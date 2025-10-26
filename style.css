@@ -1,0 +1,128 @@
+:root {
+  --bg-color: #f9f9f9;
+  --text-color: #333;
+  --card-color: white;
+}
+
+body {
+  font-family: 'Arial', sans-serif;
+  background: var(--bg-color);
+  color: var(--text-color);
+  direction: rtl;
+  margin: 0;
+  padding: 0;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+body.dark {
+  --bg-color: #1e1e1e;
+  --text-color: #f0f0f0;
+  --card-color: #2c2c2c;
+}
+
+.container {
+  max-width: 600px;
+  margin: 30px auto;
+  background: var(--card-color);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.1);
+}
+
+h1, h2, h3 {
+  text-align: center;
+}
+
+form label {
+  font-weight: bold;
+  margin-top: 10px;
+  display: block;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  margin-top: 10px;
+}
+
+button:hover {
+  background: #218838;
+}
+
+#reset {
+  background: #ffc107;
+}
+
+#reset:hover {
+  background: #e0a800;
+}
+
+#toggle-theme {
+  background: #6c757d;
+}
+
+#toggle-theme:hover {
+  background: #495057;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+canvas {
+  margin: 20px auto;
+  display: block;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+th, td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: center;
+}
+
+#export-pdf {
+  background: #007bff;
+}
+
+#export-pdf:hover {
+  background: #0056b3;
+}
+
+.hidden {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  button, input {
+    font-size: 14px;
+  }
+}
