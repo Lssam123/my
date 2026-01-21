@@ -1,59 +1,60 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>حاسبة مالية ذكية</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مساعدك الذكي</title>
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-  <div class="container">
-    <h1>💰 حاسبة الميزانية الشهرية</h1>
-    <form id="budget-form">
-      <label for="income">الدخل الشهري:</label>
-      <input type="number" id="income" placeholder="مثلاً: 5000" required />
 
-      <h3>📦 المصاريف حسب التصنيف:</h3>
-      <div class="grid">
-        <div><label>🍽️ أكل:</label><input type="number" id="food" /></div>
-        <div><label>🚗 مواصلات:</label><input type="number" id="transport" /></div>
-        <div><label>🎮 ترفيه:</label><input type="number" id="entertainment" /></div>
-        <div><label>💡 فواتير:</label><input type="number" id="bills" /></div>
-        <div><label>📦 أخرى:</label><input type="number" id="other" /></div>
-      </div>
+    <!-- الشريط العلوي -->
+    <header>
+        <h1>مساعدك الذكي</h1>
+        <div class="top-controls">
+            <button id="themeToggle">تغيير الثيم</button>
+            <span id="clock"></span>
+        </div>
+    </header>
 
-      <button type="submit">احسب</button>
-      <button type="button" id="reset">🔄 إعادة تعيين</button>
-    </form>
+    <!-- لوحة الأدوات -->
+    <section class="dashboard">
 
-    <div id="result" class="hidden">
-      <h2>النتائج:</h2>
-      <p>💸 المتبقي من الراتب: <span id="remaining"></span> ريال</p>
-      <p>📊 نسبة الادخار: <span id="savingRate"></span>%</p>
-      <canvas id="expenseChart" width="400" height="400"></canvas>
-    </div>
+        <!-- ملخص النصوص -->
+        <div class="card">
+            <h2>ملخص النصوص</h2>
+            <textarea id="summaryInput" placeholder="أدخل النص هنا..."></textarea>
+            <button id="summarizeBtn">تلخيص</button>
+            <div class="output" id="summaryOutput"></div>
+        </div>
 
-    <div id="history" class="hidden">
-      <h2>📅 سجل العمليات</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>التاريخ</th>
-            <th>الدخل</th>
-            <th>المصاريف</th>
-            <th>المتبقي</th>
-          </tr>
-        </thead>
-        <tbody id="history-body"></tbody>
-      </table>
-    </div>
+        <!-- المحادثة الذكية -->
+        <div class="card">
+            <h2>المحادث الذكي</h2>
+            <div class="chat-box" id="chatBox"></div>
+            <input type="text" id="chatInput" placeholder="اكتب رسالتك...">
+            <button id="sendChat">إرسال</button>
+        </div>
 
-    <button id="export-pdf" class="hidden">📤 تصدير النتائج إلى PDF</button>
-    <button id="toggle-theme">🌓 تبديل الوضع الليلي</button>
-  </div>
+        <!-- مساعد المهام -->
+        <div class="card">
+            <h2>مساعد المهام</h2>
+            <input type="text" id="taskInput" placeholder="اكتب مهمة مثل: ذكرني أذاكر الساعة 8">
+            <button id="addTask">إضافة</button>
+            <ul id="taskList"></ul>
+        </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="script.js"></script>
+        <!-- التوصيات -->
+        <div class="card">
+            <h2>التوصيات الذكية</h2>
+            <input type="text" id="recInput" placeholder="اكتب اهتماماتك مثل: تقنية، برمجة">
+            <button id="recBtn">عرض التوصيات</button>
+            <div class="output" id="recOutput"></div>
+        </div>
+
+    </section>
+
+    <script src="script.js"></script>
 </body>
 </html>
