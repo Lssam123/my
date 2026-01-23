@@ -2,19 +2,26 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>المحادث الذكي العربي</title>
+    <title>AI Chat</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="chat-container">
-    <h1>المحادث الذكي العربي</h1>
+<div class="app-wrapper">
+    <div class="chat-container">
+        <div class="chat-header">
+            <span class="logo">AI</span>
+            <span class="title">مساعد ذكي</span>
+        </div>
 
-    <div id="chatBox" class="chat-box"></div>
+        <div id="chatBox" class="chat-box"></div>
 
-    <div class="input-area">
-        <input type="text" id="userInput" placeholder="اكتب رسالتك هنا...">
-        <button id="sendBtn">إرسال</button>
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="اكتب رسالتك هنا...">
+            <button id="sendBtn" aria-label="إرسال">
+                ▲
+            </button>
+        </div>
     </div>
 </div>
 
