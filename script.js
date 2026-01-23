@@ -1,23 +1,18 @@
-/* ============================
-   قاعدة معرفة أساسية
-============================ */
+/* ========== قاعدة معرفة أساسية ========== */
 
 let knowledgeBase = [
     { keywords: ["مرحبا", "هلا", "السلام"], replies: ["أهلاً! كيف أقدر أساعدك اليوم؟", "يا هلا! تفضل بسؤالك."] },
     { keywords: ["كيف حالك", "اخبارك"], replies: ["أنا بخير ولله الحمد، جاهز لخدمتك.", "تمام ولله الحمد، شكراً لسؤالك."] },
-    { keywords: ["اسمك", "من انت"], replies: ["أنا محادث ذكي عربي صُمم لمساعدتك.", "تقدر تعتبرني مساعدك الشخصي الذكي."] },
+    { keywords: ["اسمك", "من انت"], replies: ["أنا AI مساعد ذكي صُمم لمساعدتك.", "تقدر تعتبرني مساعدك الشخصي الذكي."] },
     { keywords: ["شكرا", "يسلمو"], replies: ["العفو! سعيد بخدمتك دائماً.", "لا شكر على واجب."] },
-    { keywords: ["برمجة", "اتعلم برمجة"], replies: ["ابدأ بـ HTML, CSS, JavaScript ثم انتقل لـ Python أو غيرها.", "أفضل بداية: تعلم أساسيات الويب ثم لغة برمجة عامة."] }
+    { keywords: ["برمجة", "اتعلم برمجة"], replies: ["ابدأ بـ HTML, CSS, JavaScript ثم انتقل لـ Python.", "أفضل بداية: تعلم أساسيات الويب ثم لغة برمجة عامة."] }
 ];
 
-/* تحميل المعرفة المتعلمة سابقاً */
 if (localStorage.getItem("learnedData")) {
     knowledgeBase = knowledgeBase.concat(JSON.parse(localStorage.getItem("learnedData")));
 }
 
-/* ============================
-   خوارزمية Levenshtein
-============================ */
+/* ========== Levenshtein ========== */
 function levenshtein(a, b) {
     const matrix = [];
     for (let i = 0; i <= b.length; i++) matrix[i] = [i];
@@ -35,13 +30,10 @@ function levenshtein(a, b) {
     return matrix[b.length][a.length];
 }
 
-/* ============================
-   اختيار رد من القاعدة
-============================ */
+/* ========== اختيار رد ========== */
 function findBestReply(message) {
     message = message.trim();
 
-    // مطابقة مباشرة بالكلمات
     for (let item of knowledgeBase) {
         for (let key of item.keywords) {
             if (message.includes(key)) {
@@ -51,7 +43,6 @@ function findBestReply(message) {
         }
     }
 
-    // مطابقة بالتشابه
     let bestMatch = null;
     let bestScore = 999;
 
@@ -70,9 +61,7 @@ function findBestReply(message) {
     return null;
 }
 
-/* ============================
-   التعلّم الذاتي
-============================ */
+/* ========== التعلّم الذاتي ========== */
 let waitingForTeach = false;
 let lastUserQuestion = "";
 
@@ -89,9 +78,7 @@ function learnNewReply(question, answer) {
     knowledgeBase.push(newEntry);
 }
 
-/* ============================
-   البحث في الإنترنت (DuckDuckGo)
-============================ */
+/* ========== البحث في الإنترنت (DuckDuckGo) ========== */
 
 async function searchInternet(query) {
     const url = "https://api.duckduckgo.com/?q=" +
@@ -127,13 +114,10 @@ async function searchInternet(query) {
     }
 }
 
-/* ============================
-   منطق الرد الكامل
-============================ */
+/* ========== منطق الرد الكامل ========== */
 async function handleUserMessage(msg) {
     msg = msg.trim();
 
-    // أوامر البحث في النت
     if (msg.startsWith("ابحث عن") || msg.startsWith("بحث عن") || msg.includes("في النت") || msg.includes("في الإنترنت")) {
         let query = msg
             .replace("ابحث عن", "")
@@ -149,36 +133,32 @@ async function handleUserMessage(msg) {
         return await searchInternet(query);
     }
 
-    // إذا كان البوت ينتظر تعليم
     if (waitingForTeach) {
         learnNewReply(lastUserQuestion, msg);
         waitingForTeach = false;
         return "تم حفظ الرد، شكراً لك! سأستخدمه إذا تكرر هذا السؤال.";
     }
 
-    // محاولة الرد من القاعدة
     let reply = findBestReply(msg);
     if (reply) return reply;
 
-    // لم يفهم → يطلب تعليم
     waitingForTeach = true;
     lastUserQuestion = msg;
     return "ما فهمت سؤالك… تقدر تعطيني الرد المناسب عشان أتعلمه؟";
 }
 
-/* ============================
-   واجهة المحادثة
-============================ */
+/* ========== واجهة المحادثة + الاهتزاز ========== */
 const chatBox = document.getElementById("chatBox");
 const userInput = document.getElementById("userInput");
 const sendBtn = document.getElementById("sendBtn");
 
-function addMessage(text, type) {
+function addMessage(text, type, extraClass = "") {
     const div = document.createElement("div");
-    div.className = "message " + type;
+    div.className = "message " + type + (extraClass ? " " + extraClass : "");
     div.textContent = text;
     chatBox.appendChild(div);
     chatBox.scrollTop = chatBox.scrollHeight;
+    return div;
 }
 
 sendBtn.onclick = async () => {
@@ -188,13 +168,19 @@ sendBtn.onclick = async () => {
     addMessage(msg, "user");
     userInput.value = "";
 
+    // بطاقة رد تهتز أثناء "الكتابة"
+    const typingCard = addMessage("...", "bot", "shake");
+
     const reply = await handleUserMessage(msg);
-    addMessage(reply, "bot");
+
+    setTimeout(() => {
+        typingCard.classList.remove("shake");
+        typingCard.textContent = reply;
+    }, 600);
 };
 
 userInput.addEventListener("keydown", e => {
     if (e.key === "Enter") sendBtn.click();
 });
 
-// رسالة ترحيب
 addMessage("أهلاً بك! اكتب سؤالك، أو جرّب: ابحث عن فوائد العسل", "bot");
