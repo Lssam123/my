@@ -1,162 +1,200 @@
 /* ============================
-   تشغيل الساعة
-============================ */
-function updateClock() {
-    const now = new Date();
-    const time = now.toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-    document.getElementById("clock").textContent = time;
-}
-setInterval(updateClock, 1000);
-updateClock();
-
-/* ============================
-   تبديل الثيم (فاتح / داكن)
-============================ */
-document.getElementById("themeToggle").onclick = () => {
-    document.body.classList.toggle("dark");
-};
-
-/* ============================
-   1) ملخص النصوص الذكي
+   قاعدة معرفة أساسية
 ============================ */
 
-// كلمات شائعة عربية يتم تجاهلها
-const stopWords = ["في", "على", "من", "إلى", "عن", "أن", "إن", "كان", "كانت", "هو", "هي", "هذا", "هذه", "ذلك", "هناك", "ما", "لم", "لن"];
-
-function summarizeText(text) {
-    let sentences = text.split(/[\.\؟\!]/).filter(s => s.trim().length > 0);
-    let words = text.split(/\s+/);
-
-    // حساب تكرار الكلمات
-    let freq = {};
-    words.forEach(word => {
-        word = word.trim();
-        if (!stopWords.includes(word) && word.length > 2) {
-            freq[word] = (freq[word] || 0) + 1;
-        }
-    });
-
-    // حساب وزن كل جملة
-    let scores = sentences.map(sentence => {
-        let score = 0;
-        sentence.split(" ").forEach(word => {
-            if (freq[word]) score += freq[word];
-        });
-        return score;
-    });
-
-    // اختيار أعلى الجمل
-    let topSentences = [];
-    let maxScore = Math.max(...scores);
-
-    sentences.forEach((sentence, i) => {
-        if (scores[i] > maxScore * 0.4) {
-            topSentences.push(sentence.trim());
-        }
-    });
-
-    return topSentences.join(". ") + ".";
-}
-
-document.getElementById("summarizeBtn").onclick = () => {
-    let text = document.getElementById("summaryInput").value.trim();
-    if (text.length < 20) {
-        document.getElementById("summaryOutput").textContent = "الرجاء إدخال نص أطول للتلخيص.";
-        return;
-    }
-    document.getElementById("summaryOutput").textContent = summarizeText(text);
-};
-
-/* ============================
-   2) المحادثة الذكية
-============================ */
-
-// قاعدة بيانات ردود بسيطة
-const botReplies = [
-    { keywords: ["مرحبا", "هلا", "السلام"], reply: "أهلاً بك! كيف أقدر أساعدك اليوم؟" },
-    { keywords: ["اسمك", "من انت"], reply: "أنا مساعدك الذكي، جاهز لخدمتك." },
-    { keywords: ["تلخيص", "ملخص"], reply: "تقدر تستخدم أداة التلخيص في الأعلى، فقط ألصق النص واضغط تلخيص." },
-    { keywords: ["مهمة", "ذكرني"], reply: "اكتب مهمتك في قسم مساعد المهام وسأتولى الباقي." },
-    { keywords: ["شكرا", "يسلمو"], reply: "العفو! سعيد بخدمتك دائماً." }
+let knowledgeBase = [
+    { keywords: ["مرحبا", "هلا", "السلام"], replies: ["أهلاً! كيف أقدر أساعدك اليوم؟", "يا هلا! تفضل بسؤالك."] },
+    { keywords: ["كيف حالك", "اخبارك"], replies: ["أنا بخير ولله الحمد، جاهز لخدمتك.", "تمام ولله الحمد، شكراً لسؤالك."] },
+    { keywords: ["اسمك", "من انت"], replies: ["أنا محادث ذكي عربي صُمم لمساعدتك.", "تقدر تعتبرني مساعدك الشخصي الذكي."] },
+    { keywords: ["شكرا", "يسلمو"], replies: ["العفو! سعيد بخدمتك دائماً.", "لا شكر على واجب."] },
+    { keywords: ["برمجة", "اتعلم برمجة"], replies: ["ابدأ بـ HTML, CSS, JavaScript ثم انتقل لـ Python أو غيرها.", "أفضل بداية: تعلم أساسيات الويب ثم لغة برمجة عامة."] }
 ];
 
-function getBotReply(message) {
-    message = message.trim();
-
-    for (let item of botReplies) {
-        for (let key of item.keywords) {
-            if (message.includes(key)) return item.reply;
-        }
-    }
-
-    return "لم أفهم رسالتك تماماً، لكني هنا لمساعدتك.";
+/* تحميل المعرفة المتعلمة سابقاً */
+if (localStorage.getItem("learnedData")) {
+    knowledgeBase = knowledgeBase.concat(JSON.parse(localStorage.getItem("learnedData")));
 }
 
-document.getElementById("sendChat").onclick = () => {
-    let input = document.getElementById("chatInput");
-    let msg = input.value.trim();
-    if (msg === "") return;
-
-    let chatBox = document.getElementById("chatBox");
-
-    // رسالة المستخدم
-    chatBox.innerHTML += `<div class="message user">${msg}</div>`;
-
-    // رد الذكاء الاصطناعي
-    let reply = getBotReply(msg);
-    chatBox.innerHTML += `<div class="message bot">${reply}</div>`;
-
-    chatBox.scrollTop = chatBox.scrollHeight;
-    input.value = "";
-};
-
 /* ============================
-   3) مساعد المهام
+   خوارزمية Levenshtein
 ============================ */
+function levenshtein(a, b) {
+    const matrix = [];
+    for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+    for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
 
-document.getElementById("addTask").onclick = () => {
-    let input = document.getElementById("taskInput").value.trim();
-    if (input.length < 3) return;
-
-    let timeMatch = input.match(/الساعة\s*(\d+)/);
-    let taskText = input.replace(/الساعة\s*\d+/, "").trim();
-
-    let finalTask = taskText;
-    if (timeMatch) finalTask += ` — الوقت: ${timeMatch[1]}:00`;
-
-    let li = document.createElement("li");
-    li.textContent = finalTask;
-
-    document.getElementById("taskList").appendChild(li);
-    document.getElementById("taskInput").value = "";
-};
-
-/* ============================
-   4) نظام التوصيات الذكي
-============================ */
-
-const recommendationsDB = {
-    "تقنية": ["كتاب: مقدمة في الأمن السيبراني", "دورة: أساسيات الشبكات", "مقال: مستقبل الذكاء الاصطناعي"],
-    "برمجة": ["تعلم JavaScript", "مشروع: بناء موقع كامل", "دورة: Python للمبتدئين"],
-    "أمن": ["أدوات اختبار الاختراق", "مقال: حماية الحسابات", "دورة: Security+ أساسيات"],
-    "ذكاء": ["مشروع: تحليل نصوص", "مقال: تعلم الآلة", "دورة: أساسيات الذكاء الاصطناعي"]
-};
-
-document.getElementById("recBtn").onclick = () => {
-    let input = document.getElementById("recInput").value.trim();
-    let interests = input.split(/[,،]/).map(i => i.trim());
-
-    let results = [];
-
-    interests.forEach(interest => {
-        if (recommendationsDB[interest]) {
-            results.push(...recommendationsDB[interest]);
+    for (let i = 1; i <= b.length; i++) {
+        for (let j = 1; j <= a.length; j++) {
+            matrix[i][j] = Math.min(
+                matrix[i - 1][j] + 1,
+                matrix[i][j - 1] + 1,
+                matrix[i - 1][j - 1] + (a[j - 1] === b[i - 1] ? 0 : 1)
+            );
         }
+    }
+    return matrix[b.length][a.length];
+}
+
+/* ============================
+   اختيار رد من القاعدة
+============================ */
+function findBestReply(message) {
+    message = message.trim();
+
+    // مطابقة مباشرة بالكلمات
+    for (let item of knowledgeBase) {
+        for (let key of item.keywords) {
+            if (message.includes(key)) {
+                const replies = item.replies;
+                return replies[Math.floor(Math.random() * replies.length)];
+            }
+        }
+    }
+
+    // مطابقة بالتشابه
+    let bestMatch = null;
+    let bestScore = 999;
+
+    knowledgeBase.forEach(item => {
+        item.keywords.forEach(key => {
+            let score = levenshtein(message, key);
+            if (score < bestScore) {
+                bestScore = score;
+                bestMatch = item.replies[Math.floor(Math.random() * item.replies.length)];
+            }
+        });
     });
 
-    if (results.length === 0) {
-        document.getElementById("recOutput").textContent = "لم أجد توصيات مناسبة.";
-    } else {
-        document.getElementById("recOutput").innerHTML = results.map(r => `• ${r}`).join("<br>");
+    if (bestScore <= 3) return bestMatch;
+
+    return null;
+}
+
+/* ============================
+   التعلّم الذاتي
+============================ */
+let waitingForTeach = false;
+let lastUserQuestion = "";
+
+function learnNewReply(question, answer) {
+    let newEntry = {
+        keywords: [question],
+        replies: [answer]
+    };
+
+    let learned = JSON.parse(localStorage.getItem("learnedData") || "[]");
+    learned.push(newEntry);
+    localStorage.setItem("learnedData", JSON.stringify(learned));
+
+    knowledgeBase.push(newEntry);
+}
+
+/* ============================
+   البحث في الإنترنت (DuckDuckGo)
+============================ */
+
+async function searchInternet(query) {
+    const url = "https://api.duckduckgo.com/?q=" +
+        encodeURIComponent(query) +
+        "&format=json&no_redirect=1&no_html=1";
+
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
+
+        let reply = "";
+
+        if (data.AbstractText && data.AbstractText.length > 0) {
+            reply += data.AbstractText + "\n\n";
+        }
+
+        if (data.RelatedTopics && data.RelatedTopics.length > 0) {
+            reply += "بعض الروابط ذات الصلة:\n";
+            data.RelatedTopics.slice(0, 3).forEach(t => {
+                if (t.Text && t.FirstURL) {
+                    reply += `• ${t.Text}\n${t.FirstURL}\n\n`;
+                }
+            });
+        }
+
+        if (reply === "") {
+            reply = "لم أجد معلومات كافية عن هذا الموضوع.";
+        }
+
+        return reply;
+    } catch (e) {
+        return "حدث خطأ أثناء محاولة البحث في الإنترنت.";
     }
+}
+
+/* ============================
+   منطق الرد الكامل
+============================ */
+async function handleUserMessage(msg) {
+    msg = msg.trim();
+
+    // أوامر البحث في النت
+    if (msg.startsWith("ابحث عن") || msg.startsWith("بحث عن") || msg.includes("في النت") || msg.includes("في الإنترنت")) {
+        let query = msg
+            .replace("ابحث عن", "")
+            .replace("بحث عن", "")
+            .replace("في النت", "")
+            .replace("في الإنترنت", "")
+            .trim();
+
+        if (query.length < 2) {
+            return "ما هو الموضوع الذي تريد البحث عنه؟";
+        }
+
+        return await searchInternet(query);
+    }
+
+    // إذا كان البوت ينتظر تعليم
+    if (waitingForTeach) {
+        learnNewReply(lastUserQuestion, msg);
+        waitingForTeach = false;
+        return "تم حفظ الرد، شكراً لك! سأستخدمه إذا تكرر هذا السؤال.";
+    }
+
+    // محاولة الرد من القاعدة
+    let reply = findBestReply(msg);
+    if (reply) return reply;
+
+    // لم يفهم → يطلب تعليم
+    waitingForTeach = true;
+    lastUserQuestion = msg;
+    return "ما فهمت سؤالك… تقدر تعطيني الرد المناسب عشان أتعلمه؟";
+}
+
+/* ============================
+   واجهة المحادثة
+============================ */
+const chatBox = document.getElementById("chatBox");
+const userInput = document.getElementById("userInput");
+const sendBtn = document.getElementById("sendBtn");
+
+function addMessage(text, type) {
+    const div = document.createElement("div");
+    div.className = "message " + type;
+    div.textContent = text;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+sendBtn.onclick = async () => {
+    const msg = userInput.value.trim();
+    if (msg === "") return;
+
+    addMessage(msg, "user");
+    userInput.value = "";
+
+    const reply = await handleUserMessage(msg);
+    addMessage(reply, "bot");
 };
+
+userInput.addEventListener("keydown", e => {
+    if (e.key === "Enter") sendBtn.click();
+});
+
+// رسالة ترحيب
+addMessage("أهلاً بك! اكتب سؤالك، أو جرّب: ابحث عن فوائد العسل", "bot");
