@@ -2,59 +2,22 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مساعدك الذكي</title>
+    <title>المحادث الذكي العربي</title>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-    <!-- الشريط العلوي -->
-    <header>
-        <h1>مساعدك الذكي</h1>
-        <div class="top-controls">
-            <button id="themeToggle">تغيير الثيم</button>
-            <span id="clock"></span>
-        </div>
-    </header>
+<div class="chat-container">
+    <h1>المحادث الذكي العربي</h1>
 
-    <!-- لوحة الأدوات -->
-    <section class="dashboard">
+    <div id="chatBox" class="chat-box"></div>
 
-        <!-- ملخص النصوص -->
-        <div class="card">
-            <h2>ملخص النصوص</h2>
-            <textarea id="summaryInput" placeholder="أدخل النص هنا..."></textarea>
-            <button id="summarizeBtn">تلخيص</button>
-            <div class="output" id="summaryOutput"></div>
-        </div>
+    <div class="input-area">
+        <input type="text" id="userInput" placeholder="اكتب رسالتك هنا...">
+        <button id="sendBtn">إرسال</button>
+    </div>
+</div>
 
-        <!-- المحادثة الذكية -->
-        <div class="card">
-            <h2>المحادث الذكي</h2>
-            <div class="chat-box" id="chatBox"></div>
-            <input type="text" id="chatInput" placeholder="اكتب رسالتك...">
-            <button id="sendChat">إرسال</button>
-        </div>
-
-        <!-- مساعد المهام -->
-        <div class="card">
-            <h2>مساعد المهام</h2>
-            <input type="text" id="taskInput" placeholder="اكتب مهمة مثل: ذكرني أذاكر الساعة 8">
-            <button id="addTask">إضافة</button>
-            <ul id="taskList"></ul>
-        </div>
-
-        <!-- التوصيات -->
-        <div class="card">
-            <h2>التوصيات الذكية</h2>
-            <input type="text" id="recInput" placeholder="اكتب اهتماماتك مثل: تقنية، برمجة">
-            <button id="recBtn">عرض التوصيات</button>
-            <div class="output" id="recOutput"></div>
-        </div>
-
-    </section>
-
-    <script src="script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
