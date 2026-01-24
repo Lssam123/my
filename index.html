@@ -10,33 +10,40 @@
 
 <header>
     <h1>لوحة الطقس</h1>
-    <!-- زر تغيير الثيم (لايت / دارك) -->
     <button id="themeToggle" type="button">🌙</button>
 </header>
 
-<!-- مربع البحث -->
-<div class="search-box">
-    <input type="text" id="cityInput" placeholder="اكتب اسم المدينة">
-    <button id="searchBtn" type="button">بحث</button>
-    <button id="gpsBtn" type="button">📍 موقعي</button>
+<!-- اختيار المدينة -->
+<div class="city-selector">
+    <label>اختر مدينة:</label>
+    <select id="citySelect">
+        <option value="">— اختر مدينة —</option>
+        <option value="Riyadh">الرياض</option>
+        <option value="Jeddah">جدة</option>
+        <option value="Dammam">الدمام</option>
+        <option value="Tabuk">تبوك</option>
+        <option value="Makkah">مكة المكرمة</option>
+        <option value="Madinah">المدينة المنورة</option>
+        <option value="Abha">أبها</option>
+        <option value="Hail">حائل</option>
+        <option value="Dubai">دبي</option>
+        <option value="Doha">الدوحة</option>
+        <option value="Cairo">القاهرة</option>
+        <option value="Amman">عمّان</option>
+        <option value="Kuwait">الكويت</option>
+        <option value="London">لندن</option>
+        <option value="Paris">باريس</option>
+    </select>
 </div>
 
-<!-- اقتراحات المدن (اختياري – يمكن استخدامه لاحقًا) -->
-<div id="suggestions" class="suggestions"></div>
-
-<!-- لوحة المعلومات الرئيسية -->
 <section id="dashboard">
 
     <!-- الطقس الحالي -->
-    <div id="currentWeather" class="card glass">
-        <!-- يتم تعبئته من script.js -->
-    </div>
+    <div id="currentWeather" class="card glass"></div>
 
-    <!-- كروت فرعية: جودة الهواء + عداد سرعة الرياح -->
+    <!-- كروت فرعية -->
     <div class="sub-cards">
-        <div id="aqiCard" class="card glass small">
-            <!-- جودة الهواء من script.js -->
-        </div>
+        <div id="aqiCard" class="card glass small"></div>
 
         <div id="windCard" class="card glass small">
             <canvas id="windGauge" width="200" height="200"></canvas>
@@ -45,9 +52,7 @@
 
     <!-- توقعات الأيام القادمة -->
     <h2 class="section-title">توقعات الأيام القادمة</h2>
-    <div id="forecast" class="forecast-container">
-        <!-- يتم تعبئته من script.js -->
-    </div>
+    <div id="forecast" class="forecast-container"></div>
 
 </section>
 
