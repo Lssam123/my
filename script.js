@@ -1,36 +1,50 @@
-const apiKey = "2d82dbdecba67d3e9742ec667dcfb3dd";
+const apiKey = "2d82dbdecba67d3e9742ec667dcfb3dd"; // ضع مفتاحك هنا
 
-document.getElementById("themeToggle").onclick = () => {
+// =========================
+// 1) تبديل الوضع الليلي
+// =========================
+document.getElementById("themeToggle").addEventListener("click", () => {
     document.body.classList.toggle("dark");
-};
-
-document.getElementById("searchBtn").addEventListener("click", () => {
-    const city = document.getElementById("cityInput").value.trim();
-    if (!city) return alert("اكتب اسم المدينة");
-    fetchWeather(city);
 });
 
-document.getElementById("gpsBtn").addEventListener("click", () => {
-    navigator.geolocation.getCurrentPosition(pos => {
-        fetchWeather(null, pos.coords.latitude, pos.coords.longitude);
-    });
+// =========================
+// 2) عند اختيار مدينة
+// =========================
+document.getElementById("citySelect").addEventListener("change", function () {
+    const city = this.value;
+    if (city) {
+        fetchWeather(city);
+    }
 });
 
-async function fetchWeather(city, lat = null, lon = null) {
-    let url = city
-        ? `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric&lang=ar`
-        : `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=ar`;
+// =========================
+// 3) جلب الطقس الحالي
+// =========================
+async function fetchWeather(city) {
+    try {
+        const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric&lang=ar`;
+        const res = await fetch(url);
+        const data = await res.json();
 
-    const res = await fetch(url);
-    const data = await res.json();
+        if (data.cod !== 200) {
+            document.getElementById("currentWeather").innerHTML = "<p>تعذر جلب البيانات</p>";
+            return;
+        }
 
-    displayCurrentWeather(data);
-    drawWindGauge(data.wind.speed);
+        displayCurrentWeather(data);
+        drawWindGauge(data.wind.speed);
 
-    fetchForecast(city, lat, lon);
-    fetchAQI(data.coord.lat, data.coord.lon);
+        fetchForecast(city);
+        fetchAQI(data.coord.lat, data.coord.lon);
+
+    } catch (error) {
+        document.getElementById("currentWeather").innerHTML = "<p>خطأ في الاتصال</p>";
+    }
 }
 
+// =========================
+// 4) عرض الطقس الحالي
+// =========================
 function displayCurrentWeather(data) {
     document.getElementById("currentWeather").innerHTML = `
         <h2>${data.name}</h2>
@@ -38,14 +52,15 @@ function displayCurrentWeather(data) {
         <p>درجة الحرارة: ${data.main.temp}°C</p>
         <p>${data.weather[0].description}</p>
         <p>الرطوبة: ${data.main.humidity}%</p>
+        <p>الرياح: ${data.wind.speed} m/s</p>
     `;
 }
 
-async function fetchForecast(city, lat, lon) {
-    let url = city
-        ? `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric&lang=ar`
-        : `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=ar`;
-
+// =========================
+// 5) توقعات 5 أيام
+// =========================
+async function fetchForecast(city) {
+    const url = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric&lang=ar`;
     const res = await fetch(url);
     const data = await res.json();
 
@@ -66,6 +81,9 @@ async function fetchForecast(city, lat, lon) {
     });
 }
 
+// =========================
+// 6) جودة الهواء AQI
+// =========================
 async function fetchAQI(lat, lon) {
     const url = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${apiKey}`;
     const res = await fetch(url);
@@ -80,18 +98,32 @@ async function fetchAQI(lat, lon) {
     `;
 }
 
+// =========================
+// 7) عداد سرعة الرياح
+// =========================
 function drawWindGauge(speed) {
     const canvas = document.getElementById("windGauge");
     const ctx = canvas.getContext("2d");
 
     ctx.clearRect(0, 0, 200, 200);
 
+    // الخلفية
     ctx.beginPath();
-    ctx.arc(100, 100, 80, Math.PI, Math.PI + (speed / 20) * Math.PI);
+    ctx.arc(100, 100, 80, Math.PI, 2 * Math.PI);
+    ctx.strokeStyle = "#ccc";
+    ctx.lineWidth = 15;
+    ctx.stroke();
+
+    // المؤشر
+    ctx.beginPath();
+    const angle = Math.PI + (speed / 20) * Math.PI;
+    ctx.arc(100, 100, 80, Math.PI, angle);
     ctx.strokeStyle = "#0078ff";
     ctx.lineWidth = 15;
     ctx.stroke();
 
+    // النص
     ctx.font = "20px Cairo";
+    ctx.fillStyle = "var(--text)";
     ctx.fillText(speed + " m/s", 70, 110);
 }
