@@ -3,12 +3,14 @@
     --text: #222;
     --card: rgba(255,255,255,0.4);
     --blur: blur(12px);
+    --primary: #0078ff;
 }
 
 .dark {
     --bg: #0f0f0f;
     --text: #f5f5f5;
     --card: rgba(40,40,40,0.5);
+    --primary: #4da3ff;
 }
 
 body {
@@ -21,37 +23,42 @@ body {
     transition: 0.3s;
 }
 
+/* ====== الهيدر ====== */
 header {
     display: flex;
     justify-content: space-between;
     padding: 15px 20px;
     background: linear-gradient(45deg, #0078ff, #00c6ff);
     color: white;
+    font-size: 20px;
 }
 
-.search-box {
+#themeToggle {
+    background: transparent;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    color: white;
+}
+
+/* ====== اختيار المدينة ====== */
+.city-selector {
     text-align: center;
-    margin: 20px;
+    margin: 25px 0;
+    font-size: 18px;
 }
 
-input {
+.city-selector select {
     padding: 12px;
     width: 60%;
     border-radius: 10px;
-    border: none;
+    border: 1px solid #ccc;
     outline: none;
+    font-size: 16px;
+    background: white;
 }
 
-button {
-    padding: 12px 15px;
-    margin: 5px;
-    border: none;
-    border-radius: 10px;
-    background: #0078ff;
-    color: white;
-    cursor: pointer;
-}
-
+/* ====== الكروت ====== */
 .card {
     padding: 20px;
     margin: 20px auto;
@@ -60,11 +67,19 @@ button {
     background: var(--card);
     width: 80%;
     text-align: center;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
 }
 
 .small {
     width: 40%;
     display: inline-block;
+}
+
+/* ====== توقعات الأيام ====== */
+.section-title {
+    text-align: center;
+    margin-top: 30px;
+    font-size: 22px;
 }
 
 .forecast-container {
@@ -80,4 +95,20 @@ button {
     padding: 15px;
     border-radius: 12px;
     text-align: center;
+    backdrop-filter: var(--blur);
+}
+
+/* ====== عداد الرياح ====== */
+#windGauge {
+    margin-top: 10px;
+}
+
+/* ====== تحسين التمرير ====== */
+.forecast-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.forecast-container::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 10px;
 }
