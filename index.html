@@ -3,19 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>موقع الطقس</title>
+    <title>تطبيق الطقس</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="container">
-        <h2>الطقس الآن</h2>
+    <header>
+        <h1>تطبيق الطقس</h1>
+        <button id="themeToggle">🌙</button>
+    </header>
 
+    <div class="search-box">
         <input type="text" id="cityInput" placeholder="اكتب اسم المدينة">
         <button onclick="getWeather()">بحث</button>
-
-        <div id="weatherResult" class="result"></div>
+        <button onclick="getLocationWeather()">📍 موقعي</button>
     </div>
+
+    <div id="currentWeather" class="weather-card"></div>
+
+    <h2 class="forecast-title">توقعات 5 أيام</h2>
+    <div id="forecast" class="forecast-container"></div>
 
     <script src="script.js"></script>
 </body>
