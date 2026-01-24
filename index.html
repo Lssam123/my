@@ -1,30 +1,22 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <title>AI Chat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>موقع الطقس</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="app-wrapper">
-    <div class="chat-container">
-        <div class="chat-header">
-            <span class="logo">AI</span>
-            <span class="title">مساعد ذكي</span>
-        </div>
+    <div class="container">
+        <h2>الطقس الآن</h2>
 
-        <div id="chatBox" class="chat-box"></div>
+        <input type="text" id="cityInput" placeholder="اكتب اسم المدينة">
+        <button onclick="getWeather()">بحث</button>
 
-        <div class="input-area">
-            <input type="text" id="userInput" placeholder="اكتب رسالتك هنا...">
-            <button id="sendBtn" aria-label="إرسال">
-                ▲
-            </button>
-        </div>
+        <div id="weatherResult" class="result"></div>
     </div>
-</div>
 
-<script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
