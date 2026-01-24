@@ -16,43 +16,107 @@
 <!-- اختيار المدينة -->
 <div class="city-selector">
     <label>اختر مدينة:</label>
+
     <select id="citySelect">
         <option value="">— اختر مدينة —</option>
-        <option value="Riyadh">الرياض</option>
-        <option value="Jeddah">جدة</option>
-        <option value="Dammam">الدمام</option>
-        <option value="Tabuk">تبوك</option>
-        <option value="Makkah">مكة المكرمة</option>
-        <option value="Madinah">المدينة المنورة</option>
-        <option value="Abha">أبها</option>
-        <option value="Hail">حائل</option>
-        <option value="Dubai">دبي</option>
-        <option value="Doha">الدوحة</option>
-        <option value="Cairo">القاهرة</option>
-        <option value="Amman">عمّان</option>
-        <option value="Kuwait">الكويت</option>
-        <option value="London">لندن</option>
-        <option value="Paris">باريس</option>
+
+        <!-- السعودية -->
+        <optgroup label="السعودية">
+            <option value="Riyadh">الرياض</option>
+            <option value="Jeddah">جدة</option>
+            <option value="Dammam">الدمام</option>
+            <option value="Khobar">الخبر</option>
+            <option value="Dhahran">الظهران</option>
+            <option value="Makkah">مكة المكرمة</option>
+            <option value="Madinah">المدينة المنورة</option>
+            <option value="Tabuk">تبوك</option>
+            <option value="Hail">حائل</option>
+            <option value="Abha">أبها</option>
+            <option value="Khamis Mushait">خميس مشيط</option>
+            <option value="Jazan">جازان</option>
+            <option value="Najran">نجران</option>
+            <option value="Al Baha">الباحة</option>
+            <option value="Buraydah">بريدة</option>
+            <option value="Unaizah">عنيزة</option>
+            <option value="Sakaka">سكاكا</option>
+            <option value="Arar">عرعر</option>
+            <option value="Yanbu">ينبع</option>
+            <option value="Taif">الطائف</option>
+        </optgroup>
+
+        <!-- الخليج -->
+        <optgroup label="الخليج">
+            <option value="Dubai">دبي</option>
+            <option value="Abu Dhabi">أبوظبي</option>
+            <option value="Sharjah">الشارقة</option>
+            <option value="Ajman">عجمان</option>
+            <option value="Doha">الدوحة</option>
+            <option value="Kuwait City">الكويت</option>
+            <option value="Manama">المنامة</option>
+            <option value="Muscat">مسقط</option>
+            <option value="Salalah">صلالة</option>
+        </optgroup>
+
+        <!-- الدول العربية -->
+        <optgroup label="الدول العربية">
+            <option value="Cairo">القاهرة</option>
+            <option value="Alexandria">الإسكندرية</option>
+            <option value="Giza">الجيزة</option>
+            <option value="Amman">عمّان</option>
+            <option value="Beirut">بيروت</option>
+            <option value="Damascus">دمشق</option>
+            <option value="Baghdad">بغداد</option>
+            <option value="Basra">البصرة</option>
+            <option value="Tunis">تونس</option>
+            <option value="Algiers">الجزائر</option>
+            <option value="Casablanca">الدار البيضاء</option>
+            <option value="Rabat">الرباط</option>
+            <option value="Khartoum">الخرطوم</option>
+            <option value="Tripoli">طرابلس</option>
+            <option value="Nouakchott">نواكشوط</option>
+        </optgroup>
+
+        <!-- مدن عالمية -->
+        <optgroup label="مدن عالمية">
+            <option value="London">لندن</option>
+            <option value="Paris">باريس</option>
+            <option value="Berlin">برلين</option>
+            <option value="Rome">روما</option>
+            <option value="Madrid">مدريد</option>
+            <option value="New York">نيويورك</option>
+            <option value="Los Angeles">لوس أنجلوس</option>
+            <option value="Chicago">شيكاغو</option>
+            <option value="Toronto">تورنتو</option>
+            <option value="Vancouver">فانكوفر</option>
+            <option value="Tokyo">طوكيو</option>
+            <option value="Seoul">سيول</option>
+            <option value="Beijing">بكين</option>
+            <option value="Shanghai">شنغهاي</option>
+            <option value="Sydney">سيدني</option>
+            <option value="Melbourne">ملبورن</option>
+            <option value="Moscow">موسكو</option>
+            <option value="Istanbul">إسطنبول</option>
+        </optgroup>
     </select>
 </div>
 
 <section id="dashboard">
 
     <!-- الطقس الحالي -->
-    <div id="currentWeather" class="card glass"></div>
+    <div id="currentWeather" class="card glass fade"></div>
 
     <!-- كروت فرعية -->
     <div class="sub-cards">
-        <div id="aqiCard" class="card glass small"></div>
+        <div id="aqiCard" class="card glass small fade"></div>
 
-        <div id="windCard" class="card glass small">
+        <div id="windCard" class="card glass small fade">
             <canvas id="windGauge" width="200" height="200"></canvas>
         </div>
     </div>
 
     <!-- توقعات الأيام القادمة -->
     <h2 class="section-title">توقعات الأيام القادمة</h2>
-    <div id="forecast" class="forecast-container"></div>
+    <div id="forecast" class="forecast-container fade"></div>
 
 </section>
 
