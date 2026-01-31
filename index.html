@@ -9,72 +9,81 @@
   <body>
     <div class="app">
       <header class="app-header">
-        <h1 class="app-title">اختبار سرعة الإنترنت</h1>
-        <p class="app-subtitle">
-          قياس سرعة التحميل، سرعة الرفع، وزمن الاستجابة (البينج) مباشرة من المتصفح.
-        </p>
+        <h1>اختبار سرعة الإنترنت</h1>
+        <p class="subtitle">قياس دقيق للتحميل، الرفع، والبِنغ</p>
       </header>
 
       <main class="app-main">
-        <section class="dashboard">
-          <div class="metric-card metric-card--download" id="downloadCard">
-            <h2 class="metric-title">سرعة التحميل</h2>
-            <div class="meter">
-              <div class="meter-gauge" data-metric="download">
-                <div class="meter-gauge-inner">
-                  <span id="downloadValue" class="meter-value">--</span>
-                  <span class="meter-unit">ميغابت/ثانية</span>
-                </div>
-              </div>
-            </div>
-            <p class="metric-hint">كلما كانت أعلى كان التحميل أسرع.</p>
-          </div>
-
-          <div class="metric-card metric-card--upload" id="uploadCard">
-            <h2 class="metric-title">سرعة الرفع</h2>
-            <div class="meter">
-              <div class="meter-gauge" data-metric="upload">
-                <div class="meter-gauge-inner">
-                  <span id="uploadValue" class="meter-value">--</span>
-                  <span class="meter-unit">ميغابت/ثانية</span>
-                </div>
-              </div>
-            </div>
-            <p class="metric-hint">مهم لرفع الملفات والبث المباشر.</p>
-          </div>
-
-          <div class="metric-card metric-card--ping" id="pingCard">
-            <h2 class="metric-title">زمن الاستجابة (البينج)</h2>
-            <div class="meter">
-              <div class="meter-gauge" data-metric="ping">
-                <div class="meter-gauge-inner">
-                  <span id="pingValue" class="meter-value">--</span>
-                  <span class="meter-unit">مللي ثانية</span>
-                </div>
-              </div>
-            </div>
-            <p class="metric-hint">كلما كان أقل كانت الاستجابة أسرع.</p>
-          </div>
+        <section class="controls-section">
+          <button id="startTestBtn" class="primary-btn">ابدأ الاختبار</button>
+          <p id="statusText" class="status-text">اضغط "ابدأ الاختبار" لبدء الفحص.</p>
         </section>
 
-        <section class="controls">
-          <button id="startTestBtn" class="btn-primary">ابدأ الاختبار</button>
-          <p id="statusText" class="status status--idle">
-            جاهز لبدء الاختبار. تأكد من اتصالك بالإنترنت ثم اضغط زر "ابدأ الاختبار".
-          </p>
-          <p class="status-note">
-            كلية العيدابي
-          </p>
+        <section class="results-grid">
+          <!-- Download Gauge -->
+          <div class="metric-card">
+            <h2 class="metric-title">سرعة التحميل</h2>
+            <div class="gauge-wrapper">
+              <div class="gauge" data-metric="download">
+                <svg viewBox="0 0 120 120" class="gauge-svg">
+                  <circle class="gauge-bg" cx="60" cy="60" r="50" />
+                  <circle class="gauge-progress" cx="60" cy="60" r="50" />
+                </svg>
+                <div class="gauge-value">
+                  <span id="downloadValue">0.0</span>
+                  <span class="unit">ميجابت/ثانية</span>
+                </div>
+              </div>
+            </div>
+            <p id="downloadQuality" class="quality-text">لم يبدأ بعد</p>
+          </div>
+
+          <!-- Upload Gauge -->
+          <div class="metric-card">
+            <h2 class="metric-title">سرعة الرفع</h2>
+            <div class="gauge-wrapper">
+              <div class="gauge" data-metric="upload">
+                <svg viewBox="0 0 120 120" class="gauge-svg">
+                  <circle class="gauge-bg" cx="60" cy="60" r="50" />
+                  <circle class="gauge-progress" cx="60" cy="60" r="50" />
+                </svg>
+                <div class="gauge-value">
+                  <span id="uploadValue">0.0</span>
+                  <span class="unit">ميجابت/ثانية</span>
+                </div>
+              </div>
+            </div>
+            <p id="uploadQuality" class="quality-text">لم يبدأ بعد</p>
+          </div>
+
+          <!-- Ping Gauge -->
+          <div class="metric-card">
+            <h2 class="metric-title">زمن الاستجابة (البِنغ)</h2>
+            <div class="gauge-wrapper">
+              <div class="gauge" data-metric="ping">
+                <svg viewBox="0 0 120 120" class="gauge-svg">
+                  <circle class="gauge-bg" cx="60" cy="60" r="50" />
+                  <circle class="gauge-progress" cx="60" cy="60" r="50" />
+                </svg>
+                <div class="gauge-value">
+                  <span id="pingValue">0</span>
+                  <span class="unit">مللي ثانية</span>
+                </div>
+              </div>
+            </div>
+            <p id="pingQuality" class="quality-text">لم يبدأ بعد</p>
+          </div>
         </section>
       </main>
 
       <footer class="app-footer">
         <p>
-          للحصول على دقة أعلى، يفضّل ربط هذا الاختبار بخادم (Backend) مخصص لقياس سرعة الاتصال.
+          للحصول على أعلى دقة ممكنة يُفضّل ربط الاختبار بسيرفر خاص بك وتعديل الروابط في
+          <code>script.js</code>.
         </p>
       </footer>
     </div>
 
-    <script src="script.js" defer></script>
+    <script src="script.js"></script>
   </body>
 </html>
