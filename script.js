@@ -2,27 +2,54 @@
 // Configuration constants
 // =========================
 
-// استبدل هذه الروابط لاحقاً بروابط من خادمك الخاص لأعلى دقة ومصداقية
-const PING_URL = "https://httpbin.org/get"; // نقطة خفيفة لاختبار البِنغ
-const DOWNLOAD_URL = "https://speed.hetzner.de/10MB.bin"; // ملف كبير نسبيًا للتحميل
-const UPLOAD_URL = "https://httpbin.org/post"; // نقطة لقبول بيانات POST للاختبار
+// Public test servers (arrays) – the code will rotate between them and skip failures.
+// For highest accuracy, later replace these with servers you fully control (with CORS enabled).
+const PING_SERVERS = [
+  "https://httpbin.org/get", // Lightweight JSON endpoint
+  "https://1.1.1.1/cdn-cgi/trace", // Cloudflare trace (may be blocked in some regions)
+  "https://www.google.com/generate_204" // Very small 204 response
+];
 
-// المدد الزمنية لكل مرحلة (بالملي ثانية)
-const PING_TEST_DURATION_MS = 5_000; // 5 ثوانٍ للبِنغ
-const DOWNLOAD_TEST_DURATION_MS = 25_000; // 25 ثانية للتحميل
-const UPLOAD_TEST_DURATION_MS = 15_000; // 15 ثانية للرفع
+const DOWNLOAD_SERVERS = [
+  "https://speed.hetzner.de/10MB.bin", // Hetzner public speed file
+  "https://proof.ovh.net/files/10Mb.dat", // OVH public speed file
+  "https://speed.cloudflare.com/__down?bytes=10000000" // Cloudflare test download
+];
 
-// إعدادات الطلبات والمسارات الموازية
+const UPLOAD_SERVERS = [
+  "https://httpbin.org/post", // Generic POST echo
+  "https://postman-echo.com/post" // Another public POST endpoint
+];
+
+// Durations for each phase (milliseconds)
+const PING_TEST_DURATION_MS = 5_000; // 5 seconds for ping
+const DOWNLOAD_TEST_DURATION_MS = 25_000; // 25 seconds for download
+const UPLOAD_TEST_DURATION_MS = 15_000; // 15 seconds for upload
+
+// Request timeouts per sample
 const PING_REQUEST_TIMEOUT_MS = 2_000;
 const DOWNLOAD_REQUEST_TIMEOUT_MS = 10_000;
 const UPLOAD_REQUEST_TIMEOUT_MS = 10_000;
 
-// عدد المسارات (الاتصالات) الموازية لكل جولة
+// Parallel paths (multi3) per round
 const PARALLEL_DOWNLOAD_STREAMS = 4;
 const PARALLEL_UPLOAD_STREAMS = 3;
 
-// حجم البيانات المرسلة في كل عينة رفع (بايت)
-const UPLOAD_PAYLOAD_BYTES = 512 * 1024; // 512 KB لكل طلب رفع تقريبًا
+// Upload payload size per sample (bytes)
+const UPLOAD_PAYLOAD_BYTES = 512 * 1024; // ~512 KB
+
+// Round3obin indices so we rotate over the server lists
+let pingServerIndex = 0;
+let downloadServerIndex = 0;
+let uploadServerIndex = 0;
+
+function pickNextServer(servers, indexRef) {
+  if (!servers.length) return null;
+  const idx = indexRef.value % servers.length;
+  const url = servers[idx];
+  indexRef.value = (idx + 1) % servers.length;
+  return url;
+}
 
 // =========================
 // DOM references
@@ -85,7 +112,10 @@ function resetUI() {
   uploadQualityEl.className = "metric-quality";
   pingQualityEl.className = "metric-quality";
 
-  setStatus("idle", "جاهز لبدء الاختبار. تأكد من اتصالك بالإنترنت ثم اضغط زر \"ابدأ الاختبار الآن\".");
+  setStatus(
+    "idle",
+    "جاهز لبدء الاختبار. تأكد من اتصالك بالإنترنت ثم اضغط زر \"ابدأ الاختبار الآن\"."
+  );
   setPhase("لم يبدأ الاختبار بعد.");
 }
 
@@ -126,15 +156,27 @@ function updateDownloadQualityLabel(mbps) {
   }
 
   if (mbps >= 200) {
-    setQualityLabel(downloadQualityEl, "ممتاز جداً لتحميل كل شيء تقريباً", "metric-quality--excellent");
+    setQualityLabel(
+      downloadQualityEl,
+      "ممتاز جداً لتحميل كل شيء تقريباً",
+      "metric-quality--excellent"
+    );
   } else if (mbps >= 100) {
-    setQualityLabel(downloadQualityEl, "ممتاز للفيديو بدقة عالية والألعاب", "metric-quality--very-good");
+    setQualityLabel(
+      downloadQualityEl,
+      "ممتاز للفيديو بدقة عالية والألعاب",
+      "metric-quality--very-good"
+    );
   } else if (mbps >= 40) {
     setQualityLabel(downloadQualityEl, "جيد لمعظم الاستخدام اليومي", "metric-quality--good");
   } else if (mbps >= 15) {
     setQualityLabel(downloadQualityEl, "متوسط وقد تلاحظ بطء أحياناً", "metric-quality--fair");
   } else {
-    setQualityLabel(downloadQualityEl, "ضعيف وقد يكون مزعجاً في الفيديو والألعاب", "metric-quality--weak");
+    setQualityLabel(
+      downloadQualityEl,
+      "ضعيف وقد يكون مزعجاً في الفيديو والألعاب",
+      "metric-quality--weak"
+    );
   }
 }
 
@@ -145,7 +187,11 @@ function updateUploadQualityLabel(mbps) {
   }
 
   if (mbps >= 50) {
-    setQualityLabel(uploadQualityEl, "ممتاز للبث المباشر ورفع الملفات الكبيرة", "metric-quality--excellent");
+    setQualityLabel(
+      uploadQualityEl,
+      "ممتاز للبث المباشر ورفع الملفات الكبيرة",
+      "metric-quality--excellent"
+    );
   } else if (mbps >= 20) {
     setQualityLabel(uploadQualityEl, "جيد جداً لرفع الملفات", "metric-quality--very-good");
   } else if (mbps >= 10) {
@@ -163,7 +209,7 @@ function updatePingQualityLabel(ms) {
     return;
   }
 
-  // وصف واضح هل البنق مثقّل أو غير مثقّل
+  // Clear description of loaded / unloaded ping
   if (ms <= 30) {
     setQualityLabel(pingQualityEl, "البنق غير مثقل (ممتاز جداً)", "metric-quality--excellent");
   } else if (ms <= 60) {
@@ -186,11 +232,17 @@ function updatePingQualityLabel(ms) {
 // =========================
 
 async function singlePingSample() {
+  const indexRef = { value: pingServerIndex };
+  const url = pickNextServer(PING_SERVERS, indexRef);
+  pingServerIndex = indexRef.value;
+
+  if (!url) return null;
+
   const { controller, timeoutId } = createAbortControllerWithTimeout(PING_REQUEST_TIMEOUT_MS);
   const start = performance.now();
 
   try {
-    const res = await fetch(`${PING_URL}?t=${Date.now()}`, {
+    const res = await fetch(url + `?t=${Date.now()}` , {
       cache: "no-store",
       mode: "cors",
       signal: controller.signal,
@@ -230,10 +282,17 @@ async function runPingPhase() {
 }
 
 async function singleDownloadSample(controller) {
+  const indexRef = { value: downloadServerIndex };
+  const baseUrl = pickNextServer(DOWNLOAD_SERVERS, indexRef);
+  downloadServerIndex = indexRef.value;
+
+  if (!baseUrl) return null;
+
+  const url = baseUrl + (baseUrl.includes("?") ? "&" : "?") + `r=${Math.random()}`;
   const start = performance.now();
 
   try {
-    const res = await fetch(`${DOWNLOAD_URL}?r=${Math.random()}`, {
+    const res = await fetch(url, {
       cache: "no-store",
       mode: "cors",
       signal: controller.signal,
@@ -241,16 +300,16 @@ async function singleDownloadSample(controller) {
 
     if (!res.ok) throw new Error(`Download HTTP ${res.status}`);
 
-    // نقرأ كل البيانات حتى نعرف حجمها الفعلي
     const reader = res.body?.getReader();
     let receivedBytes = 0;
 
     if (reader) {
-      // Stream القراءة
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        if (value) receivedBytes += value.length;
+        if (value) {
+          receivedBytes += value.length || value.byteLength || 0;
+        }
       }
     } else {
       const buffer = await res.arrayBuffer();
@@ -261,7 +320,7 @@ async function singleDownloadSample(controller) {
     const seconds = (end - start) / 1000;
     if (seconds <= 0 || !isFinite(seconds) || receivedBytes <= 0) return null;
 
-    const mbps = (receivedBytes * 8) / (seconds * 1_000_000); // bits to Mbps
+    const mbps = (receivedBytes * 8) / (seconds * 1_000_000); // bits  Mbps
     return mbps;
   } catch (error) {
     console.warn("Download sample failed", error);
@@ -270,7 +329,9 @@ async function singleDownloadSample(controller) {
 }
 
 async function runParallelDownloadRound() {
-  const { controller, timeoutId } = createAbortControllerWithTimeout(DOWNLOAD_REQUEST_TIMEOUT_MS);
+  const { controller, timeoutId } = createAbortControllerWithTimeout(
+    DOWNLOAD_REQUEST_TIMEOUT_MS
+  );
 
   try {
     const promises = [];
@@ -301,8 +362,7 @@ async function runDownloadPhase() {
     const roundSamples = await runParallelDownloadRound();
     mbpsAll.push(...roundSamples);
 
-    // حماية بسيطة لو صار هناك عدد عينات كبير جداً
-    if (mbpsAll.length > 100) break;
+    if (mbpsAll.length > 100) break; // simple guard
   }
 
   const medianMbps = median(mbpsAll);
@@ -315,8 +375,8 @@ async function runDownloadPhase() {
   return rounded;
 }
 
+// Prebuilt upload payload reused across samples
 const uploadPayload = (() => {
-  // نجهز بيانات عشوائية مرة واحدة لإعادة استخدامها
   const bytes = new Uint8Array(UPLOAD_PAYLOAD_BYTES);
   for (let i = 0; i < bytes.length; i += 1) {
     bytes[i] = Math.floor(Math.random() * 256);
@@ -325,10 +385,17 @@ const uploadPayload = (() => {
 })();
 
 async function singleUploadSample(controller) {
+  const indexRef = { value: uploadServerIndex };
+  const baseUrl = pickNextServer(UPLOAD_SERVERS, indexRef);
+  uploadServerIndex = indexRef.value;
+
+  if (!baseUrl) return null;
+
+  const url = baseUrl + (baseUrl.includes("?") ? "&" : "?") + `r=${Math.random()}`;
   const start = performance.now();
 
   try {
-    const res = await fetch(`${UPLOAD_URL}?r=${Math.random()}`, {
+    const res = await fetch(url, {
       method: "POST",
       body: uploadPayload,
       mode: "cors",
@@ -342,7 +409,7 @@ async function singleUploadSample(controller) {
     const seconds = (end - start) / 1000;
     if (seconds <= 0 || !isFinite(seconds)) return null;
 
-    const mbps = (UPLOAD_PAYLOAD_BYTES * 8) / (seconds * 1_000_000); // bits to Mbps
+    const mbps = (UPLOAD_PAYLOAD_BYTES * 8) / (seconds * 1_000_000); // bits  Mbps
     return mbps;
   } catch (error) {
     console.warn("Upload sample failed", error);
@@ -382,7 +449,7 @@ async function runUploadPhase() {
     const roundSamples = await runParallelUploadRound();
     mbpsAll.push(...roundSamples);
 
-    if (mbpsAll.length > 80) break;
+    if (mbpsAll.length > 80) break; // simple guard
   }
 
   const medianMbps = median(mbpsAll);
@@ -396,7 +463,7 @@ async function runUploadPhase() {
 }
 
 // =========================
-// Orchestrator – Ping → Download → Upload
+// Orchestrator  Ping 13 Download 13 Upload
 // =========================
 
 async function runFullTestSequential() {
@@ -406,31 +473,34 @@ async function runFullTestSequential() {
   startBtn.disabled = true;
 
   resetUI();
-  setStatus("info", "بدأ الاختبار. سيتم قياس البِنغ أولاً ثم التحميل ثم الرفع.");
+  setStatus(
+    "info",
+    "بدأ الاختبار. سيتم قياس البِنغ أولاً ثم التحميل ثم الرفع باستخدام عدة مسارات وسيرفرات عامة."
+  );
 
   let pingMs = null;
   let downloadMbps = null;
   let uploadMbps = null;
 
   try {
-    // 1) Ping first (5s)
-    setPhase("جاري قياس زمن الاستجابة (البِنغ) لمدة تقريبية ٥ ثوانٍ...");
+    // 1) Ping first (155s)
+    setPhase("جاري قياس زمن الاستجابة (البِنغ) لمدة تقريبية ٥ ثوانٍ من عدة سيرفرات...");
     pingMs = await runPingPhase();
   } catch (error) {
     console.warn("Ping phase failed", error);
   }
 
   try {
-    // 2) Download (25s)
-    setPhase("جاري قياس سرعة التحميل لمدة تقريبية ٢٥ ثانية عبر عدة مسارات...");
+    // 2) Download (1525s)
+    setPhase("جاري قياس سرعة التحميل لمدة تقريبية ٢٥ ثانية عبر عدة مسارات وسيرفرات...");
     downloadMbps = await runDownloadPhase();
   } catch (error) {
     console.warn("Download phase failed", error);
   }
 
   try {
-    // 3) Upload (15s)
-    setPhase("جاري قياس سرعة الرفع لمدة تقريبية ١٥ ثانية عبر عدة مسارات...");
+    // 3) Upload (1515s)
+    setPhase("جاري قياس سرعة الرفع لمدة تقريبية ١٥ ثانية عبر عدة مسارات وسيرفرات...");
     uploadMbps = await runUploadPhase();
   } catch (error) {
     console.warn("Upload phase failed", error);
@@ -446,16 +516,18 @@ async function runFullTestSequential() {
   } else if (successfulCount > 0) {
     setStatus(
       "warning",
-      "تم تنفيذ جزء من الاختبار. بعض القياسات لم تنجح بالكامل (غالباً بسبب إعدادات الخادم أو CORS)."
+      "تم تنفيذ جزء من الاختبار. بعض القياسات لم تنجح بالكامل (غالباً بسبب حجب أو إعدادات CORS لبعض السيرفرات)."
     );
-    setPhase("اكتمل جزء من الاختبار. يُفضّل لاحقاً ربط نقاط القياس بخادمك لنتائج أدق.");
+    setPhase(
+      "اكتمل جزء من الاختبار. يمكنك لاحقاً تعديل قائمة السيرفرات أو ربطها بسيرفراتك الخاصة لنتائج أدق."
+    );
   } else {
     setStatus(
       "error",
-      "لم ينجح أي جزء من الاختبار. غالباً السبب من الاتصال أو من إعدادات الخوادم (CORS)، وليس من شكل الموقع نفسه. جرّب لاحقاً تغيير الروابط إلى خادمك وتشغيل الصفحة من خادم (مثل Live Server)."
+      "لم ينجح أي جزء من الاختبار. غالباً السبب من الاتصال أو من حجب/إعدادات الخوادم (CORS)، وليس من شكل الموقع نفسه. جرّب لاحقاً تغيير السيرفرات أو استخدام خادمك الخاص وتشغيل الصفحة من خادم (مثل Live Server)."
     );
     setPhase(
-      "لم يكتمل الاختبار بسبب مشكلة في نقاط القياس أو الاتصال. بعد ضبط الروابط أو تشغيل الصفحة من خادم، أعد المحاولة."
+      "لم يكتمل الاختبار بسبب مشكلة في نقاط القياس أو الاتصال. بعد ضبط السيرفرات أو تشغيل الصفحة من خادم، أعد المحاولة."
     );
   }
 
@@ -472,5 +544,5 @@ startBtn?.addEventListener("click", () => {
   runFullTestSequential();
 });
 
-// ضبط الحالة الأولية عند تحميل الصفحة
+// Initial UI state
 resetUI();
