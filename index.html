@@ -10,24 +10,26 @@
     <div class="app">
       <header class="app-header">
         <h1>اختبار سرعة الإنترنت</h1>
-        <p class="subtitle">قياس دقيق للتحميل، الرفع، والبِنغ</p>
+        <p class="subtitle">قياس احترافي لسرعة التحميل والرفع وزمن الاستجابة</p>
       </header>
 
       <main class="app-main">
         <section class="controls-section">
-          <button id="startTestBtn" class="primary-btn">ابدأ الاختبار</button>
-          <p id="statusText" class="status-text">اضغط "ابدأ الاختبار" لبدء الفحص.</p>
+          <button id="startTestBtn" class="primary-btn">ابدأ الاختبار الآن</button>
+          <p id="statusText" class="status-text">
+            اضغط على زر "ابدأ الاختبار الآن" لبدء الفحص.
+          </p>
         </section>
 
         <section class="results-grid">
-          <!-- Download Gauge -->
-          <div class="metric-card">
+          <!-- Download -->
+          <article class="metric-card metric-download">
             <h2 class="metric-title">سرعة التحميل</h2>
             <div class="gauge-wrapper">
               <div class="gauge" data-metric="download">
                 <svg viewBox="0 0 120 120" class="gauge-svg">
                   <circle class="gauge-bg" cx="60" cy="60" r="50" />
-                  <circle class="gauge-progress" cx="60" cy="60" r="50" />
+                  <circle class="gauge-progress" cx="60" cy="60" r="50"></circle>
                 </svg>
                 <div class="gauge-value">
                   <span id="downloadValue">0.0</span>
@@ -36,16 +38,16 @@
               </div>
             </div>
             <p id="downloadQuality" class="quality-text">لم يبدأ بعد</p>
-          </div>
+          </article>
 
-          <!-- Upload Gauge -->
-          <div class="metric-card">
+          <!-- Upload -->
+          <article class="metric-card metric-upload">
             <h2 class="metric-title">سرعة الرفع</h2>
             <div class="gauge-wrapper">
               <div class="gauge" data-metric="upload">
                 <svg viewBox="0 0 120 120" class="gauge-svg">
                   <circle class="gauge-bg" cx="60" cy="60" r="50" />
-                  <circle class="gauge-progress" cx="60" cy="60" r="50" />
+                  <circle class="gauge-progress" cx="60" cy="60" r="50"></circle>
                 </svg>
                 <div class="gauge-value">
                   <span id="uploadValue">0.0</span>
@@ -54,16 +56,16 @@
               </div>
             </div>
             <p id="uploadQuality" class="quality-text">لم يبدأ بعد</p>
-          </div>
+          </article>
 
-          <!-- Ping Gauge -->
-          <div class="metric-card">
+          <!-- Ping -->
+          <article class="metric-card metric-ping">
             <h2 class="metric-title">زمن الاستجابة (البِنغ)</h2>
             <div class="gauge-wrapper">
               <div class="gauge" data-metric="ping">
                 <svg viewBox="0 0 120 120" class="gauge-svg">
                   <circle class="gauge-bg" cx="60" cy="60" r="50" />
-                  <circle class="gauge-progress" cx="60" cy="60" r="50" />
+                  <circle class="gauge-progress" cx="60" cy="60" r="50"></circle>
                 </svg>
                 <div class="gauge-value">
                   <span id="pingValue">0</span>
@@ -72,13 +74,13 @@
               </div>
             </div>
             <p id="pingQuality" class="quality-text">لم يبدأ بعد</p>
-          </div>
+          </article>
         </section>
       </main>
 
       <footer class="app-footer">
         <p>
-          للحصول على أعلى دقة ممكنة يُفضّل ربط الاختبار بسيرفر خاص بك وتعديل الروابط في
+          للحصول على أعلى دقة ممكنة، يُفضَّل ربط الاختبار بسيرفر خاص بك وتعديل الروابط في
           <code>script.js</code>.
         </p>
       </footer>
