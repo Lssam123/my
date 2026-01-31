@@ -1,210 +1,294 @@
-// Simple front-end internet speed test (approximate only).
-// This implementation uses public endpoints by default, but you SHOULD
-// replace them with your own backend/API endpoints for more reliable results
-// and to avoid possible CORS or rate-limit issues.
+/*
+  Internet speed test (front-end approximation)
+  -------------------------------------------
+  - All visible text is Arabic for the UI.
+  - Logic is written in English and is structured for future backend integration.
 
-const DOWNLOAD_TEST_URL = "https://speed.hetzner.de/10MB.bin";
-// Small, fast endpoint to approximate ping. You can point this to your own API.
-const PING_TEST_URL = "https://www.google.com/generate_204";
-// Echo endpoint for upload test (replace with your own server-side URL).
-const UPLOAD_TEST_URL = "https://httpbin.org/post";
+  IMPORTANT:
+  - For best accuracy, replace the placeholder URLs below with your own backend
+    endpoints that are hosted close to your users.
+  - Make sure CORS is configured correctly on your server, otherwise the
+    requests may fail from the browser.
+*/
 
-// Approximate payload size for upload test (bytes)
+// === Configuration ===============================================
+
+// Download: file endpoint used for measuring download speed.
+// Choose a file of 5–20 MB on your own server for more stable results.
+const DOWNLOAD_URL = "https://speed.hetzner.de/10MB.bin"; // TODO: replace with your own endpoint
+
+// Upload: API endpoint that accepts POST requests with binary payload.
+const UPLOAD_URL = "https://httpbin.org/post"; // TODO: replace with your own endpoint
+
+// Ping: lightweight endpoint used just to measure round-trip latency.
+const PING_URL = "https://www.google.com/generate_204"; // TODO: replace with your own endpoint
+
+// Number of samples for each metric to stabilize results.
+const PING_SAMPLES = 6;
+const DOWNLOAD_SAMPLES = 3;
+const UPLOAD_SAMPLES = 3;
+
+// Size of generated payload for upload test (in bytes).
 const UPLOAD_SIZE_BYTES = 2 * 1024 * 1024; // 2 MB
 
-const startTestBtn = document.getElementById("startTestBtn");
+// Expected ranges for the gauges (adjust to your needs).
+const EXPECTED_MAX_DOWNLOAD_MBPS = 300; // 0–300 Mbps
+const EXPECTED_MAX_UPLOAD_MBPS = 100; // 0–100 Mbps
+const EXPECTED_MAX_PING_MS = 200; // 0–200 ms (lower is better)
+
+// === DOM elements ===============================================
+
+const startButton = document.getElementById("startTestBtn");
 const statusText = document.getElementById("statusText");
 
 const downloadValueEl = document.getElementById("downloadValue");
 const uploadValueEl = document.getElementById("uploadValue");
 const pingValueEl = document.getElementById("pingValue");
 
+const downloadCard = document.getElementById("downloadCard");
+const uploadCard = document.getElementById("uploadCard");
+const pingCard = document.getElementById("pingCard");
+
+const gaugeDownload = document.querySelector('.meter-gauge[data-metric="download"]');
+const gaugeUpload = document.querySelector('.meter-gauge[data-metric="upload"]');
+const gaugePing = document.querySelector('.meter-gauge[data-metric="ping"]');
+
 let isRunning = false;
 
-const metricCards = {
-  download: document.getElementById("downloadCard"),
-  upload: document.getElementById("uploadCard"),
-  ping: document.getElementById("pingCard"),
-};
+// === Helpers =====================================================
 
-function setStatus(state, messageAr, messageEn) {
+function setStatus(state, text) {
   statusText.classList.remove("status--idle", "status--running", "status--success", "status--error");
   statusText.classList.add(`status--${state}`);
-  statusText.innerHTML = `
-    ${messageAr}
-    ${messageEn}
-  `;
+  statusText.textContent = text;
 }
 
-function resetValues() {
+function resetUI() {
   downloadValueEl.textContent = "--";
   uploadValueEl.textContent = "--";
   pingValueEl.textContent = "--";
-}
 
-function setMetricValue(el, value, fractionDigits = 2) {
-  if (typeof value !== "number" || !isFinite(value)) {
-    el.textContent = "--";
-    return;
-  }
-  el.textContent = value.toFixed(fractionDigits);
-}
+  setGaugeValue(gaugeDownload, 0);
+  setGaugeValue(gaugeUpload, 0);
+  setGaugeValue(gaugePing, 0);
 
-function activateCard(activeKey) {
-  Object.entries(metricCards).forEach(([key, card]) => {
-    if (!card) return;
-    card.classList.toggle("is-active", key === activeKey);
+  [downloadCard, uploadCard, pingCard].forEach((card) => {
+    if (card) card.classList.remove("is-active");
   });
 }
 
-// Ping test: perform several small requests and average the response time.
-async function testPing(attempts = 5) {
+function activateCard(card) {
+  [downloadCard, uploadCard, pingCard].forEach((c) => {
+    if (!c) return;
+    c.classList.toggle("is-active", c === card);
+  });
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function median(values) {
+  const arr = values.slice().sort((a, b) => a - b);
+  const mid = Math.floor(arr.length / 2);
+  if (arr.length === 0) return NaN;
+  if (arr.length % 2 === 0) {
+    return (arr[mid - 1] + arr[mid]) / 2;
+  }
+  return arr[mid];
+}
+
+// Convert a numeric value into a gauge angle (0–270 degrees).
+function valueToAngle(value, maxValue, invert = false) {
+  if (!isFinite(value) || value <= 0) return 0;
+  const ratioRaw = value / maxValue;
+  const ratio = clamp(ratioRaw, 0, 1);
+  const angle = 270 * ratio;
+  if (invert) {
+    // For ping, lower is better → invert the scale.
+    return 270 - angle;
+  }
+  return angle;
+}
+
+function setGaugeValue(gaugeEl, angleDeg) {
+  if (!gaugeEl) return;
+  const safeAngle = clamp(angleDeg, 0, 270);
+  gaugeEl.style.setProperty("--gauge-fill", `${safeAngle}deg`);
+}
+
+function setMetricNumber(el, value, fractionDigits) {
+  if (!isFinite(value) || value < 0) {
+    el.textContent = "--";
+  } else {
+    el.textContent = value.toFixed(fractionDigits);
+  }
+}
+
+// === Measurement functions =======================================
+
+// Ping: multiple small requests and median of timings (ms).
+async function measurePing(samples = PING_SAMPLES) {
   const timings = [];
 
-  for (let i = 0; i < attempts; i += 1) {
+  for (let i = 0; i < samples; i += 1) {
     const start = performance.now();
     try {
-      // We use "no-store" to avoid cached responses affecting timing.
-      await fetch(`${PING_TEST_URL}?cacheBust=${Math.random()}`, {
+      await fetch(`${PING_URL}?t=${Date.now()}-${i}`, {
         cache: "no-store",
         mode: "cors",
       });
       const end = performance.now();
       timings.push(end - start);
     } catch (error) {
-      console.error("Ping attempt failed:", error);
+      console.error("Ping attempt failed", error);
     }
   }
 
   if (!timings.length) {
-    throw new Error("Ping test failed (no successful attempts).");
+    throw new Error("لم تنجح أي محاولة لقياس البينج.");
   }
 
-  const sum = timings.reduce((total, t) => total + t, 0);
-  return sum / timings.length; // ms
+  return median(timings); // ms
 }
 
-// Download test: download a known-size file and measure how long it takes.
-async function testDownload(url = DOWNLOAD_TEST_URL) {
-  const startTime = performance.now();
-  const response = await fetch(`${url}?cacheBust=${Math.random()}`, {
-    cache: "no-store",
-    mode: "cors",
-  });
+// Download: stream the response and measure time + bytes.
+async function measureDownload(samples = DOWNLOAD_SAMPLES) {
+  const results = [];
 
-  if (!response.ok || !response.body) {
-    throw new Error("Download test failed (response not OK or no body).");
+  for (let i = 0; i < samples; i += 1) {
+    const testUrl = `${DOWNLOAD_URL}?t=${Date.now()}-${i}`;
+    const startTime = performance.now();
+    const response = await fetch(testUrl, {
+      cache: "no-store",
+      mode: "cors",
+    });
+
+    if (!response.ok || !response.body) {
+      throw new Error("فشل اختبار التحميل (الاستجابة غير ناجحة).");
+    }
+
+    const reader = response.body.getReader();
+    let bytes = 0;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      bytes += value.byteLength;
+    }
+
+    const endTime = performance.now();
+    const seconds = (endTime - startTime) / 1000;
+    if (seconds === 0) continue;
+
+    const bits = bytes * 8;
+    const mbps = bits / seconds / 1_000_000; // bits → megabits
+    results.push(mbps);
   }
 
-  const reader = response.body.getReader();
-  let bytesReceived = 0;
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    bytesReceived += value.byteLength;
+  if (!results.length) {
+    throw new Error("فشل اختبار التحميل.");
   }
 
-  const endTime = performance.now();
-  const durationSeconds = (endTime - startTime) / 1000;
-
-  if (durationSeconds === 0) {
-    throw new Error("Download test failed (zero duration).");
-  }
-
-  // bits per second -> megabits per second (Mbps)
-  const bitsLoaded = bytesReceived * 8;
-  const mbps = bitsLoaded / durationSeconds / 1_000_000;
-  return mbps;
+  return median(results);
 }
 
-// Upload test: upload a generated payload and measure how long it takes.
-async function testUpload(url = UPLOAD_TEST_URL, sizeBytes = UPLOAD_SIZE_BYTES) {
-  // Generate a binary payload of the requested size.
-  const payload = new Uint8Array(sizeBytes);
+// Upload: send a generated binary payload and measure the duration.
+async function measureUpload(samples = UPLOAD_SAMPLES) {
+  const results = [];
+
+  // Prepare payload once and reuse it for all samples.
+  const payload = new Uint8Array(UPLOAD_SIZE_BYTES);
   if (window.crypto && window.crypto.getRandomValues) {
     window.crypto.getRandomValues(payload);
   } else {
-    // Fallback: fill with pseudo-random data.
     for (let i = 0; i < payload.length; i += 1) {
       payload[i] = Math.floor(Math.random() * 256);
     }
   }
 
-  const startTime = performance.now();
-  const response = await fetch(`${url}?cacheBust=${Math.random()}`, {
-    method: "POST",
-    mode: "cors",
-    body: payload,
-    headers: {
-      "Content-Type": "application/octet-stream",
-    },
-  });
-  const endTime = performance.now();
+  for (let i = 0; i < samples; i += 1) {
+    const startTime = performance.now();
+    const response = await fetch(`${UPLOAD_URL}?t=${Date.now()}-${i}`, {
+      method: "POST",
+      mode: "cors",
+      body: payload,
+      headers: {
+        "Content-Type": "application/octet-stream",
+      },
+    });
+    const endTime = performance.now();
 
-  if (!response.ok) {
-    throw new Error("Upload test failed (response not OK).");
+    if (!response.ok) {
+      throw new Error("فشل اختبار الرفع (الاستجابة غير ناجحة).");
+    }
+
+    const seconds = (endTime - startTime) / 1000;
+    if (seconds === 0) continue;
+
+    const bits = UPLOAD_SIZE_BYTES * 8;
+    const mbps = bits / seconds / 1_000_000;
+    results.push(mbps);
   }
 
-  const durationSeconds = (endTime - startTime) / 1000;
-  if (durationSeconds === 0) {
-    throw new Error("Upload test failed (zero duration).");
+  if (!results.length) {
+    throw new Error("فشل اختبار الرفع.");
   }
 
-  const bitsSent = sizeBytes * 8;
-  const mbps = bitsSent / durationSeconds / 1_000_000;
-  return mbps;
+  return median(results);
 }
+
+// === Main flow ===================================================
 
 async function runSpeedTest() {
   if (isRunning) return;
   isRunning = true;
-  startTestBtn.disabled = true;
-  resetValues();
+  startButton.disabled = true;
 
-  setStatus(
-    "جاري قياس سرعة الاتصال بالإنترنت، يُرجى الانتظار...",
-    "Testing your internet speed, please wait..."
-  );
+  resetUI();
+  setStatus("running", "جاري تنفيذ اختبار السرعة، يرجى الانتظار...");
 
   try {
     // 1) Ping
-    activateCard("ping");
-    const pingMs = await testPing();
-    setMetricValue(pingValueEl, pingMs, 0);
+    activateCard(pingCard);
+    const pingMs = await measurePing();
+    setMetricNumber(pingValueEl, pingMs, 0);
+    const pingAngle = valueToAngle(pingMs, EXPECTED_MAX_PING_MS, true);
+    setGaugeValue(gaugePing, pingAngle);
 
     // 2) Download
-    activateCard("download");
-    const downloadMbps = await testDownload();
-    setMetricValue(downloadValueEl, downloadMbps, 2);
+    activateCard(downloadCard);
+    const downloadMbps = await measureDownload();
+    setMetricNumber(downloadValueEl, downloadMbps, 1);
+    const downloadAngle = valueToAngle(downloadMbps, EXPECTED_MAX_DOWNLOAD_MBPS, false);
+    setGaugeValue(gaugeDownload, downloadAngle);
 
     // 3) Upload
-    activateCard("upload");
-    const uploadMbps = await testUpload();
-    setMetricValue(uploadValueEl, uploadMbps, 2);
+    activateCard(uploadCard);
+    const uploadMbps = await measureUpload();
+    setMetricNumber(uploadValueEl, uploadMbps, 1);
+    const uploadAngle = valueToAngle(uploadMbps, EXPECTED_MAX_UPLOAD_MBPS, false);
+    setGaugeValue(gaugeUpload, uploadAngle);
 
-    setStatus(
-      "تم إكمال الاختبار بنجاح ✅",
-      "Test completed successfully ✅"
-    );
+    setStatus("success", "تم إكمال اختبار السرعة بنجاح ✅");
   } catch (error) {
-    console.error("Speed test failed:", error);
+    console.error("Speed test failed", error);
     setStatus(
-      "تعذّر إكمال الاختبار. قد تكون هناك مشكلة في الاتصال أو في إعداد نقطة الاختبار. جرّب لاحقًا أو حدّث عناوين الـ API.",
-      "The test could not be completed. There may be a connectivity or test-endpoint issue. Try again later or update the API endpoints."
+      "error",
+      "تعذّر إكمال الاختبار. تحقق من اتصال الإنترنت أو عناوين نقاط الاختبار ثم أعد المحاولة."
     );
   } finally {
     isRunning = false;
-    startTestBtn.disabled = false;
+    startButton.disabled = false;
     activateCard(null);
   }
 }
 
-// Attach event listener
-startTestBtn.addEventListener("click", runSpeedTest);
+// === Event listeners =============================================
 
-// Optional: run an automatic test when the page loads.
-// Comment this out if you prefer manual-only testing.
+startButton.addEventListener("click", runSpeedTest);
+
+// Optional: run automatically on page load (disable if you prefer manual only).
 // window.addEventListener("load", () => {
 //   runSpeedTest();
 // });
