@@ -1,82 +1,80 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>اختبار سرعة الإنترنت | Internet Speed Test</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <div class="app">
-    <header class="app-header">
-      <h1 class="app-title">
-        اختبار سرعة الإنترنت
-        <span class="app-title-en">Internet Speed Test</span>
-      </h1>
-      <p class="app-subtitle">
-        قِس سرعة التحميل، سرعة الرفع، والبينج من متصفحك مباشرةً.
-        <span class="app-subtitle-en">Measure download, upload, and ping directly from your browser.</span>
-      </p>
-    </header>
-
-    <main class="app-main">
-      <section class="controls">
-        <button id="startTestBtn" class="btn-primary">
-          ابدأ الاختبار
-          <span class="btn-label-en">Start Test</span>
-        </button>
-        <p id="statusText" class="status status--idle">
-          جاهز للاختبار
-          <span class="status-en">Ready to start the test.</span>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>اختبار سرعة الإنترنت</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="app-header">
+        <h1 class="app-title">اختبار سرعة الإنترنت</h1>
+        <p class="app-subtitle">
+          قياس سرعة التحميل، سرعة الرفع، وزمن الاستجابة (البينج) مباشرة من المتصفح.
         </p>
-      </section>
+      </header>
 
-      <section class="results">
-        <div class="metric-card" id="downloadCard">
-          <h2 class="metric-title">
-            سرعة التحميل
-            <span class="metric-title-en">Download Speed</span>
-          </h2>
-          <div class="metric-value">
-            <span id="downloadValue">--</span>
-            <span class="metric-unit">Mbps</span>
+      <main class="app-main">
+        <section class="dashboard">
+          <div class="metric-card metric-card--download" id="downloadCard">
+            <h2 class="metric-title">سرعة التحميل</h2>
+            <div class="meter">
+              <div class="meter-gauge" data-metric="download">
+                <div class="meter-gauge-inner">
+                  <span id="downloadValue" class="meter-value">--</span>
+                  <span class="meter-unit">ميغابت/ثانية</span>
+                </div>
+              </div>
+            </div>
+            <p class="metric-hint">كلما كانت أعلى كان التحميل أسرع.</p>
           </div>
-        </div>
 
-        <div class="metric-card" id="uploadCard">
-          <h2 class="metric-title">
-            سرعة الرفع
-            <span class="metric-title-en">Upload Speed</span>
-          </h2>
-          <div class="metric-value">
-            <span id="uploadValue">--</span>
-            <span class="metric-unit">Mbps</span>
+          <div class="metric-card metric-card--upload" id="uploadCard">
+            <h2 class="metric-title">سرعة الرفع</h2>
+            <div class="meter">
+              <div class="meter-gauge" data-metric="upload">
+                <div class="meter-gauge-inner">
+                  <span id="uploadValue" class="meter-value">--</span>
+                  <span class="meter-unit">ميغابت/ثانية</span>
+                </div>
+              </div>
+            </div>
+            <p class="metric-hint">مهم لرفع الملفات والبث المباشر.</p>
           </div>
-        </div>
 
-        <div class="metric-card" id="pingCard">
-          <h2 class="metric-title">
-            البينج
-            <span class="metric-title-en">Ping / Latency</span>
-          </h2>
-          <div class="metric-value">
-            <span id="pingValue">--</span>
-            <span class="metric-unit">ms</span>
+          <div class="metric-card metric-card--ping" id="pingCard">
+            <h2 class="metric-title">زمن الاستجابة (البينج)</h2>
+            <div class="meter">
+              <div class="meter-gauge" data-metric="ping">
+                <div class="meter-gauge-inner">
+                  <span id="pingValue" class="meter-value">--</span>
+                  <span class="meter-unit">مللي ثانية</span>
+                </div>
+              </div>
+            </div>
+            <p class="metric-hint">كلما كان أقل كانت الاستجابة أسرع.</p>
           </div>
-        </div>
-      </section>
-    </main>
+        </section>
 
-    <footer class="app-footer">
-      <p>
-        هذه النتائج تقريبية وتعتمد على متصفحك ونقطة الاختبار.
-        <span class="app-footer-en">
-          Results are approximate and depend on your browser and the test endpoint.
-        </span>
-      </p>
-    </footer>
-  </div>
+        <section class="controls">
+          <button id="startTestBtn" class="btn-primary">ابدأ الاختبار</button>
+          <p id="statusText" class="status status--idle">
+            جاهز لبدء الاختبار. تأكد من اتصالك بالإنترنت ثم اضغط زر "ابدأ الاختبار".
+          </p>
+          <p class="status-note">
+            ملاحظة: هذه النتائج تقريبية وتعتمد على المتصفح ونقاط الاختبار المستخدمة.
+          </p>
+        </section>
+      </main>
 
-  <script src="script.js" defer></script>
-</body>
+      <footer class="app-footer">
+        <p>
+          للحصول على دقة أعلى، يفضّل ربط هذا الاختبار بخادم (Backend) مخصص لقياس سرعة الاتصال.
+        </p>
+      </footer>
+    </div>
+
+    <script src="script.js" defer></script>
+  </body>
 </html>
