@@ -1,113 +1,109 @@
-const API = {
-    dl: "https://speed.cloudflare.com/__down?bytes=100000000", // 100MB لضمان استمرار التدفق
+const ENDPOINTS = {
+    download: "https://speed.cloudflare.com/__down?bytes=150000000", // 150MB
     ping: "https://1.1.1.1/cdn-cgi/trace",
-    ul: "https://httpbin.org/post"
+    upload: "https://httpbin.org/post"
 };
 
-async function launchSequence() {
-    const btn = document.getElementById('start-btn');
-    const status = document.getElementById('status-bar');
+async function startSystem() {
+    const btn = document.getElementById('run-btn');
+    const status = document.getElementById('status');
     btn.disabled = true;
 
-    // 1. فحص البينق الخامل (5 ثوانٍ)
-    status.innerText = "Phase 1: Measuring Idle Latency (5s)...";
-    document.getElementById('ping-card').classList.add('active');
-    const idlePing = await runPingTest(5000);
-    document.getElementById('val-ping').innerText = idlePing.toFixed(1);
-    document.getElementById('ping-card').classList.remove('active');
+    // 1. فحص الاستجابة الخاملة (Unloaded Ping)
+    status.innerText = "جاري فحص جودة الاتصال...";
+    document.getElementById('card-ping').classList.add('active');
+    const idlePing = await measurePing(5000); // 5 ثواني
+    document.getElementById('val-ping').innerText = idlePing.toFixed(0);
+    document.getElementById('card-ping').classList.remove('active');
 
-    // 2. فحص التحميل + البينق المثقل (15 ثانية)
-    status.innerText = "Phase 2: Download & Loaded Ping (15s)...";
-    document.getElementById('loaded-card').classList.add('active');
-    const dlResult = await runDownloadTest(15000);
-    document.getElementById('hero-speed').innerText = dlResult.speed;
-    document.getElementById('val-loaded').innerText = dlResult.loadedPing.toFixed(1);
-    document.getElementById('loaded-card').classList.remove('active');
+    // 2. فحص التحميل والاستجابة المُثقلة (Loaded Ping)
+    status.innerText = "جاري فحص سرعة الاستقبال...";
+    document.getElementById('card-loaded').classList.add('active');
+    const dlResult = await measureDownload(15000); // 15 ثانية
+    document.getElementById('dl-speed').innerText = dlResult.speed;
+    document.getElementById('val-loaded').innerText = dlResult.loadedPing.toFixed(0);
+    document.getElementById('card-loaded').classList.remove('active');
 
-    // 3. فحص الرفع (15 ثانية)
-    status.innerText = "Phase 3: Measuring Upload Speed (15s)...";
-    document.getElementById('upload-card').classList.add('active');
-    const ulSpeed = await runUploadTest(15000);
+    // 3. فحص الرفع
+    status.innerText = "جاري فحص سرعة الإرسال...";
+    document.getElementById('card-ul').classList.add('active');
+    const ulSpeed = await measureUpload(15000); // 15 ثانية
     document.getElementById('val-upload').innerText = ulSpeed;
-    document.getElementById('upload-card').classList.remove('active');
+    document.getElementById('card-ul').classList.remove('active');
 
-    status.innerText = "Test Complete. Accuracy Verified.";
+    status.innerText = "اكتمل الفحص بنجاح";
     btn.disabled = false;
 }
 
-// دالة البينق الخامل
-async function runPingTest(duration) {
-    let pings = [];
+// دالة قياس البينق
+async function measurePing(duration) {
+    let results = [];
     const start = Date.now();
     while (Date.now() - start < duration) {
-        const pStart = performance.now();
-        await fetch(API.ping, { mode: 'no-cors', cache: 'no-cache' });
-        pings.push(performance.now() - pStart);
-        await new Promise(r => setTimeout(r, 200));
+        const t0 = performance.now();
+        await fetch(ENDPOINTS.ping, { mode: 'no-cors', cache: 'no-cache' });
+        results.push(performance.now() - t0);
+        await new Promise(r => setTimeout(r, 150));
     }
-    return pings.reduce((a, b) => a + b) / pings.length;
+    return results.reduce((a, b) => a + b) / results.length;
 }
 
-// دالة التحميل المتقدمة (Parallel Threads + Time-based)
-async function runDownloadTest(duration) {
-    let totalBytes = 0;
+// دالة التحميل المتقدمة
+async function measureDownload(duration) {
+    let bytesReceived = 0;
     let loadedPings = [];
     const startTime = performance.now();
-    const controller = new AbortController();
+    const abort = new AbortController();
 
-    // قياس البينق تحت الضغط
     const pingTask = setInterval(async () => {
-        const pStart = performance.now();
-        await fetch(API.ping, { mode: 'no-cors' });
-        loadedPings.push(performance.now() - pStart);
-    }, 250);
+        const t0 = performance.now();
+        await fetch(ENDPOINTS.ping, { mode: 'no-cors' });
+        loadedPings.push(performance.now() - t0);
+    }, 300);
 
     const threads = 6;
-    const downloadWorkers = Array(threads).fill(0).map(async () => {
+    const workers = Array(threads).fill(0).map(async () => {
         while (performance.now() - startTime < duration) {
             try {
-                const response = await fetch(API.dl + "&cb=" + Math.random(), { signal: controller.signal });
-                const reader = response.body.getReader();
+                const res = await fetch(ENDPOINTS.download + "&r=" + Math.random(), { signal: abort.signal });
+                const reader = res.body.getReader();
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done || (performance.now() - startTime >= duration)) break;
-                    totalBytes += value.length;
+                    bytesReceived += value.length;
                     
-                    // تحديث العداد العلوي فقط
                     const elapsed = (performance.now() - startTime) / 1000;
-                    const mbps = ((totalBytes * 8) / (1024 * 1024) / elapsed).toFixed(1);
-                    document.getElementById('hero-speed').innerText = mbps;
+                    const mbps = ((bytesReceived * 8) / (1024 * 1024) / elapsed).toFixed(1);
+                    document.getElementById('dl-speed').innerText = mbps;
                 }
             } catch (e) { break; }
         }
     });
 
     await new Promise(r => setTimeout(r, duration));
-    controller.abort();
+    abort.abort();
     clearInterval(pingTask);
 
     return {
-        speed: ((totalBytes * 8) / (1024 * 1024) / (duration / 1000)).toFixed(1),
+        speed: ((bytesReceived * 8) / (1024 * 1024) / (duration / 1000)).toFixed(1),
         loadedPing: loadedPings.length ? (loadedPings.reduce((a,b)=>a+b)/loadedPings.length) : 0
     };
 }
 
 // دالة الرفع المتقدمة
-async function runUploadTest(duration) {
-    let uploadedBytes = 0;
+async function measureUpload(duration) {
+    let bytesUploaded = 0;
     const startTime = performance.now();
-    const dataChunk = new Uint8Array(1024 * 1024); // 1MB chunk
+    const chunk = new Uint8Array(1024 * 1024); // 1MB
 
     while (performance.now() - startTime < duration) {
         try {
-            await fetch(API.ul, { method: 'POST', body: dataChunk, mode: 'no-cors' });
-            uploadedBytes += dataChunk.length;
-            
-            // تحديث عداد الرفع في مكانه
+            await fetch(ENDPOINTS.upload, { method: 'POST', body: chunk, mode: 'no-cors' });
+            bytesUploaded += chunk.length;
             const elapsed = (performance.now() - startTime) / 1000;
-            const mbps = ((uploadedBytes * 8) / (1024 * 1024) / elapsed).toFixed(1);
+            const mbps = ((bytesUploaded * 8) / (1024 * 1024) / elapsed).toFixed(1);
             document.getElementById('val-upload').innerText = mbps;
         } catch (e) { break; }
     }
-    return ((uploadedBytes * 8) / (1024 * 1024) / (duration / 1000)).toFixed(1);
+    return ((bytesUploaded * 8) / (1024 * 1024) / (duration / 1000)).toFixed(1);
 }
