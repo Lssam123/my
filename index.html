@@ -1,89 +1,63 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>اختبار سرعة الإنترنت</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <div class="app">
-      <header class="app-header">
-        <h1 class="app-title">اختبار سرعة الإنترنت</h1>
-        <p class="app-subtitle">
-          قياس تقريبي لسرعة التحميل، سرعة الرفع، وزمن الاستجابة (البِنغ) مع واجهة عربية واضحة.
-        </p>
-      </header>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpeedTest Elite | قياس السرعة الاحترافي</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --accent: #00d2ff; --bg: #060b19; --glass: rgba(255, 255, 255, 0.05); }
+        body {
+            background-color: var(--bg); color: white; font-family: 'Segoe UI', sans-serif;
+            margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh;
+            background: radial-gradient(circle at center, #111d35 0%, #060b19 100%);
+        }
+        .app-container {
+            width: 90%; max-width: 500px; background: var(--glass); padding: 30px;
+            border-radius: 30px; backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5); text-align: center;
+        }
+        .main-gauge {
+            width: 220px; height: 220px; border-radius: 50%; margin: 20px auto;
+            border: 5px solid #1e293b; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; position: relative;
+            box-shadow: 0 0 30px rgba(0, 210, 255, 0.1);
+        }
+        .speed-number { font-size: 3.5rem; font-weight: 800; color: var(--accent); line-height: 1; }
+        .unit { color: #64748b; font-size: 1rem; margin-top: 5px; }
+        .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 30px; }
+        .result-box { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 15px; }
+        .label { font-size: 0.8rem; color: #94a3b8; margin-bottom: 5px; }
+        .val { font-size: 1.2rem; font-weight: bold; color: white; }
+        .go-btn {
+            width: 100px; height: 100px; border-radius: 50%; border: none;
+            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            color: #060b19; font-weight: bold; font-size: 1.2rem; cursor: pointer;
+            margin-top: 20px; transition: 0.3s; box-shadow: 0 10px 20px rgba(0, 210, 255, 0.3);
+        }
+        .go-btn:hover { transform: scale(1.05); box-shadow: 0 15px 30px rgba(0, 210, 255, 0.5); }
+        .go-btn:disabled { opacity: 0.5; cursor: wait; }
+        #chart-area { height: 120px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <h2>SpeedTest Elite</h2>
+        <div class="main-gauge">
+            <div id="display-speed" class="speed-number">0</div>
+            <div class="unit">Mbps</div>
+        </div>
+        
+        <button id="run-btn" class="go-btn">GO</button>
 
-      <main class="app-main">
-        <section class="controls">
-          <button id="startTestBtn" class="btn-primary">ابدأ الاختبار الآن</button>
-          <p id="statusText" class="status status--idle">
-            جاهز لبدء الاختبار. تأكد من اتصالك بالإنترنت ثم اضغط زر "ابدأ الاختبار الآن".
-          </p>
-          <p id="phaseText" class="phase-text">لم يبدأ الاختبار بعد.</p>
-          <p class="status-note">
-            ملاحظة: هذا الاختبار يعمل بالكامل من المتصفح ويعطي نتائج تقريبية. للحصول على دقة حقيقية أعلى،
-            اربطه لاحقاً بخادم (Backend) خاص بك وغيّر عناوين القياس في script.js.
-          </p>
-        </section>
-
-        <section class="dashboard">
-          <!-- Upload (يسار على الشاشات الكبيرة) -->
-          <article class="metric-card metric-card--side metric-card--upload" id="uploadCard">
-            <h2 class="metric-title">سرعة الرفع</h2>
-            <div class="meter">
-              <div class="meter-gauge" data-metric="upload">
-                <div class="meter-gauge-inner">
-                  <span id="uploadValue" class="meter-value">--</span>
-                  <span class="meter-unit">ميغابت/ثانية</span>
-                </div>
-              </div>
+        <div class="results-grid">
+            <div class="result-box"><div class="label">PING</div><div id="ping-val" class="val">--</div><small>ms</small></div>
+            <div class="result-box"><div class="label">JITTER</div><div id="jitter-val" class="val">--</div><small>ms</small></div>
+            <div class="result-box" style="grid-column: span 2;">
+                <canvas id="miniChart"></canvas>
             </div>
-            <p class="metric-hint">مهم لرفع الملفات، النسخ الاحتياطي، والبث المباشر.</p>
-            <p id="uploadQuality" class="metric-quality">لم يبدأ بعد</p>
-          </article>
-
-          <!-- Download (في الوسط وبحجم أكبر) -->
-          <article class="metric-card metric-card--center metric-card--download" id="downloadCard">
-            <h2 class="metric-title">سرعة التحميل</h2>
-            <div class="meter meter--large">
-              <div class="meter-gauge" data-metric="download">
-                <div class="meter-gauge-inner">
-                  <span id="downloadValue" class="meter-value meter-value--large">--</span>
-                  <span class="meter-unit">ميغابت/ثانية</span>
-                </div>
-              </div>
-            </div>
-            <p class="metric-hint">كلما كانت أعلى كان تحميل الملفات والفيديو أسرع.</p>
-            <p id="downloadQuality" class="metric-quality">لم يبدأ بعد</p>
-          </article>
-
-          <!-- Ping (يمين على الشاشات الكبيرة) -->
-          <article class="metric-card metric-card--side metric-card--ping" id="pingCard">
-            <h2 class="metric-title">زمن الاستجابة (البِنغ)</h2>
-            <div class="meter">
-              <div class="meter-gauge" data-metric="ping">
-                <div class="meter-gauge-inner">
-                  <span id="pingValue" class="meter-value">--</span>
-                  <span class="meter-unit">مللي ثانية</span>
-                </div>
-              </div>
-            </div>
-            <p class="metric-hint">كلما كان أقل كانت الألعاب والتصفح أكثر سلاسة.</p>
-            <p id="pingQuality" class="metric-quality">لم يبدأ بعد</p>
-          </article>
-        </section>
-      </main>
-
-      <footer class="app-footer">
-        <p>
-          لتحسين الدقة بشكل كبير، غيّر قيم PING_URL وDOWNLOAD_URL وUPLOAD_URL
-          في script.js إلى روابط من خادمك الخاص وفعّل CORS.
-        </p>
-      </footer>
+        </div>
     </div>
-
-    <script src="script.js" defer></script>
-  </body>
+    <script src="script.js"></script>
+</body>
 </html>
