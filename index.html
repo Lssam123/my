@@ -3,52 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Network Analyzer Pro | نظام الفحص الزمني</title>
+    <title>Network Precision Analyzer | مشروع تخرج</title>
     <style>
-        :root { --accent: #00f2fe; --bg: #080c15; --card: #111827; }
-        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .container { width: 90%; max-width: 800px; background: var(--card); padding: 40px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 30px 60px rgba(0,0,0,0.5); }
-        .main-display { text-align: center; margin-bottom: 40px; }
-        .speed-val { font-size: 6rem; font-weight: 900; color: var(--accent); line-height: 1; }
-        .unit { font-size: 1.2rem; color: #4b5563; }
-        .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .stat-card { background: rgba(255,255,255,0.02); padding: 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); text-align: center; }
-        .label { display: block; font-size: 0.8rem; color: #9ca3af; margin-bottom: 10px; font-weight: bold; }
-        .number { font-size: 2rem; font-weight: bold; color: #f3f4f6; }
-        .active { border-color: var(--accent); box-shadow: 0 0 15px rgba(0, 242, 254, 0.1); }
-        .btn-go { width: 100%; padding: 20px; margin-top: 30px; border-radius: 15px; border: none; background: linear-gradient(90deg, #00f2fe, #4facfe); color: #080c15; font-weight: 900; font-size: 1.5rem; cursor: pointer; transition: 0.3s; }
-        .btn-go:disabled { filter: grayscale(1); cursor: not-allowed; }
-        #status { text-align: center; margin-top: 15px; color: var(--accent); font-size: 0.9rem; min-height: 1.2em; }
+        :root { --accent: #00f2fe; --bg: #0a0f1d; --card: #161e2d; --text-muted: #94a3b8; }
+        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { width: 90%; max-width: 850px; background: var(--card); padding: 40px; border-radius: 40px; box-shadow: 0 50px 100px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.05); }
+        
+        /* القسم العلوي: عداد التحميل فقط */
+        .download-hero { text-align: center; margin-bottom: 50px; padding: 30px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .hero-label { font-size: 0.9rem; color: var(--accent); letter-spacing: 2px; font-weight: bold; }
+        .main-speed { font-size: 7rem; font-weight: 900; background: linear-gradient(180deg, #fff 30%, var(--accent) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; }
+        
+        /* شبكة النتائج الأخرى */
+        .results-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .stat-card { background: rgba(0,0,0,0.2); padding: 25px; border-radius: 25px; text-align: center; border: 2px solid transparent; transition: 0.4s; }
+        .stat-card.active { border-color: var(--accent); background: rgba(0, 242, 254, 0.05); }
+        .stat-label { display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 600; }
+        .stat-value { font-size: 2.2rem; font-weight: 800; color: #fff; }
+        .unit { font-size: 0.8rem; color: var(--text-muted); margin-right: 4px; }
+
+        .controls { margin-top: 40px; text-align: center; }
+        .btn-go { background: linear-gradient(135deg, var(--accent), #4facfe); color: #0a0f1d; border: none; padding: 18px 80px; border-radius: 50px; font-size: 1.4rem; font-weight: 900; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 30px rgba(0, 242, 254, 0.3); }
+        .btn-go:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(0, 242, 254, 0.5); }
+        .btn-go:disabled { filter: grayscale(1); opacity: 0.5; cursor: wait; }
+        #status-bar { margin-top: 20px; font-size: 0.85rem; color: var(--accent); opacity: 0.8; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="main-display">
-            <div id="big-speed" class="speed-val">0</div>
-            <div class="unit">Mbps</div>
+        <div class="download-hero">
+            <span class="hero-label">DOWNLOAD SPEED</span>
+            <div id="hero-speed" class="main-speed">0</div>
+            <span style="color:var(--text-muted)">Megabits per second</span>
         </div>
 
         <div class="results-grid">
-            <div class="stat-card" id="card-ping">
-                <span class="label">PING (خامل)</span>
-                <span id="res-ping" class="number">--</span><small>ms</small>
+            <div class="stat-card" id="ping-card">
+                <span class="stat-label">PING (IDLE)</span>
+                <span id="val-ping" class="stat-value">--</span><span class="unit">ms</span>
             </div>
-            <div class="stat-card" id="card-loaded">
-                <span class="label">PING (مُثقل)</span>
-                <span id="res-loaded" class="number">--</span><small>ms</small>
+            <div class="stat-card" id="loaded-card">
+                <span class="stat-label">PING (LOADED)</span>
+                <span id="val-loaded" class="stat-value">--</span><span class="unit">ms</span>
             </div>
-            <div class="stat-card" id="card-dl">
-                <span class="label">DOWNLOAD</span>
-                <span id="res-dl" class="number">--</span><small>Mbps</small>
-            </div>
-            <div class="stat-card" id="card-ul">
-                <span class="label">UPLOAD</span>
-                <span id="res-ul" class="number">--</span><small>Mbps</small>
+            <div class="stat-card" id="upload-card">
+                <span class="stat-label">UPLOAD</span>
+                <span id="val-upload" class="stat-value">--</span><span class="unit">Mbps</span>
             </div>
         </div>
 
-        <button id="start-btn" class="btn-go" onclick="runProfessionalTest()">ابدأ الفحص المتقدم</button>
-        <div id="status">جاهز للاختبار</div>
+        <div class="controls">
+            <button id="start-btn" class="btn-go" onclick="launchSequence()">START TEST</button>
+            <div id="status-bar">جاهز لبدء الفحص المتقدم</div>
+        </div>
     </div>
     <script src="script.js"></script>
 </body>
