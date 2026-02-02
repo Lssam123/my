@@ -3,59 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Network Precision Analyzer | مشروع تخرج</title>
+    <title>محلل الشبكة المتقدم | مشروع تخرج</title>
     <style>
-        :root { --accent: #00f2fe; --bg: #0a0f1d; --card: #161e2d; --text-muted: #94a3b8; }
-        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .container { width: 90%; max-width: 850px; background: var(--card); padding: 40px; border-radius: 40px; box-shadow: 0 50px 100px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.05); }
+        :root { --main: #00f2fe; --bg: #060912; --card: #111827; --text: #f3f4f6; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { width: 90%; max-width: 700px; background: var(--card); padding: 40px; border-radius: 35px; box-shadow: 0 40px 80px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.05); text-align: center; }
         
-        /* القسم العلوي: عداد التحميل فقط */
-        .download-hero { text-align: center; margin-bottom: 50px; padding: 30px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .hero-label { font-size: 0.9rem; color: var(--accent); letter-spacing: 2px; font-weight: bold; }
-        .main-speed { font-size: 7rem; font-weight: 900; background: linear-gradient(180deg, #fff 30%, var(--accent) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; }
+        /* عداد التحميل المركزي */
+        .hero-section { margin-bottom: 40px; }
+        .hero-label { font-size: 1rem; color: var(--main); font-weight: bold; letter-spacing: 1px; }
+        .speed-val { font-size: 7.5rem; font-weight: 900; background: linear-gradient(180deg, #fff, var(--main)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; margin: 10px 0; }
         
-        /* شبكة النتائج الأخرى */
-        .results-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-        .stat-card { background: rgba(0,0,0,0.2); padding: 25px; border-radius: 25px; text-align: center; border: 2px solid transparent; transition: 0.4s; }
-        .stat-card.active { border-color: var(--accent); background: rgba(0, 242, 254, 0.05); }
-        .stat-label { display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 600; }
-        .stat-value { font-size: 2.2rem; font-weight: 800; color: #fff; }
-        .unit { font-size: 0.8rem; color: var(--text-muted); margin-right: 4px; }
+        /* بطاقات النتائج المصغرة */
+        .results-grid { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; }
+        .mini-card { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 18px; flex: 1; border: 1px solid transparent; transition: 0.3s; }
+        .mini-card.active { border-color: var(--main); background: rgba(0, 242, 254, 0.05); }
+        .label { display: block; font-size: 0.7rem; color: #94a3b8; margin-bottom: 5px; font-weight: 600; }
+        .value { font-size: 1.4rem; font-weight: bold; color: #fff; }
+        .unit { font-size: 0.7rem; color: #64748b; margin-right: 2px; }
 
-        .controls { margin-top: 40px; text-align: center; }
-        .btn-go { background: linear-gradient(135deg, var(--accent), #4facfe); color: #0a0f1d; border: none; padding: 18px 80px; border-radius: 50px; font-size: 1.4rem; font-weight: 900; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 30px rgba(0, 242, 254, 0.3); }
-        .btn-go:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(0, 242, 254, 0.5); }
-        .btn-go:disabled { filter: grayscale(1); opacity: 0.5; cursor: wait; }
-        #status-bar { margin-top: 20px; font-size: 0.85rem; color: var(--accent); opacity: 0.8; }
+        /* الأزرار والحالة */
+        .btn-start { background: linear-gradient(135deg, var(--main), #4facfe); color: #060912; border: none; padding: 18px 60px; border-radius: 50px; font-size: 1.3rem; font-weight: 800; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 25px rgba(0, 242, 254, 0.2); }
+        .btn-start:hover { transform: translateY(-2px); box-shadow: 0 15px 35px rgba(0, 242, 254, 0.4); }
+        .btn-start:disabled { opacity: 0.4; cursor: not-allowed; transform: scale(0.95); }
+        #status { margin-top: 20px; font-size: 0.85rem; color: var(--main); height: 20px; opacity: 0.8; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="download-hero">
-            <span class="hero-label">DOWNLOAD SPEED</span>
-            <div id="hero-speed" class="main-speed">0</div>
-            <span style="color:var(--text-muted)">Megabits per second</span>
+        <div class="hero-section">
+            <span class="hero-label">سرعة التحميل</span>
+            <div id="dl-speed" class="speed-val">0</div>
+            <span style="color: #64748b; font-size: 0.9rem;">ميجابت في الثانية</span>
         </div>
 
         <div class="results-grid">
-            <div class="stat-card" id="ping-card">
-                <span class="stat-label">PING (IDLE)</span>
-                <span id="val-ping" class="stat-value">--</span><span class="unit">ms</span>
+            <div class="mini-card" id="card-ping">
+                <span class="label">استجابة خاملة</span>
+                <span id="val-ping" class="value">--</span><span class="unit">ملي ثانية</span>
             </div>
-            <div class="stat-card" id="loaded-card">
-                <span class="stat-label">PING (LOADED)</span>
-                <span id="val-loaded" class="stat-value">--</span><span class="unit">ms</span>
+            <div class="mini-card" id="card-loaded">
+                <span class="label">استجابة مُثقلة</span>
+                <span id="val-loaded" class="value">--</span><span class="unit">ملي ثانية</span>
             </div>
-            <div class="stat-card" id="upload-card">
-                <span class="stat-label">UPLOAD</span>
-                <span id="val-upload" class="stat-value">--</span><span class="unit">Mbps</span>
+            <div class="mini-card" id="card-ul">
+                <span class="label">سرعة الرفع</span>
+                <span id="val-upload" class="value">--</span><span class="unit">ميجابت</span>
             </div>
         </div>
 
-        <div class="controls">
-            <button id="start-btn" class="btn-go" onclick="launchSequence()">START TEST</button>
-            <div id="status-bar">جاهز لبدء الفحص المتقدم</div>
-        </div>
+        <button id="run-btn" class="btn-start" onclick="startSystem()">بدء الفحص</button>
+        <div id="status">جاهز للفحص</div>
     </div>
     <script src="script.js"></script>
 </body>
