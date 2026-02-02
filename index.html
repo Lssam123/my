@@ -3,73 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Network Analyzer Pro | التقرير النهائي</title>
+    <title>Network Analyzer Pro | نظام الفحص الزمني</title>
     <style>
-        :root { --glow: #00f2fe; --bg-dark: #050a14; --panel: #10192c; }
-        body { background: var(--bg-dark); color: #fff; font-family: 'Inter', system-ui; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .app-box { width: 900px; background: var(--panel); border-radius: 24px; padding: 40px; box-shadow: 0 40px 100px rgba(0,0,0,0.6); position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
-        
-        /* تأثير النبض أثناء الفحص */
-        .scanning { animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0, 242, 254, 0.2); } 70% { box-shadow: 0 0 0 30px rgba(0, 242, 254, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 242, 254, 0); } }
-
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
-        .main-metrics { display: flex; justify-content: space-around; align-items: center; margin-bottom: 50px; }
-        
-        .speed-dial { position: relative; width: 280px; height: 280px; display: flex; justify-content: center; align-items: center; background: radial-gradient(circle, #16243d 0%, transparent 70%); border-radius: 50%; }
-        .speed-val { font-size: 5rem; font-weight: 900; color: var(--glow); text-shadow: 0 0 20px rgba(0, 242, 254, 0.4); }
-        
-        .detailed-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-        .card { background: rgba(255,255,255,0.02); padding: 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; }
-        .card:hover { background: rgba(255,255,255,0.05); transform: translateY(-5px); }
-        .card label { display: block; color: #64748b; font-size: 0.8rem; margin-bottom: 10px; font-weight: 600; letter-spacing: 1px; }
-        .card .value { font-size: 1.8rem; font-weight: bold; }
-        .card .unit { font-size: 0.8rem; color: #475569; margin-right: 5px; }
-
-        .go-button { width: 120px; height: 120px; border-radius: 50%; border: none; background: linear-gradient(135deg, #00f2fe, #4facfe); color: #050a14; font-weight: 900; font-size: 1.5rem; cursor: pointer; transition: 0.5s; box-shadow: 0 15px 30px rgba(0, 242, 254, 0.3); }
-        .go-button:hover { transform: scale(1.1); box-shadow: 0 20px 40px rgba(0, 242, 254, 0.5); }
-        .go-button:disabled { background: #1e293b; color: #475569; transform: scale(0.9); }
+        :root { --accent: #00f2fe; --bg: #080c15; --card: #111827; }
+        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { width: 90%; max-width: 800px; background: var(--card); padding: 40px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 30px 60px rgba(0,0,0,0.5); }
+        .main-display { text-align: center; margin-bottom: 40px; }
+        .speed-val { font-size: 6rem; font-weight: 900; color: var(--accent); line-height: 1; }
+        .unit { font-size: 1.2rem; color: #4b5563; }
+        .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .stat-card { background: rgba(255,255,255,0.02); padding: 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); text-align: center; }
+        .label { display: block; font-size: 0.8rem; color: #9ca3af; margin-bottom: 10px; font-weight: bold; }
+        .number { font-size: 2rem; font-weight: bold; color: #f3f4f6; }
+        .active { border-color: var(--accent); box-shadow: 0 0 15px rgba(0, 242, 254, 0.1); }
+        .btn-go { width: 100%; padding: 20px; margin-top: 30px; border-radius: 15px; border: none; background: linear-gradient(90deg, #00f2fe, #4facfe); color: #080c15; font-weight: 900; font-size: 1.5rem; cursor: pointer; transition: 0.3s; }
+        .btn-go:disabled { filter: grayscale(1); cursor: not-allowed; }
+        #status { text-align: center; margin-top: 15px; color: var(--accent); font-size: 0.9rem; min-height: 1.2em; }
     </style>
 </head>
 <body>
-    <div id="app" class="app-box">
-        <div class="header">
-            <div>
-                <h2 style="margin:0">Network Analyzer Pro</h2>
-                <span id="status" style="color:#64748b">نظام الفحص المتعدد (V3.0) جاهز</span>
-            </div>
-            <button id="start-btn" class="go-button">GO</button>
+    <div class="container">
+        <div class="main-display">
+            <div id="big-speed" class="speed-val">0</div>
+            <div class="unit">Mbps</div>
         </div>
 
-        <div class="main-metrics">
-            <div class="speed-dial">
-                <div id="main-speed" class="speed-val">0</div>
-                <div style="position:absolute; bottom:60px; color:#475569">Mbps</div>
+        <div class="results-grid">
+            <div class="stat-card" id="card-ping">
+                <span class="label">PING (خامل)</span>
+                <span id="res-ping" class="number">--</span><small>ms</small>
+            </div>
+            <div class="stat-card" id="card-loaded">
+                <span class="label">PING (مُثقل)</span>
+                <span id="res-loaded" class="number">--</span><small>ms</small>
+            </div>
+            <div class="stat-card" id="card-dl">
+                <span class="label">DOWNLOAD</span>
+                <span id="res-dl" class="number">--</span><small>Mbps</small>
+            </div>
+            <div class="stat-card" id="card-ul">
+                <span class="label">UPLOAD</span>
+                <span id="res-ul" class="number">--</span><small>Mbps</small>
             </div>
         </div>
 
-        <div class="detailed-grid">
-            <div class="card">
-                <label>PING (الاستجابة)</label>
-                <span class="value" id="ping">--</span><span class="unit">ms</span>
-            </div>
-            <div class="card">
-                <label>JITTER (التذبذب)</label>
-                <span class="value" id="jitter">--</span><span class="unit">ms</span>
-            </div>
-            <div class="card">
-                <label>BUFFERBLOAT (المثقل)</label>
-                <span class="value" id="loaded-ping">--</span><span class="unit">ms</span>
-            </div>
-            <div class="card" style="grid-column: span 1.5">
-                <label>DOWNLOAD (التحميل)</label>
-                <span class="value" id="dl-res" style="color:var(--glow)">--</span><span class="unit">Mbps</span>
-            </div>
-            <div class="card" style="grid-column: span 1.5">
-                <label>UPLOAD (الرفع)</label>
-                <span class="value" id="ul-res" style="color:#a855f7">--</span><span class="unit">Mbps</span>
-            </div>
-        </div>
+        <button id="start-btn" class="btn-go" onclick="runProfessionalTest()">ابدأ الفحص المتقدم</button>
+        <div id="status">جاهز للاختبار</div>
     </div>
     <script src="script.js"></script>
 </body>
