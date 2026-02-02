@@ -1,110 +1,119 @@
-/** * محرك فحص السرعة المتوازي - مشروع تخرج
- * تم تحسين هذا الكود ليعمل بـ 6 مسارات تحميل متزامنة لضمان تشبع القناة
- */
-
 const CONFIG = {
-    testFile: "https://speed.cloudflare.com/__down?bytes=50000000",
-    pingSvc: "https://1.1.1.1/cdn-cgi/trace",
-    threads: 6 // عدد المسارات المتزامنة للدقة القصوى
+    dlUrl: "https://speed.cloudflare.com/__down?bytes=50000000",
+    pingUrl: "https://1.1.1.1/cdn-cgi/trace",
+    pingDuration: 5000,    // 5 ثواني
+    testDuration: 15000,   // 15 ثانية
+    threads: 6             // مسارات متوازية للدقة
 };
 
-const dom = {
-    btn: document.getElementById('start-btn'),
-    mainSpeed: document.getElementById('main-speed'),
-    ping: document.getElementById('ping'),
-    jitter: document.getElementById('jitter'),
-    loaded: document.getElementById('loaded-ping'),
-    dl: document.getElementById('dl-res'),
-    ul: document.getElementById('ul-res'),
-    status: document.getElementById('status'),
-    app: document.getElementById('app')
-};
+async function runProfessionalTest() {
+    const btn = document.getElementById('start-btn');
+    const status = document.getElementById('status');
+    btn.disabled = true;
 
-async function startAnalysis() {
-    dom.btn.disabled = true;
-    dom.app.classList.add('scanning');
-    dom.status.innerText = "جاري معاينة جودة القناة...";
+    // 1. فحص البينق الخامل (مدة 5 ثواني)
+    status.innerText = "جاري فحص البينق الخامل (5 ثواني)...";
+    document.getElementById('card-ping').classList.add('active');
+    const idlePing = await runTimedPing(CONFIG.pingDuration);
+    document.getElementById('res-ping').innerText = idlePing.toFixed(1);
+    document.getElementById('card-ping').classList.remove('active');
 
-    // 1. قياس الـ Ping الخامل بدقة إحصائية
-    const idleStats = await getPingStats(10);
-    dom.ping.innerText = idleStats.avg.toFixed(1);
-    dom.jitter.innerText = idleStats.jitter.toFixed(1);
+    // 2. فحص التحميل + البينق المثقل (مدة 15 ثانية)
+    status.innerText = "جاري فحص التحميل والبينق المثقل (15 ثانية)...";
+    document.getElementById('card-dl').classList.add('active');
+    document.getElementById('card-loaded').classList.add('active');
+    const dlData = await runTimedDownload(CONFIG.testDuration);
+    document.getElementById('res-dl').innerText = dlData.speed;
+    document.getElementById('res-loaded').innerText = dlData.loadedPing.toFixed(1);
+    document.getElementById('card-dl').classList.remove('active');
+    document.getElementById('card-loaded').classList.remove('active');
 
-    // 2. قياس التحميل المتوازي + Ping المثقل
-    dom.status.innerText = "جاري اختبار التحميل المتعدد (Multi-threading)...";
-    const downloadStats = await performParallelDownload();
-    dom.dl.innerText = downloadStats.speed;
-    dom.loaded.innerText = downloadStats.loadedPing.toFixed(1);
+    // 3. فحص الرفع (مدة 15 ثانية)
+    status.innerText = "جاري فحص الرفع (15 ثانية)...";
+    document.getElementById('card-ul').classList.add('active');
+    const ulSpeed = await runTimedUpload(CONFIG.testDuration);
+    document.getElementById('res-ul').innerText = ulSpeed;
+    document.getElementById('card-ul').classList.remove('active');
 
-    // 3. قياس الرفع
-    dom.status.innerText = "جاري اختبار الرفع الحي...";
-    const uploadSpeed = await performUploadTest();
-    dom.ul.innerText = uploadSpeed;
-
-    dom.status.innerText = "اكتمل التحليل الفني بنجاح";
-    dom.app.classList.remove('scanning');
-    dom.btn.disabled = false;
+    status.innerText = "اكتمل الاختبار بدقة احترافية";
+    btn.disabled = false;
 }
 
-async function getPingStats(samples) {
-    let results = [];
-    for(let i=0; i<samples; i++) {
-        const start = performance.now();
-        await fetch(CONFIG.pingSvc + "?n=" + i, { mode: 'no-cors', cache: 'no-cache' });
-        results.push(performance.now() - start);
+// دالة البينق الخامل لمدة محددة
+async function runTimedPing(ms) {
+    let pings = [];
+    const start = Date.now();
+    while (Date.now() - start < ms) {
+        const pStart = performance.now();
+        await fetch(CONFIG.pingUrl, { mode: 'no-cors', cache: 'no-cache' });
+        pings.push(performance.now() - pStart);
+        await new Promise(r => setTimeout(r, 100)); // فاصل بسيط بين النبضات
     }
-    // تصفية القيم الشاذة (أعلى وأدنى قيمة)
-    results.sort((a, b) => a - b);
-    const filtered = results.slice(1, -1); 
-    const avg = filtered.reduce((a, b) => a + b) / filtered.length;
-    return { avg, jitter: results[results.length-1] - results[0] };
+    return pings.reduce((a, b) => a + b) / pings.length;
 }
 
-async function performParallelDownload() {
-    const startTime = performance.now();
+// دالة التحميل والرفع المجدولة زمنياً (15 ثانية)
+async function runTimedDownload(ms) {
     let totalBytes = 0;
     let loadedPings = [];
-
-    // مراقبة الـ Ping أثناء الضغط
-    const monitor = setInterval(async () => {
+    const startTest = performance.now();
+    
+    // مراقب البينق المثقل
+    const pingInterval = setInterval(async () => {
         const pStart = performance.now();
-        await fetch(CONFIG.pingSvc + "?load=true", { mode: 'no-cors' });
+        await fetch(CONFIG.pingUrl, { mode: 'no-cors' });
         loadedPings.push(performance.now() - pStart);
     }, 200);
 
-    // تشغيل عدة مسارات تحميل في نفس الوقت
+    // التحميل المتوازي
+    const controller = new AbortController();
     const downloadThreads = Array(CONFIG.threads).fill(0).map(async () => {
-        const response = await fetch(CONFIG.testFile + "&t=" + Math.random());
-        const reader = response.body.getReader();
-        while(true) {
-            const {done, value} = await reader.read();
-            if (done) break;
-            totalBytes += value.length;
-            
-            // تحديث الواجهة اللحظي
-            const elapsed = (performance.now() - startTime) / 1000;
-            const mbps = ((totalBytes * 8) / (1024 * 1024) / elapsed).toFixed(2);
-            dom.mainSpeed.innerText = Math.floor(mbps);
+        while (performance.now() - startTest < ms) {
+            try {
+                const response = await fetch(CONFIG.dlUrl + "&cache=" + Math.random(), { signal: controller.signal });
+                const reader = response.body.getReader();
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done || (performance.now() - startTest >= ms)) break;
+                    totalBytes += value.length;
+                    
+                    const elapsed = (performance.now() - startTest) / 1000;
+                    const mbps = ((totalBytes * 8) / (1024 * 1024) / elapsed).toFixed(2);
+                    document.getElementById('big-speed').innerText = Math.floor(mbps);
+                }
+            } catch (e) { break; }
         }
     });
 
-    await Promise.all(downloadThreads);
-    clearInterval(monitor);
+    await new Promise(r => setTimeout(r, ms)); // الانتظار لانتهاء المدة
+    controller.abort(); // إيقاف التحميل فوراً
+    clearInterval(pingInterval);
 
-    const finalTime = (performance.now() - startTime) / 1000;
+    const finalMbps = ((totalBytes * 8) / (1024 * 1024) / (ms / 1000)).toFixed(2);
     return {
-        speed: ((totalBytes * 8) / (1024 * 1024) / finalTime).toFixed(2),
-        loadedPing: loadedPings.reduce((a,b)=>a+b, 0) / loadedPings.length
+        speed: finalMbps,
+        loadedPing: loadedPings.reduce((a, b) => a + b, 0) / loadedPings.length
     };
 }
 
-async function performUploadTest() {
-    // محاكاة رفع بيانات 8MB
-    const blob = new Blob([new Uint8Array(8 * 1024 * 1024)]);
-    const start = performance.now();
-    await fetch('https://httpbin.org/post', { method: 'POST', body: blob });
-    const duration = (performance.now() - start) / 1000;
-    return ((blob.size * 8) / (1024 * 1024) / duration).toFixed(2);
-}
+async function runTimedUpload(ms) {
+    let totalUploaded = 0;
+    const startTest = performance.now();
+    const data = new Uint8Array(2 * 1024 * 1024); // 2MB chunk
 
-dom.btn.onclick = startAnalysis;
+    while (performance.now() - startTest < ms) {
+        try {
+            await fetch('https://httpbin.org/post', {
+                method: 'POST',
+                body: data,
+                mode: 'no-cors'
+            });
+            totalUploaded += data.length;
+            const elapsed = (performance.now() - startTest) / 1000;
+            const mbps = ((totalUploaded * 8) / (1024 * 1024) / elapsed).toFixed(2);
+            document.getElementById('big-speed').innerText = Math.floor(mbps);
+        } catch (e) { break; }
+    }
+
+    return ((totalUploaded * 8) / (1024 * 1024) / (ms / 1000)).toFixed(2);
+}
