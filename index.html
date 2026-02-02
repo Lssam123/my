@@ -5,55 +5,64 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>محلل الشبكة المتقدم | مشروع تخرج</title>
     <style>
-        :root { --main: #00f2fe; --bg: #060912; --card: #111827; --text: #f3f4f6; }
-        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .container { width: 90%; max-width: 700px; background: var(--card); padding: 40px; border-radius: 35px; box-shadow: 0 40px 80px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.05); text-align: center; }
+        :root { --accent: #00f2fe; --bg: #05080f; --card: #101624; --sub-text: #94a3b8; }
+        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow-x: hidden; }
         
-        /* عداد التحميل المركزي */
-        .hero-section { margin-bottom: 40px; }
-        .hero-label { font-size: 1rem; color: var(--main); font-weight: bold; letter-spacing: 1px; }
-        .speed-val { font-size: 7.5rem; font-weight: 900; background: linear-gradient(180deg, #fff, var(--main)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; margin: 10px 0; }
+        .container { width: 90%; max-width: 600px; background: var(--card); padding: 50px 30px; border-radius: 40px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 40px 100px rgba(0,0,0,0.7); position: relative; text-align: center; }
         
-        /* بطاقات النتائج المصغرة */
-        .results-grid { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; }
-        .mini-card { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 18px; flex: 1; border: 1px solid transparent; transition: 0.3s; }
-        .mini-card.active { border-color: var(--main); background: rgba(0, 242, 254, 0.05); }
-        .label { display: block; font-size: 0.7rem; color: #94a3b8; margin-bottom: 5px; font-weight: 600; }
-        .value { font-size: 1.4rem; font-weight: bold; color: #fff; }
-        .unit { font-size: 0.7rem; color: #64748b; margin-right: 2px; }
+        /* تأثير التوهج الخلفي */
+        .glow-bg { position: absolute; top: 20%; left: 50%; transform: translateX(-50%); width: 250px; height: 250px; background: var(--accent); filter: blur(140px); opacity: 0.12; z-index: 0; pointer-events: none; }
 
-        /* الأزرار والحالة */
-        .btn-start { background: linear-gradient(135deg, var(--main), #4facfe); color: #060912; border: none; padding: 18px 60px; border-radius: 50px; font-size: 1.3rem; font-weight: 800; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 25px rgba(0, 242, 254, 0.2); }
-        .btn-start:hover { transform: translateY(-2px); box-shadow: 0 15px 35px rgba(0, 242, 254, 0.4); }
-        .btn-start:disabled { opacity: 0.4; cursor: not-allowed; transform: scale(0.95); }
-        #status { margin-top: 20px; font-size: 0.85rem; color: var(--main); height: 20px; opacity: 0.8; }
+        .hero-section { position: relative; z-index: 1; margin-bottom: 50px; }
+        .hero-label { font-size: 0.9rem; color: var(--accent); font-weight: 800; letter-spacing: 2px; }
+        .main-speed { font-size: 8rem; font-weight: 900; background: linear-gradient(180deg, #ffffff 40%, var(--accent) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; margin: 15px 0; }
+        .unit-label { color: var(--sub-text); font-weight: 600; font-size: 1rem; }
+
+        /* البطاقات السفلية المصغرة */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; z-index: 1; position: relative; }
+        .stat-card { background: rgba(255,255,255,0.02); padding: 15px 10px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); transition: 0.4s ease; }
+        .stat-card.active { border-color: var(--accent); background: rgba(0, 242, 254, 0.05); transform: translateY(-5px); }
+        .stat-card .title { display: block; font-size: 0.75rem; color: var(--sub-text); margin-bottom: 8px; font-weight: bold; }
+        .stat-card .value { font-size: 1.8rem; font-weight: 800; color: #fff; }
+        .stat-card .unit { font-size: 0.7rem; color: #475569; margin-right: 3px; }
+
+        /* الأزرار */
+        .control-panel { margin-top: 50px; }
+        .btn-run { background: #fff; color: #000; border: none; padding: 20px 80px; border-radius: 100px; font-size: 1.3rem; font-weight: 900; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .btn-run:hover { background: var(--accent); transform: scale(1.05); box-shadow: 0 15px 40px rgba(0, 242, 254, 0.4); }
+        .btn-run:disabled { opacity: 0.2; cursor: wait; transform: scale(0.95); }
+        
+        #progress-text { margin-top: 20px; font-size: 0.85rem; color: var(--sub-text); height: 20px; }
     </style>
 </head>
 <body>
+    <div class="glow-bg"></div>
     <div class="container">
         <div class="hero-section">
             <span class="hero-label">سرعة التحميل</span>
-            <div id="dl-speed" class="speed-val">0</div>
-            <span style="color: #64748b; font-size: 0.9rem;">ميجابت في الثانية</span>
+            <div id="display-main" class="main-speed">0</div>
+            <span class="unit-label">ميجابت / ثانية</span>
         </div>
 
-        <div class="results-grid">
-            <div class="mini-card" id="card-ping">
-                <span class="label">استجابة خاملة</span>
-                <span id="val-ping" class="value">--</span><span class="unit">ملي ثانية</span>
+        <div class="stats-grid">
+            <div class="stat-card" id="box-ping">
+                <span class="title">بينق خامل</span>
+                <span id="res-ping" class="value">--</span><span class="unit">MS</span>
             </div>
-            <div class="mini-card" id="card-loaded">
-                <span class="label">استجابة مُثقلة</span>
-                <span id="val-loaded" class="value">--</span><span class="unit">ملي ثانية</span>
+            <div class="stat-card" id="box-loaded">
+                <span class="title">بينق مُثقل</span>
+                <span id="res-loaded" class="value">--</span><span class="unit">MS</span>
             </div>
-            <div class="mini-card" id="card-ul">
-                <span class="label">سرعة الرفع</span>
-                <span id="val-upload" class="value">--</span><span class="unit">ميجابت</span>
+            <div class="stat-card" id="box-upload">
+                <span class="title">سرعة الرفع</span>
+                <span id="res-upload" class="value">--</span><span class="unit">MBPS</span>
             </div>
         </div>
 
-        <button id="run-btn" class="btn-start" onclick="startSystem()">بدء الفحص</button>
-        <div id="status">جاهز للفحص</div>
+        <div class="control-panel">
+            <button id="main-btn" class="btn-run" onclick="startFinalTest()">بدء الفحص</button>
+            <div id="progress-text">جاهز لتحليل جودة الشبكة</div>
+        </div>
     </div>
     <script src="script.js"></script>
 </body>
