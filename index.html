@@ -2,61 +2,56 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>محلل الشبكة الفائق | Ultra-Precision V10</title>
+    <title>محلل الشبكة المتقدم - دقة مخبرية</title>
     <style>
-        :root { --neon: #00f2fe; --bg: #010204; --card: #0a0f1a; }
-        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+        :root { --neon-cyan: #00f2fe; --bg-dark: #020617; --card-hex: #0f172a; }
+        body { background: var(--bg-dark); color: #fff; font-family: 'Segoe UI', system-ui; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
         
-        .container { width: 95%; max-width: 800px; background: var(--card); padding: 50px; border-radius: 50px; border: 1px solid rgba(0, 242, 254, 0.15); box-shadow: 0 0 150px rgba(0,0,0,1); position: relative; }
+        .master-panel { width: 90%; max-width: 800px; background: var(--card-hex); padding: 50px; border-radius: 40px; border: 1px solid rgba(0, 242, 254, 0.2); box-shadow: 0 0 80px rgba(0,0,0,0.8); text-align: center; }
         
-        .glow-sphere { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); width: 450px; height: 450px; background: radial-gradient(circle, var(--neon) 0%, transparent 70%); filter: blur(140px); opacity: 0.12; z-index: 0; }
+        .hero-gauge { margin-bottom: 50px; position: relative; }
+        .hero-label { font-size: 0.85rem; color: var(--neon-cyan); font-weight: 800; letter-spacing: 5px; }
+        .speed-digit { font-size: 10rem; font-weight: 900; background: linear-gradient(180deg, #fff 40%, var(--neon-cyan) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; margin: 20px 0; }
+        
+        .stats-grid { display: flex; gap: 20px; justify-content: center; }
+        .mini-card { background: rgba(255,255,255,0.03); padding: 25px; border-radius: 25px; flex: 1; border: 1px solid transparent; transition: 0.4s; }
+        .mini-card.active { border-color: var(--neon-cyan); background: rgba(0, 242, 254, 0.08); transform: translateY(-10px); }
+        .tag { display: block; font-size: 0.7rem; color: #94a3b8; margin-bottom: 10px; font-weight: bold; }
+        .val { font-size: 2.2rem; font-weight: 800; }
+        .unit { font-size: 0.7rem; color: #475569; margin-right: 3px; }
 
-        .hero-gauge { position: relative; z-index: 1; text-align: center; margin-bottom: 60px; }
-        .hero-title { font-size: 0.9rem; color: var(--neon); font-weight: 900; letter-spacing: 10px; opacity: 0.8; }
-        .speed-val { font-size: 11rem; font-weight: 950; background: linear-gradient(180deg, #fff 40%, var(--neon) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 0.8; margin: 35px 0; font-family: 'Consolas', monospace; }
-        
-        .grid-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; z-index: 1; position: relative; }
-        .stat-card { background: rgba(255,255,255,0.02); padding: 30px 15px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.06); transition: 0.5s cubic-bezier(0.19, 1, 0.22, 1); }
-        .stat-card.active { border-color: var(--neon); background: rgba(0, 242, 254, 0.06); transform: translateY(-12px); box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
-        .tag { display: block; font-size: 0.75rem; color: #586069; margin-bottom: 12px; font-weight: 800; }
-        .num { font-size: 2.5rem; font-weight: 900; color: #f0f6fc; }
-        .unit { font-size: 0.75rem; color: #484f58; margin-right: 5px; }
+        .launch-btn { margin-top: 50px; background: #fff; color: #020617; border: none; padding: 22px 90px; border-radius: 100px; font-size: 1.4rem; font-weight: 900; cursor: pointer; transition: 0.3s; }
+        .launch-btn:hover { background: var(--neon-cyan); transform: scale(1.05); box-shadow: 0 0 50px rgba(0, 242, 254, 0.4); }
+        .launch-btn:disabled { opacity: 0.1; cursor: wait; }
 
-        .btn-run { margin-top: 60px; background: #fff; color: #010204; border: none; padding: 25px 120px; border-radius: 100px; font-size: 1.6rem; font-weight: 950; cursor: pointer; transition: 0.4s; }
-        .btn-run:hover { background: var(--neon); transform: scale(1.05); box-shadow: 0 0 60px rgba(0, 242, 254, 0.5); }
-        .btn-run:disabled { opacity: 0.05; cursor: wait; }
-        
-        #engine-log { margin-top: 30px; font-size: 0.9rem; color: #484f58; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; }
+        #engine-log { margin-top: 25px; font-size: 0.8rem; color: #64748b; font-weight: bold; letter-spacing: 1px; }
     </style>
 </head>
 <body>
-    <div class="glow-sphere"></div>
-    <div class="container">
+    <div class="master-panel">
         <div class="hero-gauge">
-            <span class="hero-title">تحميل فائق (20 مسار)</span>
-            <div id="main-speed" class="speed-val">0</div>
-            <div style="color: #484f58; font-weight: 900; font-size: 1.4rem;">Mbps</div>
+            <span class="hero-label">تحليل الاستقبال (DOWNLOAD)</span>
+            <div id="dl-val" class="speed-digit">0</div>
+            <span style="color: #475569; font-weight: 900; font-size: 1.2rem;">Mbps</span>
         </div>
 
-        <div class="grid-stats">
-            <div class="stat-card" id="b-ping">
-                <span class="tag">بينق (الأقرب)</span>
-                <span id="v-ping" class="num">--</span><span class="unit">ms</span>
+        <div class="stats-grid">
+            <div class="mini-card" id="c-ping">
+                <span class="tag">بينق دقيق</span>
+                <span id="v-ping" class="val">--</span><span class="unit">ms</span>
             </div>
-            <div class="stat-card" id="b-loaded">
-                <span class="tag">بينق (مُثقل)</span>
-                <span id="v-loaded" class="num">--</span><span class="unit">ms</span>
+            <div class="mini-card" id="c-jitter">
+                <span class="tag">التذبذب (Jitter)</span>
+                <span id="v-jitter" class="val">--</span><span class="unit">ms</span>
             </div>
-            <div class="stat-card" id="b-upload">
-                <span class="tag">رفع (مُعزز)</span>
-                <span id="v-upload" class="num">--</span><span class="unit">Mbps</span>
+            <div class="mini-card" id="c-upload">
+                <span class="tag">تحليل الإرسال</span>
+                <span id="v-upload" class="val">--</span><span class="unit">Mbps</span>
             </div>
         </div>
 
-        <div style="text-align: center;">
-            <button id="run-btn" class="btn-run" onclick="launchUltraEngine()">تشغيل المحرك V10</button>
-            <div id="engine-log">جاهز للمعايرة القصوى</div>
-        </div>
+        <button id="run-btn" class="launch-btn" onclick="startUltraPrecisionTest()">بدء المعايرة</button>
+        <div id="engine-log">نظام المعالجة جاهز</div>
     </div>
     <script src="script.js"></script>
 </body>
