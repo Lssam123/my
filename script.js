@@ -1,118 +1,121 @@
-const CONFIG = {
-    dl_file: "https://speed.cloudflare.com/__down?bytes=500000000", // ملف 500 ميجا
-    ul_endpoint: "https://httpbin.org/post",
-    ping_target: "https://1.1.1.1/cdn-cgi/trace", // سيرفر كلاود فلير (الأسرع عالمياً)
-    threads: 20, // 20 مسار تحميل متوازي لإحداث "إجهاد" كامل للشبكة
-    ping_samples: 50 // عدد العينات لضمان الدقة
+const RESOURCES = {
+    dl_url: "https://speed.cloudflare.com/__down?bytes=500000000",
+    ul_url: "https://httpbin.org/post",
+    // قائمة السيرفرات لاختيار الأقرب (Precision Targeting)
+    ping_targets: [
+        "https://1.1.1.1/cdn-cgi/trace",
+        "https://8.8.8.8/favicon.ico",
+        "https://speed.cloudflare.com/cdn-cgi/trace"
+    ],
+    threads: 24 // رفع عدد المسارات لضمان إشباع الشبكة
 };
 
-async function startEngine() {
+async function runExtremeEngine() {
     const btn = document.getElementById('run-btn');
-    const log = document.getElementById('log');
+    const log = document.getElementById('log-status');
     btn.disabled = true;
 
-    // المرحلة 1: البينق غير المثقل (بدقة 50 عينة)
-    log.innerText = "جاري قياس البينق غير المثقل بدقة ميكرو-ثانية...";
-    document.getElementById('b-ping').classList.add('active');
-    const idlePing = await measurePrecisionPing(CONFIG.ping_samples);
-    document.getElementById('v-ping').innerText = idlePing.toFixed(2);
-    document.getElementById('b-ping').classList.remove('active');
+    // 1. فحص البينق الفائق (تعدد المصادر)
+    log.innerText = "جاري البحث عن أقرب نقطة استجابة ومعايرة البينق...";
+    document.getElementById('box-idle').classList.add('active');
+    const idlePing = await getPrecisionPing();
+    document.getElementById('v-idle').innerText = idlePing.toFixed(1);
+    document.getElementById('box-idle').classList.remove('active');
 
-    // المرحلة 2: التحميل + البينق المثقل (أهم جزء في مشروعك)
-    log.innerText = "جاري إشباع الشبكة بـ 20 مسار وقياس البينق تحت الضغط...";
-    document.getElementById('b-loaded').classList.add('active');
-    const dlData = await runUltraDownload(15000);
-    document.getElementById('dl-val').innerText = Math.round(dlData.speed);
-    document.getElementById('v-loaded').innerText = dlData.loadedPing.toFixed(2);
-    document.getElementById('b-loaded').classList.remove('active');
+    // 2. التحميل العملاق + البينق المثقل (الدقة القصوى)
+    log.innerText = "جاري إشباع النطاق الترددي بـ 24 مسار وقياس البينق تحت الضغط...";
+    document.getElementById('box-loaded').classList.add('active');
+    const dlMetrics = await runHyperDownload(15000);
+    document.getElementById('dl-display').innerText = Math.round(dlMetrics.speed);
+    document.getElementById('v-loaded').innerText = dlMetrics.loadedPing.toFixed(1);
+    document.getElementById('box-loaded').classList.remove('active');
 
-    // المرحلة 3: الرفع
-    log.innerText = "جاري تحليل سرعة الرفع...";
-    document.getElementById('b-upload').classList.add('active');
-    const ulSpeed = await runUltraUpload(15000);
-    document.getElementById('v-upload').innerText = ulSpeed;
-    document.getElementById('b-upload').classList.remove('active');
+    // 3. الرفع بكتل ضخمة (Extreme Upload)
+    log.innerText = "جاري تحليل الرفع باستخدام كتل بيانات 25MB...";
+    document.getElementById('box-upload').classList.add('active');
+    const ulSpeed = await runHyperUpload(15000);
+    document.getElementById('v-upload').innerText = ulSpeed.toFixed(1);
+    document.getElementById('box-upload').classList.remove('active');
 
-    log.innerText = "تمت المعايرة. النتائج جاهزة للمناقشة.";
+    log.innerText = "تم الانتهاء: المعايرة تمت بدقة مخبرية";
     btn.disabled = false;
 }
 
-// دالة البينق فائقة الدقة
-async function measurePrecisionPing(count) {
-    let pings = [];
-    for (let i = 0; i < count; i++) {
-        const t0 = performance.now();
-        try {
-            await fetch(CONFIG.ping_target, { mode: 'no-cors', cache: 'no-cache' });
-            pings.push(performance.now() - t0);
-        } catch(e) {}
-        await new Promise(r => setTimeout(r, 50)); // فاصل زمني صغير جداً بين العينات
+// دالة البينق (تختار الأسرع من 3 مصادر عالمية)
+async function getPrecisionPing() {
+    let allResults = [];
+    for (let target of RESOURCES.ping_targets) {
+        let pings = [];
+        for (let i = 0; i < 15; i++) {
+            const t0 = performance.now();
+            try {
+                await fetch(target, { mode: 'no-cors', cache: 'no-cache' });
+                pings.push(performance.now() - t0);
+            } catch (e) {}
+        }
+        allResults.push(...pings);
     }
-    // تصفية إحصائية: حذف القيم الشاذة القصوى
-    pings.sort((a, b) => a - b);
-    const trimmed = pings.slice(Math.floor(pings.length * 0.1), -Math.floor(pings.length * 0.1));
-    return trimmed.reduce((a, b) => a + b) / trimmed.length;
+    allResults.sort((a, b) => a - b);
+    // نأخذ أفضل 20% من القراءات (الاستجابة الحقيقية للسيرفر الأقرب)
+    const bestSection = allResults.slice(0, Math.floor(allResults.length * 0.2));
+    return bestSection.reduce((a, b) => a + b) / bestSection.length;
 }
 
-// محرك التحميل المتوازي (20 مسار) مع مراقبة البينق
-async function runUltraDownload(duration) {
-    let bytes = 0;
-    let loadedPings = [];
-    const startTime = performance.now();
-    const abort = new AbortController();
+// محرك التحميل بـ 24 مسار
+async function runHyperDownload(ms) {
+    let totalBytes = 0;
+    let lPings = [];
+    const start = performance.now();
+    const controller = new AbortController();
 
-    // فحص البينق أثناء التحميل النشط (Loaded Ping) كل 200 ملي ثانية
-    const pinger = setInterval(async () => {
+    const monitorPing = setInterval(async () => {
         const t0 = performance.now();
         try {
-            await fetch(CONFIG.ping_target, { mode: 'no-cors' });
-            loadedPings.push(performance.now() - t0);
-        } catch(e) {}
-    }, 200);
+            await fetch(RESOURCES.ping_targets[0], { mode: 'no-cors' });
+            lPings.push(performance.now() - t0);
+        } catch (e) {}
+    }, 150);
 
-    const streams = Array(CONFIG.threads).fill(0).map(async () => {
-        while (performance.now() - startTime < duration) {
+    const workers = Array(RESOURCES.threads).fill(0).map(async () => {
+        while (performance.now() - start < ms) {
             try {
-                const res = await fetch(CONFIG.dl_file + "&r=" + Math.random(), { signal: abort.signal });
+                const res = await fetch(RESOURCES.dl_url + "&nocache=" + Math.random(), { signal: controller.signal });
                 const reader = res.body.getReader();
                 while (true) {
                     const { done, value } = await reader.read();
-                    if (done || (performance.now() - startTime >= duration)) break;
-                    bytes += value.length;
-                    const elapsed = (performance.now() - startTime) / 1000;
-                    if (elapsed > 1) {
-                        const mbps = ((bytes * 8) / (1024 * 1024) / elapsed);
-                        document.getElementById('dl-val').innerText = Math.round(mbps);
-                    }
+                    if (done || (performance.now() - start >= ms)) break;
+                    totalBytes += value.length;
+                    const mbps = ((totalBytes * 8) / (1024 * 1024) / ((performance.now() - start) / 1000));
+                    document.getElementById('dl-display').innerText = Math.round(mbps);
                 }
             } catch (e) { break; }
         }
     });
 
-    await new Promise(r => setTimeout(r, duration));
-    abort.abort();
-    clearInterval(pinger);
+    await new Promise(r => setTimeout(r, ms));
+    controller.abort();
+    clearInterval(monitorPing);
 
     return {
-        speed: ((bytes * 8) / (1024 * 1024) / (duration / 1000)).toFixed(1),
-        loadedPing: loadedPings.reduce((a,b)=>a+b, 0) / loadedPings.length
+        speed: (totalBytes * 8) / (1024 * 1024) / (ms / 1000),
+        loadedPing: lPings.reduce((a, b) => a + b) / lPings.length
     };
 }
 
-// محرك الرفع بملف ضخم
-async function runUltraUpload(duration) {
+// محرك الرفع بكتل بيانات ضخمة (حل مشكلة بطء الرفع)
+async function runHyperUpload(ms) {
     let upBytes = 0;
-    const startTime = performance.now();
-    const blob = new Blob([new Uint8Array(10 * 1024 * 1024)]); // قطعة 10 ميجا
+    const start = performance.now();
+    // إنشاء كتلة بيانات ضخمة 25 ميجابايت لضمان تشبع الرفع
+    const largeBlob = new Blob([new Uint8Array(25 * 1024 * 1024)]);
 
-    while (performance.now() - startTime < duration) {
+    while (performance.now() - start < ms) {
         try {
-            await fetch(CONFIG.ul_endpoint, { method: 'POST', body: blob, mode: 'no-cors' });
-            upBytes += blob.size;
-            const elapsed = (performance.now() - startTime) / 1000;
-            const mbps = ((upBytes * 8) / (1024 * 1024) / elapsed).toFixed(1);
-            document.getElementById('v-upload').innerText = mbps;
+            await fetch(RESOURCES.ul_url, { method: 'POST', body: largeBlob, mode: 'no-cors' });
+            upBytes += largeBlob.size;
+            const mbps = ((upBytes * 8) / (1024 * 1024) / ((performance.now() - start) / 1000));
+            document.getElementById('v-upload').innerText = mbps.toFixed(1);
         } catch (e) { break; }
     }
-    return ((upBytes * 8) / (1024 * 1024) / (duration / 1000)).toFixed(1);
+    return (upBytes * 8) / (1024 * 1024) / (ms / 1000);
 }
