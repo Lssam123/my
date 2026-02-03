@@ -1,54 +1,113 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <title>محرك قياس الشبكة المطور | Professional Edition</title>
-    <style>
-        :root { --accent: #00f2fe; --bg: #0a0a0c; }
-        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .main-container { width: 90%; max-width: 800px; background: #121214; padding: 40px; border-radius: 40px; border: 1px solid #222; text-align: center; }
-        
-        .speed-box { margin-bottom: 40px; }
-        .speed-value { font-size: 10rem; font-weight: 950; background: linear-gradient(180deg, #fff, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; }
-        
-        .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-        .card { background: #1a1a1c; padding: 20px; border-radius: 20px; border: 1px solid #222; }
-        .card.active { border-color: var(--accent); box-shadow: 0 0 20px rgba(0,242,254,0.15); }
-        .card span { display: block; }
-        .label { font-size: 0.75rem; color: #666; font-weight: bold; margin-bottom: 8px; }
-        .num { font-size: 2rem; font-weight: 900; }
+const CONFIG = {
+    // سيرفر STC لقياس البينق الصافي (مخفي المسمى)
+    ping_url: "https://www.stc.com.sa/favicon.ico",
+    dl_url: "https://speed.cloudflare.com/__down?bytes=26214400", // 25MB
+    ul_url: "https://httpbin.org/post",
+    threads: 32
+};
 
-        .go-btn { width: 100%; margin-top: 30px; background: #fff; color: #000; border: none; padding: 20px; border-radius: 100px; font-size: 1.5rem; font-weight: 900; cursor: pointer; transition: 0.3s; }
-        .go-btn:hover { background: var(--accent); transform: scale(1.02); }
-        #status-msg { margin-top: 15px; font-size: 0.8rem; color: #444; letter-spacing: 1px; }
-    </style>
-</head>
-<body>
-    <div class="main-container">
-        <div class="speed-box">
-            <span style="color:var(--accent); font-weight: 900; letter-spacing: 5px;">DOWNLOAD</span>
-            <div id="dl-text" class="speed-value">0</div>
-            <div style="font-weight: 900; color: #444; font-size: 1.5rem; margin-top: -10px;">Mbps</div>
-        </div>
+async function startV17Engine() {
+    // 1. فحص البينق الدقيق (تصحيح مشكلة الـ 900ms)
+    const idlePing = await getPrecisionPing();
+    document.getElementById('v-idle').innerText = idlePing.toFixed(1);
 
-        <div class="metrics">
-            <div class="card" id="c-idle">
-                <span class="label">البينق (استجابة خاملة)</span>
-                <span id="v-idle" class="num">--</span><small>ms</small>
-            </div>
-            <div class="card" id="c-loaded">
-                <span class="label">البينق (تحت الضغط)</span>
-                <span id="v-loaded" class="num">--</span><small>ms</small>
-            </div>
-            <div class="card" id="c-ul">
-                <span class="label">الرفع (إرسال)</span>
-                <span id="v-ul" class="num">--</span><small>Mbps</small>
-            </div>
-        </div>
+    // 2. فحص الداونلود (32 مسار - 25MB)
+    const dlResult = await runAdvancedDL();
+    document.getElementById('v-dl').innerText = Math.round(dlResult.speed);
+    document.getElementById('v-loaded').innerText = dlResult.lPing.toFixed(1);
 
-        <button class="go-btn" onclick="startV16Engine()">بدء المعايرة الفنية</button>
-        <div id="status-msg">نظام الفحص جاهز | بروتوكول Anycast نشط</div>
-    </div>
-    <script src="script.js"></script>
-</body>
-</html>
+    // 3. فحص الابلود (حل مشكلة التوقف - ملف 20MB مقسم)
+    const ulSpeed = await runStableUL();
+    document.getElementById('v-ul').innerText = ulSpeed.toFixed(1);
+}
+
+// دالة البينق الاحترافية (تجاوز مشكلة التأخير البرمجي)
+function getPrecisionPing() {
+    return new Promise((resolve) => {
+        const xhr = new XMLHttpRequest();
+        const t0 = performance.now();
+        xhr.open("GET", CONFIG.ping_url + "?t=" + t0, true);
+        // نأخذ الوقت فور استلام "رؤوس البيانات" فقط وليس تحميل الملف كاملاً
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 2) { 
+                const t1 = performance.now();
+                xhr.abort();
+                resolve(t1 - t0);
+            }
+        };
+        xhr.send();
+    });
+}
+
+// محرك الرفع المستقر (حل مشكلة التوقف)
+async function runStableUL() {
+    let totalUploaded = 0;
+    const startTime = performance.now();
+    const duration = 10000; // 10 ثواني
+    const chunkSize = 1024 * 1024; // 1MB لكل قطعة لتجنب الحظر والتوقف
+    const data = new Uint8Array(chunkSize); 
+
+    const workers = Array(10).fill(0).map(async () => {
+        while (performance.now() - startTime < duration) {
+            try {
+                const uniqueID = Math.random().toString(36).substring(7);
+                await fetch(CONFIG.ul_url + "?id=" + uniqueID, {
+                    method: 'POST',
+                    body: data, // إرسال 1MB تلو الآخر بسرعة عالية
+                    mode: 'no-cors',
+                    priority: 'high'
+                });
+                totalUploaded += chunkSize;
+                // تحديث العداد فوراً
+                const currentElapsed = (performance.now() - startTime) / 1000;
+                const currentMbps = (totalUploaded * 8) / (1024 * 1024) / currentElapsed;
+                document.getElementById('v-ul').innerText = currentMbps.toFixed(1);
+            } catch (e) {
+                console.error("Upload chunk failed, retrying...");
+            }
+        }
+    });
+
+    await new Promise(r => setTimeout(r, duration));
+    const finalElapsed = (performance.now() - startTime) / 1000;
+    return (totalUploaded * 8) / (1024 * 1024) / finalElapsed;
+}
+
+// محرك التحميل المتوازي (25MB)
+async function runAdvancedDL() {
+    let bytesReceived = 0;
+    let lPings = [];
+    const startTime = performance.now();
+    const abort = new AbortController();
+
+    const pinger = setInterval(async () => {
+        const p = await getPrecisionPing();
+        lPings.push(p);
+    }, 250);
+
+    const threads = Array(CONFIG.threads).fill(0).map(async () => {
+        while (performance.now() - startTime < 10000) {
+            try {
+                const res = await fetch(CONFIG.dl_url + "&cache=" + Math.random(), { signal: abort.signal });
+                const reader = res.body.getReader();
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    bytesReceived += value.length;
+                    const elapsed = (performance.now() - startTime) / 1000;
+                    const mbps = (bytesReceived * 8) / (1024 * 1024) / elapsed;
+                    document.getElementById('v-dl').innerText = Math.round(mbps);
+                    if (elapsed >= 10) break;
+                }
+            } catch (e) { break; }
+        }
+    });
+
+    await new Promise(r => setTimeout(r, 10500));
+    abort.abort();
+    clearInterval(pinger);
+    return {
+        speed: (bytesReceived * 8) / (1024 * 1024) / 10,
+        lPing: lPings.length ? lPings.reduce((a,b)=>a+b)/lPings.length : 0
+    };
+}
