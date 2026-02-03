@@ -2,47 +2,53 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>نظام معايرة الشبكة عالي الدقة</title>
+    <title>محلل الشبكة الفائق | النسخة المختبرية V11</title>
     <style>
-        :root { --neon: #00f2fe; --bg: #030712; --card: #111827; }
-        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .master-panel { width: 90%; max-width: 800px; background: var(--card); padding: 50px; border-radius: 40px; border: 1px solid rgba(0, 242, 254, 0.2); box-shadow: 0 0 100px rgba(0,0,0,0.8); text-align: center; }
-        .speed-digit { font-size: 9rem; font-weight: 900; background: linear-gradient(180deg, #fff 40%, var(--neon) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; margin: 20px 0; font-family: 'Consolas', monospace; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 30px; }
-        .box { background: rgba(255,255,255,0.03); padding: 25px; border-radius: 25px; border: 1px solid transparent; transition: 0.3s; }
-        .box.active { border-color: var(--neon); background: rgba(0, 242, 254, 0.05); }
-        .tag { display: block; font-size: 0.8rem; color: #94a3b8; font-weight: bold; margin-bottom: 5px; }
-        .val { font-size: 2.5rem; font-weight: 800; }
-        .unit { font-size: 0.8rem; color: #475569; margin-right: 5px; }
-        .launch-btn { margin-top: 40px; background: #fff; color: #000; border: none; padding: 20px 80px; border-radius: 100px; font-size: 1.4rem; font-weight: 900; cursor: pointer; transition: 0.3s; }
-        .launch-btn:hover { background: var(--neon); transform: scale(1.05); }
-        #log { margin-top: 20px; font-size: 0.85rem; color: #64748b; font-weight: bold; }
+        :root { --accent: #00f2fe; --bg: #010409; --card: #0d1117; }
+        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+        .master-container { width: 90%; max-width: 850px; background: var(--card); padding: 50px; border-radius: 40px; border: 1px solid rgba(0, 242, 254, 0.1); box-shadow: 0 0 100px rgba(0,0,0,1); position: relative; }
+        .glow { position: absolute; top: -100px; left: 50%; transform: translateX(-50%); width: 500px; height: 500px; background: radial-gradient(circle, var(--accent) 0%, transparent 70%); filter: blur(150px); opacity: 0.05; pointer-events: none; }
+        .main-stat { text-align: center; margin-bottom: 50px; }
+        .speed-label { font-size: 0.8rem; color: var(--accent); font-weight: 900; letter-spacing: 5px; text-transform: uppercase; }
+        .speed-value { font-size: 11rem; font-weight: 950; background: linear-gradient(180deg, #fff 40%, var(--accent) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 0.8; margin: 25px 0; font-family: 'Arial Black', sans-serif; }
+        .results-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .stat-item { background: rgba(255,255,255,0.02); padding: 30px 15px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.05); transition: 0.4s; text-align: center; }
+        .stat-item.active { border-color: var(--accent); background: rgba(0, 242, 254, 0.05); transform: translateY(-10px); }
+        .stat-label { display: block; font-size: 0.75rem; color: #8b949e; margin-bottom: 10px; font-weight: 800; }
+        .stat-value { font-size: 2.8rem; font-weight: 900; color: #f0f6fc; }
+        .stat-unit { font-size: 0.8rem; color: #484f58; margin-right: 5px; }
+        .btn-start { margin-top: 50px; background: #fff; color: #010409; border: none; padding: 25px 120px; border-radius: 100px; font-size: 1.6rem; font-weight: 950; cursor: pointer; transition: 0.4s; display: block; width: fit-content; margin-left: auto; margin-right: auto; }
+        .btn-start:hover { background: var(--accent); box-shadow: 0 0 50px rgba(0, 242, 254, 0.5); transform: scale(1.05); }
+        .btn-start:disabled { opacity: 0.05; cursor: wait; }
+        #log-status { margin-top: 30px; font-size: 0.9rem; color: #484f58; font-weight: bold; text-align: center; }
     </style>
 </head>
 <body>
-    <div class="master-panel">
-        <div>
-            <span style="color:var(--neon); font-weight: 800; letter-spacing: 5px;">DOWNLOAD</span>
-            <div id="dl-val" class="speed-digit">0</div>
+    <div class="glow"></div>
+    <div class="master-container">
+        <div class="main-stat">
+            <span class="speed-label">تحميل البيانات المستمر</span>
+            <div id="dl-display" class="speed-value">0</div>
+            <div style="font-weight: 900; font-size: 1.5rem; color: #484f58;">Mbps</div>
         </div>
 
-        <div class="grid">
-            <div class="box" id="b-ping">
-                <span class="tag">البينق غير المثقل (Idle)</span>
-                <span id="v-ping" class="val">--</span><span class="unit">ms</span>
+        <div class="results-grid">
+            <div class="stat-item" id="box-idle">
+                <span class="stat-label">بينق خامل (أقل استجابة)</span>
+                <span id="v-idle" class="stat-value">--</span><span class="stat-unit">ms</span>
             </div>
-            <div class="box" id="b-loaded">
-                <span class="tag">البينق المثقل (Loaded)</span>
-                <span id="v-loaded" class="val">--</span><span class="unit">ms</span>
+            <div class="stat-item" id="box-loaded">
+                <span class="stat-label">بينق مثقل (Bufferbloat)</span>
+                <span id="v-loaded" class="stat-value">--</span><span class="stat-unit">ms</span>
             </div>
-            <div class="box" id="b-upload" style="grid-column: span 2;">
-                <span class="tag">سرعة الرفع (UPLOAD)</span>
-                <span id="v-upload" class="val">--</span><span class="unit">Mbps</span>
+            <div class="stat-item" id="box-upload">
+                <span class="stat-label">سرعة الرفع (إرسال)</span>
+                <span id="v-upload" class="stat-value">--</span><span class="stat-unit">Mbps</span>
             </div>
         </div>
 
-        <button id="run-btn" class="launch-btn" onclick="startEngine()">بدء الفحص الدقيق</button>
-        <div id="log">جاهز للمعايرة الفيزيائية</div>
+        <button id="run-btn" class="btn-start" onclick="runExtremeEngine()">إطلاق الفحص الشامل</button>
+        <div id="log-status">جاهز للمعايرة الفنية القصوى</div>
     </div>
     <script src="script.js"></script>
 </body>
