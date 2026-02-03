@@ -2,45 +2,52 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>المحلل الفيزيائي للشبكة | V18</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام قياس الشبكة الاحترافي | النسخة المخبرية</title>
     <style>
-        :root { --neon: #00f2fe; --bg: #050507; }
-        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .box-master { width: 90%; max-width: 700px; background: #0f0f12; padding: 40px; border-radius: 35px; border: 1px solid #1f1f23; text-align: center; }
-        .hero-speed { font-size: 8rem; font-weight: 950; color: var(--neon); line-height: 1; margin: 20px 0; font-family: 'Consolas', monospace; }
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 30px; }
-        .stat { background: #16161a; padding: 20px; border-radius: 20px; border: 1px solid #222; }
-        .stat span { display: block; }
-        .label { font-size: 0.7rem; color: #555; font-weight: bold; margin-bottom: 5px; }
-        .val { font-size: 1.8rem; font-weight: 900; color: #f0f0f0; }
-        .btn { width: 100%; margin-top: 30px; background: var(--neon); color: #000; border: none; padding: 20px; border-radius: 50px; font-size: 1.4rem; font-weight: 900; cursor: pointer; transition: 0.3s; }
-        .btn:hover { filter: brightness(1.2); transform: scale(1.02); }
-        #log { margin-top: 15px; font-size: 0.8rem; color: #333; }
+        :root { --neon: #00f2fe; --dark-bg: #0a0a0c; --card-bg: #111114; }
+        body { background: var(--dark-bg); color: #fff; font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .master-panel { width: 95%; max-width: 800px; background: var(--card-bg); padding: 40px; border-radius: 40px; border: 1px solid #222; box-shadow: 0 50px 100px rgba(0,0,0,0.6); text-align: center; }
+        .hero-title { color: #444; font-weight: 900; letter-spacing: 4px; font-size: 0.9rem; margin-bottom: 10px; display: block; }
+        .main-display { margin-bottom: 40px; }
+        .speed-val { font-size: 10rem; font-weight: 950; background: linear-gradient(180deg, #fff 30%, var(--neon) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 0.8; font-family: 'Arial Black', sans-serif; }
+        .unit-label { font-size: 1.5rem; color: #444; font-weight: 900; }
+        .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 30px; }
+        .metric-card { background: #18181b; padding: 25px 10px; border-radius: 25px; border: 1px solid #222; transition: 0.3s; }
+        .metric-card.active { border-color: var(--neon); background: rgba(0, 242, 254, 0.05); transform: translateY(-5px); }
+        .m-label { display: block; font-size: 0.75rem; color: #666; font-weight: 800; margin-bottom: 10px; }
+        .m-val { font-size: 2.2rem; font-weight: 900; color: #f0f0f0; }
+        .btn-launch { width: 100%; margin-top: 40px; background: #fff; color: #000; border: none; padding: 22px; border-radius: 100px; font-size: 1.6rem; font-weight: 950; cursor: pointer; transition: 0.4s; box-shadow: 0 10px 30px rgba(255,255,255,0.1); }
+        .btn-launch:hover { background: var(--neon); transform: scale(1.02); box-shadow: 0 0 40px rgba(0, 242, 254, 0.4); }
+        .btn-launch:disabled { opacity: 0.1; cursor: wait; }
+        #log-status { margin-top: 20px; font-size: 0.85rem; color: #333; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="box-master">
-        <span style="letter-spacing: 5px; color: #444; font-weight: 900;">NETWORK ANALYZER V18</span>
-        <div id="v-dl" class="hero-speed">0</div>
-        <div style="font-weight: 900; color: #222; margin-top: -15px;">Mbps Download</div>
+    <div class="master-panel">
+        <span class="hero-title">PRECISION BANDWIDTH ANALYZER</span>
+        <div class="main-display">
+            <div id="dl-val" class="speed-val">0</div>
+            <div class="unit-label">Mbps Download</div>
+        </div>
 
-        <div class="grid">
-            <div class="stat">
-                <span class="label">البينق (خامل)</span>
-                <span id="v-ping" class="val">--</span><small>ms</small>
+        <div class="metrics-grid">
+            <div class="metric-card" id="card-ping">
+                <span class="m-label">البينق الخامل</span>
+                <span id="v-ping" class="m-val">--</span><small>ms</small>
             </div>
-            <div class="stat">
-                <span class="label">البينق (مثقل)</span>
-                <span id="v-loaded" class="val">--</span><small>ms</small>
+            <div class="metric-card" id="card-loaded">
+                <span class="m-label">البينق المثقل</span>
+                <span id="v-loaded" class="m-val">--</span><small>ms</small>
             </div>
-            <div class="stat">
-                <span class="label">الرفع (إرسال)</span>
-                <span id="v-ul" class="val">--</span><small>Mbps</small>
+            <div class="metric-card" id="card-ul">
+                <span class="m-label">سرعة الرفع</span>
+                <span id="v-ul" class="m-val">--</span><small>Mbps</small>
             </div>
         </div>
 
-        <button class="btn" onclick="startEngine()">ابدأ فحص الدقة القصوى</button>
-        <div id="log">محرك STC و Cloudflare مدمج</div>
+        <button class="btn-launch" onclick="runEngine()">تشغيل الفحص الشامل</button>
+        <div id="log-status">بوابة Cloudflare Edge نشطة</div>
     </div>
     <script src="script.js"></script>
 </body>
