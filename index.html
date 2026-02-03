@@ -3,64 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام تحليل الشبكة الذكي | مشروع تخرج</title>
+    <title>نظام تحليل الشبكة الاحترافي | V6.0</title>
     <style>
-        :root { --main: #00f2fe; --bg: #040810; --card: #111a2e; --active: #3b82f6; }
-        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        :root { --main-glow: #00f2fe; --bg: #04070f; --card-bg: #0d121f; }
+        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
         
-        .container { width: 95%; max-width: 650px; background: var(--card); padding: 40px; border-radius: 45px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 50px 100px rgba(0,0,0,0.8); position: relative; }
+        .main-container { width: 90%; max-width: 650px; background: var(--card-bg); padding: 50px 30px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 50px 100px rgba(0,0,0,0.8); position: relative; }
         
-        /* تأثير النبض البصري */
-        .pulse-core { position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%); width: 250px; height: 250px; background: var(--main); filter: blur(130px); opacity: 0.1; z-index: 0; }
+        /* توهج ديناميكي خلف العداد */
+        .aura { position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%); width: 280px; height: 280px; background: var(--main-glow); filter: blur(140px); opacity: 0.1; z-index: 0; transition: 0.5s; }
 
-        .display-area { position: relative; z-index: 1; margin-bottom: 50px; text-align: center; }
-        .label-top { font-size: 0.85rem; color: var(--main); font-weight: 800; letter-spacing: 4px; }
-        .speed-digit { font-size: 8.5rem; font-weight: 900; background: linear-gradient(180deg, #fff 50%, var(--main) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 0.85; margin: 20px 0; }
+        .hero-display { position: relative; z-index: 1; margin-bottom: 60px; text-align: center; }
+        .hero-title { font-size: 0.8rem; color: var(--main-glow); font-weight: 900; letter-spacing: 5px; text-transform: uppercase; }
+        .main-number { font-size: 8.5rem; font-weight: 900; background: linear-gradient(180deg, #fff 40%, var(--main-glow) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; margin: 20px 0; font-variant-numeric: tabular-nums; }
         
-        /* البطاقات الجانبية بنظام الشبكة */
-        .grid-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; position: relative; z-index: 1; }
-        .stat-item { background: rgba(0,0,0,0.3); padding: 18px 10px; border-radius: 25px; text-align: center; border: 1px solid rgba(255,255,255,0.03); transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-        .stat-item.active { border-color: var(--main); background: rgba(0, 242, 254, 0.08); transform: translateY(-8px); box-shadow: 0 10px 30px rgba(0, 242, 254, 0.1); }
-        .stat-item span { display: block; }
-        .stat-item .desc { font-size: 0.65rem; color: #64748b; margin-bottom: 8px; font-weight: 700; }
-        .stat-item .num { font-size: 1.8rem; font-weight: 800; }
-        .stat-item .unit { font-size: 0.65rem; color: #475569; }
+        /* البطاقات الجانبية المصغرة جداً */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; z-index: 1; position: relative; }
+        .mini-stat { background: rgba(0,0,0,0.3); padding: 15px 10px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.03); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .mini-stat.active { border-color: var(--main-glow); background: rgba(0, 242, 254, 0.1); transform: scale(1.05); }
+        .mini-stat .tag { font-size: 0.65rem; color: #64748b; display: block; margin-bottom: 8px; font-weight: 700; }
+        .mini-stat .val { font-size: 1.8rem; font-weight: 800; color: #fff; }
+        .mini-stat .unit { font-size: 0.6rem; color: #475569; margin-right: 2px; }
 
-        .action-box { margin-top: 45px; text-align: center; }
-        .btn-start { background: #fff; color: #000; border: none; padding: 22px 85px; border-radius: 100px; font-size: 1.3rem; font-weight: 900; cursor: pointer; transition: 0.3s; }
-        .btn-start:hover { background: var(--main); box-shadow: 0 0 40px rgba(0, 242, 254, 0.4); transform: scale(1.05); }
-        .btn-start:disabled { opacity: 0.15; cursor: not-allowed; }
+        /* التحكم والحالة */
+        .action-area { margin-top: 50px; text-align: center; }
+        .btn-launch { background: #fff; color: #000; border: none; padding: 22px 80px; border-radius: 100px; font-size: 1.3rem; font-weight: 900; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 40px rgba(255,255,255,0.1); }
+        .btn-launch:hover { background: var(--main-glow); box-shadow: 0 0 50px rgba(0, 242, 254, 0.5); transform: translateY(-5px); }
+        .btn-launch:disabled { opacity: 0.1; cursor: wait; }
         
-        #log { margin-top: 20px; font-size: 0.8rem; color: #475569; font-weight: 600; }
+        #status-msg { margin-top: 25px; font-size: 0.8rem; color: #475569; font-weight: bold; letter-spacing: 1px; }
     </style>
 </head>
 <body>
-    <div class="pulse-core"></div>
-    <div class="container">
-        <div class="display-area">
-            <span class="label-top">استقبال البيانات</span>
-            <div id="main-speed" class="speed-digit">0</div>
-            <span style="color: #475569; font-weight: 900; font-size: 1rem;">Mbps</span>
+    <div class="aura" id="aura"></div>
+    <div class="main-container">
+        <div class="hero-display">
+            <span class="hero-title">سرعة التحميل اللحظية</span>
+            <div id="main-val" class="main-number">0</div>
+            <span style="color: #475569; font-weight: 800;">Mbps</span>
         </div>
 
-        <div class="grid-stats">
-            <div class="stat-item" id="card-ping">
-                <span class="desc">استجابة خاملة</span>
-                <span id="v-ping" class="num">--</span><span class="unit">ملي ثانية</span>
+        <div class="stats-grid">
+            <div class="mini-stat" id="box-ping">
+                <span class="tag">بينق خامل</span>
+                <span id="v-ping" class="val">--</span><span class="unit">MS</span>
             </div>
-            <div class="stat-item" id="card-loaded">
-                <span class="desc">استجابة مُثقلة</span>
-                <span id="v-loaded" class="num">--</span><span class="unit">ملي ثانية</span>
+            <div class="mini-stat" id="box-loaded">
+                <span class="tag">بينق مُثقل</span>
+                <span id="v-loaded" class="val">--</span><span class="unit">MS</span>
             </div>
-            <div class="stat-item" id="card-upload">
-                <span class="desc">سرعة الإرسال</span>
-                <span id="v-upload" class="num">--</span><span class="unit">Mbps</span>
+            <div class="mini-stat" id="box-upload">
+                <span class="tag">سرعة الرفع</span>
+                <span id="v-upload" class="val">--</span><span class="unit">Mbps</span>
             </div>
         </div>
 
-        <div class="action-box">
-            <button id="btn-run" class="btn-start" onclick="masterProcess()">ابدأ التحليل</button>
-            <div id="log">جاهز للفحص العميق</div>
+        <div class="action-area">
+            <button id="launch-btn" class="btn-launch" onclick="runEngine()">بدء التحليل</button>
+            <div id="status-msg">نظام المعايرة جاهز</div>
         </div>
     </div>
     <script src="script.js"></script>
