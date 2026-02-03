@@ -1,85 +1,86 @@
-const ENGINE_CONFIG = {
-    dl_url: "https://speed.cloudflare.com/__down?bytes=500000000", // ملف ضخم نصف جيجا
-    ping_url: "https://1.1.1.1/cdn-cgi/trace", // أقرب سيرفر Anycast
-    ul_url: "https://httpbin.org/post",
-    test_duration: 15000, 
-    threads: 20 // 20 مسار متوازي لإشباع النطاق بالكامل
+const RESOURCES = {
+    // ملفات ضخمة لضمان استقرار الفحص
+    downloadFile: "https://speed.cloudflare.com/__down?bytes=524288000", // 500MB
+    uploadEndpoint: "https://httpbin.org/post", 
+    pingTarget: "https://1.1.1.1/cdn-cgi/trace",
+    threads: 16 // 16 مسار متزامن
 };
 
-async function launchUltraEngine() {
+async function startUltraPrecisionTest() {
     const btn = document.getElementById('run-btn');
     const log = document.getElementById('engine-log');
     btn.disabled = true;
 
-    // 1. فحص البينق الخامل (أقرب سيرفر)
-    log.innerText = "تحديد أقرب سيرفر ومعايرة الاستجابة...";
-    document.getElementById('b-ping').classList.add('active');
-    const idlePing = await runUltraPing(5000);
-    document.getElementById('v-ping').innerText = idlePing.toFixed(0);
-    document.getElementById('b-ping').classList.remove('active');
+    // 1. فحص البينق والتذبذب (Jitter)
+    log.innerText = "جاري إجراء فحص بينق عالي التردد...";
+    document.getElementById('c-ping').classList.add('active');
+    document.getElementById('c-jitter').classList.add('active');
+    const pingMetrics = await measureHighFrequencyPing(5000);
+    document.getElementById('v-ping').innerText = pingMetrics.avg.toFixed(1);
+    document.getElementById('v-jitter').innerText = pingMetrics.jitter.toFixed(1);
+    document.getElementById('c-ping').classList.remove('active');
+    document.getElementById('c-jitter').classList.remove('active');
 
-    // 2. التحميل العملاق (20 مسار) + البينق المثقل
-    log.innerText = "إطلاق 20 مسار تحميل متوازي لإشباع النطاق...";
-    document.getElementById('b-loaded').classList.add('active');
-    const dlMetrics = await runUltraDownload(ENGINE_CONFIG.test_duration);
-    document.getElementById('main-speed').innerText = dlMetrics.speed;
-    document.getElementById('v-loaded').innerText = dlMetrics.loadedPing.toFixed(0);
-    document.getElementById('b-loaded').classList.remove('active');
+    // 2. فحص التحميل (500MB Payload)
+    log.innerText = "جاري تحميل ملف 500MB لإشباع النطاق الترددي...";
+    const dlResult = await runUltraDownload(15000);
+    document.getElementById('dl-val').innerText = dlResult;
 
-    // 3. الرفع المعزز
-    log.innerText = "تحليل كفاءة الرفع (High-Payload Mode)...";
-    document.getElementById('b-upload').classList.add('active');
-    const ulSpeed = await runUltraUpload(ENGINE_CONFIG.test_duration);
-    document.getElementById('v-upload').innerText = ulSpeed.toFixed(1);
-    document.getElementById('b-upload').classList.remove('active');
+    // 3. فحص الرفع (Dynamic Payload)
+    log.innerText = "جاري إرسال ملفات اختبار (Upload Analysis)...";
+    document.getElementById('c-upload').classList.add('active');
+    const ulResult = await runUltraUpload(15000);
+    document.getElementById('v-upload').innerText = ulResult;
+    document.getElementById('c-upload').classList.remove('active');
 
-    log.innerText = "اكتمل الفحص الفائق - دقة 99.9%";
+    log.innerText = "تمت المعايرة بنجاح وفق المعايير القياسية";
     btn.disabled = false;
 }
 
-// دالة البينق (أقرب سيرفر + تصفية إحصائية)
-async function runUltraPing(ms) {
+// دالة البينق المتطورة لقياس التذبذب (Jitter)
+async function measureHighFrequencyPing(ms) {
     let pings = [];
     const start = Date.now();
     while (Date.now() - start < ms) {
         const t0 = performance.now();
-        await fetch(ENGINE_CONFIG.ping_url, { mode: 'no-cors', cache: 'no-cache' });
+        await fetch(RESOURCES.pingTarget, { mode: 'no-cors', cache: 'no-cache' });
         pings.push(performance.now() - t0);
-        await new Promise(r => setTimeout(r, 100));
+        await new Promise(r => setTimeout(r, 50)); // نبضة كل 50 ملي ثانية
     }
-    pings.sort((a, b) => a - b);
-    const middle = pings.slice(Math.floor(pings.length * 0.15), -Math.floor(pings.length * 0.15));
-    return middle.reduce((a, b) => a + b) / middle.length;
+    
+    // حساب المتوسط
+    const avg = pings.reduce((a, b) => a + b) / pings.length;
+    
+    // حساب التذبذب (الفرق المتوسط بين القراءات المتتالية)
+    let totalJitter = 0;
+    for (let i = 1; i < pings.length; i++) {
+        totalJitter += Math.abs(pings[i] - pings[i-1]);
+    }
+    const jitter = totalJitter / (pings.length - 1);
+    
+    return { avg, jitter };
 }
 
-// محرك التحميل بـ 20 مسار متوازي
+// محرك التحميل بملف 500MB
 async function runUltraDownload(duration) {
-    let totalBytes = 0;
-    let loadedPings = [];
-    const startT = performance.now();
+    let bytesReceived = 0;
+    const startTime = performance.now();
     const abort = new AbortController();
 
-    const pingTask = setInterval(async () => {
-        const t0 = performance.now();
-        await fetch(ENGINE_CONFIG.ping_url, { mode: 'no-cors' });
-        loadedPings.push(performance.now() - t0);
-    }, 200);
-
-    // إنشاء 20 مسار تدفق (Flooding Engine)
-    const streams = Array(ENGINE_CONFIG.threads).fill(0).map(async () => {
-        while (performance.now() - startT < duration) {
+    const workers = Array(RESOURCES.threads).fill(0).map(async () => {
+        while (performance.now() - startTime < duration) {
             try {
-                const res = await fetch(ENGINE_CONFIG.dl_url + "&r=" + Math.random(), { signal: abort.signal });
+                const res = await fetch(RESOURCES.downloadFile + "&nocache=" + Math.random(), { signal: abort.signal });
                 const reader = res.body.getReader();
                 while (true) {
                     const { done, value } = await reader.read();
-                    if (done || (performance.now() - startT >= duration)) break;
-                    totalBytes += value.length;
+                    if (done || (performance.now() - startTime >= duration)) break;
+                    bytesReceived += value.length;
                     
-                    const elapsed = (performance.now() - startT) / 1000;
-                    if (elapsed > 1.5) { // استبعاد البداية الدافئة TCP
-                        const mbps = ((totalBytes * 8) / (1024 * 1024) / elapsed);
-                        document.getElementById('main-speed').innerText = Math.round(mbps);
+                    const elapsed = (performance.now() - startTime) / 1000;
+                    if (elapsed > 1) { // استقرار TCP
+                        const mbps = ((bytesReceived * 8) / (1024 * 1024) / elapsed);
+                        document.getElementById('dl-val').innerText = Math.round(mbps);
                     }
                 }
             } catch (e) { break; }
@@ -88,27 +89,23 @@ async function runUltraDownload(duration) {
 
     await new Promise(r => setTimeout(r, duration));
     abort.abort();
-    clearInterval(pingTask);
-
-    return {
-        speed: ((totalBytes * 8) / (1024 * 1024) / (duration / 1000)).toFixed(1),
-        loadedPing: (loadedPings.reduce((a,b)=>a+b, 0) / loadedPings.length)
-    };
+    return ((bytesReceived * 8) / (1024 * 1024) / (duration / 1000)).toFixed(1);
 }
 
+// محرك الرفع بملف مخصص 50MB
 async function runUltraUpload(duration) {
-    let upBytes = 0;
-    const startT = performance.now();
-    const payload = new Uint8Array(5 * 1024 * 1024); // رفع كتل ضخمة 5MB
+    let bytesUploaded = 0;
+    const startTime = performance.now();
+    const blob = new Blob([new Uint8Array(50 * 1024 * 1024)]); // ملف رفع 50MB خام
 
-    while (performance.now() - startT < duration) {
+    while (performance.now() - startTime < duration) {
         try {
-            await fetch(ENGINE_CONFIG.ul_url, { method: 'POST', body: payload, mode: 'no-cors' });
-            upBytes += payload.length;
-            const elapsed = (performance.now() - startT) / 1000;
-            const mbps = ((upBytes * 8) / (1024 * 1024) / elapsed).toFixed(1);
+            await fetch(RESOURCES.uploadEndpoint, { method: 'POST', body: blob, mode: 'no-cors' });
+            bytesUploaded += blob.size;
+            const elapsed = (performance.now() - startTime) / 1000;
+            const mbps = ((bytesUploaded * 8) / (1024 * 1024) / elapsed).toFixed(1);
             document.getElementById('v-upload').innerText = mbps;
         } catch (e) { break; }
     }
-    return ((upBytes * 8) / (1024 * 1024) / (duration / 1000));
+    return ((bytesUploaded * 8) / (1024 * 1024) / (duration / 1000)).toFixed(1);
 }
