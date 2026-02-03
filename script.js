@@ -1,125 +1,115 @@
-const API_URLS = {
-    dl: "https://speed.cloudflare.com/__down?bytes=250000000",
+const CONFIG = {
+    dl: "https://speed.cloudflare.com/__down?bytes=300000000",
     ping: "https://1.1.1.1/cdn-cgi/trace",
-    ul: "https://httpbin.org/post"
+    ul: "https://httpbin.org/post",
+    pTime: 5000,
+    tTime: 15000,
+    maxThreads: 12 // تعدد مسارات فائق للوصول لأقصى سرعة
 };
 
-async function runEngine() {
-    const btn = document.getElementById('launch-btn');
-    const msg = document.getElementById('status-msg');
-    const aura = document.getElementById('aura');
-    
+async function startEngine() {
+    const btn = document.getElementById('go-btn');
+    const status = document.getElementById('status-info');
     btn.disabled = true;
-    aura.style.opacity = "0.4";
 
-    try {
-        // 1. فحص البينق الخامل بدقة (5 ثوانٍ)
-        msg.innerText = "قياس استقرار زمن الاستجابة (خامل)...";
-        document.getElementById('box-ping').classList.add('active');
-        const idlePing = await measurePing(5000);
-        document.getElementById('v-ping').innerText = idlePing.toFixed(0);
-        document.getElementById('box-ping').classList.remove('active');
+    // 1. فحص البينق (5ث)
+    status.innerText = "قياس زمن الاستجابة الأساسي...";
+    document.getElementById('c-ping').classList.add('active');
+    const pIdle = await runAdvancedPing(CONFIG.pTime);
+    document.getElementById('v-ping').innerText = pIdle.toFixed(0);
+    document.getElementById('c-ping').classList.remove('active');
 
-        // 2. فحص التحميل + البينق المثقل (15 ثانية)
-        msg.innerText = "تحليل كفاءة التحميل والضغط المتوازي...";
-        document.getElementById('box-loaded').classList.add('active');
-        const dlResult = await measureDownload(15000);
-        document.getElementById('main-val').innerText = dlResult.speed;
-        document.getElementById('v-loaded').innerText = dlResult.loadedPing.toFixed(0);
-        document.getElementById('box-loaded').classList.remove('active');
+    // 2. فحص التحميل والبينق المثقل (15ث)
+    status.innerText = "تحليل كفاءة التحميل تحت الضغط القصوى...";
+    document.getElementById('c-loaded').classList.add('active');
+    const dlResult = await runAdvancedDownload(CONFIG.tTime);
+    document.getElementById('hero-num').innerText = dlResult.speed;
+    document.getElementById('v-loaded').innerText = dlResult.loadedPing.toFixed(0);
+    document.getElementById('c-loaded').classList.remove('active');
 
-        // 3. فحص الرفع (15 ثانية)
-        msg.innerText = "تحليل قدرة الرفع للإرسال الحي...";
-        document.getElementById('box-upload').classList.add('active');
-        const ulSpeed = await measureUpload(15000);
-        document.getElementById('v-upload').innerText = ulSpeed.toFixed(1);
-        document.getElementById('box-upload').classList.remove('active');
+    // 3. فحص الرفع (15ث)
+    status.innerText = "تحليل قدرة الإرسال والاستقرار...";
+    document.getElementById('c-upload').classList.add('active');
+    const ulSpeed = await runAdvancedUpload(CONFIG.tTime);
+    document.getElementById('v-upload').innerText = ulSpeed.toFixed(1);
+    document.getElementById('c-upload').classList.remove('active');
 
-        msg.innerText = "اكتمل الفحص: النتائج معايرة بدقة إحصائية";
-    } catch (e) {
-        msg.innerText = "فشل في الاتصال، تحقق من الشبكة";
-    } finally {
-        btn.disabled = false;
-        aura.style.opacity = "0.1";
-    }
+    status.innerText = "اكتمل الفحص: تمت المعايرة بنجاح";
+    btn.disabled = false;
 }
 
-// دالة البينق مع استبعاد القيم الشاذة
-async function measurePing(duration) {
-    let pings = [];
+// دالة البينق مع الفلترة الإحصائية
+async function runAdvancedPing(ms) {
+    let results = [];
     const start = Date.now();
-    while (Date.now() - start < duration) {
+    while (Date.now() - start < ms) {
         const t0 = performance.now();
-        await fetch(API_URLS.ping, { mode: 'no-cors', cache: 'no-cache' });
-        pings.push(performance.now() - t0);
-        await new Promise(r => setTimeout(r, 150));
+        await fetch(CONFIG.ping, { mode: 'no-cors', cache: 'no-cache' });
+        results.push(performance.now() - t0);
+        await new Promise(r => setTimeout(r, 100));
     }
-    // تصفية إحصائية (حذف أعلى وأدنى 10%)
-    pings.sort((a, b) => a - b);
-    const trim = Math.floor(pings.length * 0.1);
-    const filtered = pings.slice(trim, -trim);
-    return filtered.reduce((a, b) => a + b) / filtered.length;
+    // استبعاد القيم الشاذة (Trimmed Mean)
+    results.sort((a, b) => a - b);
+    const middle = results.slice(Math.ceil(results.length * 0.1), Math.floor(results.length * 0.9));
+    return middle.reduce((a,b) => a+b) / middle.length;
 }
 
-// دالة التحميل العملاقة (Multithreaded + High Precision)
-async function measureDownload(duration) {
-    let totalBytes = 0;
+// دالة التحميل مع تعدد المسارات الديناميكي
+async function runAdvancedDownload(duration) {
+    let bytes = 0;
     let loadedPings = [];
-    const startTest = performance.now();
-    const controller = new AbortController();
+    const startTime = performance.now();
+    const abort = new AbortController();
 
-    // فحص البينق المثقل (Bufferbloat)
-    const monitor = setInterval(async () => {
+    // فحص البينق المثقل
+    const pinger = setInterval(async () => {
         const t0 = performance.now();
-        await fetch(API_URLS.ping, { mode: 'no-cors' });
+        await fetch(CONFIG.ping, { mode: 'no-cors' });
         loadedPings.push(performance.now() - t0);
-    }, 250);
+    }, 200);
 
-    // استخدام 10 مسارات تحميل متوازية (Parallel Fetching)
-    const threads = 10;
-    const downloadWorkers = Array(threads).fill(0).map(async () => {
-        while (performance.now() - startTest < duration) {
+    const workers = Array(CONFIG.maxThreads).fill(0).map(async () => {
+        while (performance.now() - startTime < duration) {
             try {
-                const res = await fetch(API_URLS.dl + "&cb=" + Math.random(), { signal: controller.signal });
+                const res = await fetch(CONFIG.dl + "&cb=" + Math.random(), { signal: abort.signal });
                 const reader = res.body.getReader();
                 while (true) {
                     const { done, value } = await reader.read();
-                    if (done || (performance.now() - startTest >= duration)) break;
-                    totalBytes += value.length;
+                    if (done || (performance.now() - startTime >= duration)) break;
+                    bytes += value.length;
                     
-                    const elapsed = (performance.now() - startTest) / 1000;
-                    const mbps = ((totalBytes * 8) / (1024 * 1024) / elapsed);
-                    // تحديث بصري سلس
-                    document.getElementById('main-val').innerText = Math.round(mbps);
+                    const now = (performance.now() - startTime) / 1000;
+                    const mbps = ((bytes * 8) / (1024 * 1024) / now);
+                    // تحديث بصري سريع
+                    document.getElementById('hero-num').innerText = Math.round(mbps);
                 }
             } catch (e) { break; }
         }
     });
 
     await new Promise(r => setTimeout(r, duration));
-    controller.abort();
-    clearInterval(monitor);
+    abort.abort();
+    clearInterval(pinger);
 
-    const finalSpeed = ((totalBytes * 8) / (1024 * 1024) / (duration / 1000)).toFixed(1);
     return {
-        speed: finalSpeed,
+        speed: ((bytes * 8) / (1024 * 1024) / (duration / 1000)).toFixed(1),
         loadedPing: (loadedPings.reduce((a,b)=>a+b, 0) / loadedPings.length)
     };
 }
 
-async function measureUpload(duration) {
-    let uploaded = 0;
+async function runAdvancedUpload(duration) {
+    let upBytes = 0;
     const startTime = performance.now();
-    const data = new Uint8Array(1024 * 1024); // 1MB chunks
+    const chunk = new Uint8Array(2 * 1024 * 1024); // رفع قطع 2MB لزيادة الدقة
 
     while (performance.now() - startTime < duration) {
         try {
-            await fetch(API_URLS.ul, { method: 'POST', body: data, mode: 'no-cors' });
-            uploaded += data.length;
-            const elapsed = (performance.now() - startTime) / 1000;
-            const mbps = ((uploaded * 8) / (1024 * 1024) / elapsed);
-            document.getElementById('v-upload').innerText = mbps.toFixed(1);
+            await fetch(CONFIG.ul, { method: 'POST', body: chunk, mode: 'no-cors' });
+            upBytes += chunk.length;
+            const now = (performance.now() - startTime) / 1000;
+            const mbps = ((upBytes * 8) / (1024 * 1024) / now).toFixed(1);
+            document.getElementById('v-upload').innerText = mbps;
         } catch (e) { break; }
     }
-    return ((uploaded * 8) / (1024 * 1024) / (duration / 1000));
+    return ((upBytes * 8) / (1024 * 1024) / (duration / 1000));
 }
