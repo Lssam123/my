@@ -1,109 +1,116 @@
-const URLS = {
-    // سيرفر STC للفحص المحلي (مخفي)
-    local: "https://www.stc.com.sa/favicon.ico",
-    // سيرفرات الاختبار العالمية
-    dl: "https://speed.cloudflare.com/__down?bytes=8388608", // حزم 8MB للداونلود
-    ul: "https://httpbin.org/post",
-    ping: "https://1.1.1.1/cdn-cgi/trace"
+const API_NODES = {
+    ping: "https://1.1.1.1/cdn-cgi/trace",
+    download: "https://speed.cloudflare.com/__down?bytes=8000000", // حزم 8MB مثالية
+    upload: "https://speed.cloudflare.com/__up",
+    dl_threads: 32, 
+    ul_threads: 10
 };
 
-async function startEngine() {
-    const btn = document.querySelector('.btn');
+async function runEngine() {
+    const btn = document.querySelector('.btn-launch');
+    const log = document.getElementById('log-status');
     btn.disabled = true;
 
-    // 1. فحص البينق الخامل (تصحيح الـ 900ms عبر طلب HEAD)
-    const idlePing = await measureLatency(URLS.local);
+    // 1. مرحلة البينق (تصحيح الأرقام العالية)
+    log.innerText = "جاري معايرة زمن الاستجابة الصافي...";
+    document.getElementById('card-ping').classList.add('active');
+    const idlePing = await measurePrecisionLatency();
     document.getElementById('v-ping').innerText = idlePing.toFixed(1);
+    document.getElementById('card-ping').classList.remove('active');
 
-    // 2. فحص الداونلود + البينق المثقل (24 مسار)
-    const dlMetrics = await runDownloadTest(10000);
-    document.getElementById('v-dl').innerText = Math.round(dlMetrics.speed);
+    // 2. مرحلة التحميل + البينق المثقل
+    log.innerText = "جاري تحليل التحميل بـ 32 مسار متوازٍ...";
+    document.getElementById('card-loaded').classList.add('active');
+    const dlMetrics = await runHyperDownload(12000);
+    document.getElementById('dl-val').innerText = Math.round(dlMetrics.speed);
     document.getElementById('v-loaded').innerText = dlMetrics.loadedPing.toFixed(1);
+    document.getElementById('card-loaded').classList.remove('active');
 
-    // 3. فحص الابلود (حل مشكلة التوقف عبر حزم 4MB)
-    const ulSpeed = await runUploadTest(10000);
+    // 3. مرحلة الرفع (حل مشكلة التوقف نهائياً)
+    log.innerText = "جاري معايرة سرعة الرفع (حزم 4MB)...";
+    document.getElementById('card-ul').classList.add('active');
+    const ulSpeed = await runHyperUpload(10000);
     document.getElementById('v-ul').innerText = ulSpeed.toFixed(1);
+    document.getElementById('card-ul').classList.remove('active');
 
+    log.innerText = "اكتملت المعايرة بنجاح.";
     btn.disabled = false;
 }
 
-// دالة البينق فائقة الدقة (تجاوز الـ Handshake الطويل)
-async function measureLatency(url) {
-    const samples = [];
-    for (let i = 0; i < 10; i++) {
+// دالة البينق (إهمال أول 3 قراءات DNS/Handshake)
+async function measurePrecisionLatency() {
+    let results = [];
+    for (let i = 0; i < 12; i++) {
         const t0 = performance.now();
         try {
-            // طلب HEAD فقط لتقليل المعالجة
-            await fetch(url + "?t=" + Math.random(), { method: 'HEAD', mode: 'no-cors', cache: 'no-cache' });
-            samples.push(performance.now() - t0);
+            await fetch(API_NODES.ping, { mode: 'no-cors', cache: 'no-cache' });
+            results.push(performance.now() - t0);
         } catch (e) {}
     }
-    samples.sort((a, b) => a - b);
-    return samples[Math.floor(samples.length / 2)]; // القيمة الوسيطة
+    // تصفية: حذف أول 3 قراءات (Warm-up) ثم أخذ أقل قيمة حقيقية
+    const clean = results.slice(3).sort((a, b) => a - b);
+    return clean[0] || 0; 
 }
 
-// محرك التحميل (حزم 8MB لضمان السرعة وتجنب الحظر)
-async function runDownloadTest(duration) {
-    let bytes = 0;
-    let pings = [];
-    const start = performance.now();
-    const controller = new AbortController();
+// محرك التحميل عالي الكثافة
+async function runHyperDownload(duration) {
+    let totalBytes = 0;
+    let loadedPings = [];
+    const startTime = performance.now();
+    const abort = new AbortController();
 
     const pinger = setInterval(async () => {
-        const p = await measureLatency(URLS.ping);
-        pings.push(p);
-    }, 250);
+        const p = await measurePrecisionLatency();
+        if (p > 0) loadedPings.push(p);
+    }, 400);
 
-    const workers = Array(24).fill(0).map(async () => {
-        while (performance.now() - start < duration) {
+    const streams = Array(API_NODES.dl_threads).fill(0).map(async () => {
+        while (performance.now() - startTime < duration) {
             try {
-                const res = await fetch(URLS.dl + "&cache=" + Math.random(), { signal: controller.signal });
+                const res = await fetch(API_NODES.download + "&nocache=" + Math.random(), { signal: abort.signal });
                 const reader = res.body.getReader();
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) break;
-                    bytes += value.length;
-                    const elapsed = (performance.now() - start) / 1000;
-                    if (elapsed > 1) {
-                        const mbps = (bytes * 8) / (1024 * 1024) / elapsed;
-                        document.getElementById('v-dl').innerText = Math.round(mbps);
-                    }
+                    totalBytes += value.length;
+                    const elapsed = (performance.now() - startTime) / 1000;
+                    const mbps = (totalBytes * 8) / (1024 * 1024) / elapsed;
+                    if (elapsed > 1) document.getElementById('dl-val').innerText = Math.round(mbps);
                 }
             } catch (e) { break; }
         }
     });
 
     await new Promise(r => setTimeout(r, duration));
-    controller.abort();
+    abort.abort();
     clearInterval(pinger);
     return {
-        speed: (bytes * 8) / (1024 * 1024) / (duration / 1000),
-        loadedPing: pings.reduce((a, b) => a + b, 0) / pings.length
+        speed: (totalBytes * 8) / (1024 * 1024) / (duration / 1000),
+        loadedPing: loadedPings.reduce((a, b) => a + b, 0) / loadedPings.length
     };
 }
 
-// محرك الرفع المستقر (حزم 4MB لتجنب حظر المتصفح)
-async function runUploadTest(duration) {
-    let bytesUploaded = 0;
-    const start = performance.now();
-    const data = new Uint8Array(4 * 1024 * 1024); // حزمة 4MB مثالية
+// محرك الرفع المستقر (حزم 4MB متتالية)
+async function runHyperUpload(duration) {
+    let uploadedBytes = 0;
+    const startTime = performance.now();
+    const chunk = new Uint8Array(4 * 1024 * 1024); // 4MB
 
-    const uploadWorkers = Array(12).fill(0).map(async () => {
-        while (performance.now() - start < duration) {
+    const uploaders = Array(API_NODES.ul_threads).fill(0).map(async () => {
+        while (performance.now() - startTime < duration) {
             try {
-                await fetch(URLS.ul + "?b=" + Math.random(), {
+                await fetch(API_NODES.upload, {
                     method: 'POST',
-                    body: data,
+                    body: chunk,
                     mode: 'no-cors'
                 });
-                bytesUploaded += data.length;
-                const elapsed = (performance.now() - start) / 1000;
-                const mbps = (bytesUploaded * 8) / (1024 * 1024) / elapsed;
-                document.getElementById('v-ul').innerText = mbps.toFixed(1);
+                uploadedBytes += chunk.length;
+                const elapsed = (performance.now() - startTime) / 1000;
+                document.getElementById('v-ul').innerText = ((uploadedBytes * 8) / (1024 * 1024) / elapsed).toFixed(1);
             } catch (e) { break; }
         }
     });
 
     await new Promise(r => setTimeout(r, duration));
-    return (bytesUploaded * 8) / (1024 * 1024) / (duration / 1000);
+    return (uploadedBytes * 8) / (1024 * 1024) / (duration / 1000);
 }
