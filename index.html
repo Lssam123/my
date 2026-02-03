@@ -2,52 +2,45 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>محرك قياس الشبكة المطور | Professional Edition</title>
+    <title>المحلل الفيزيائي للشبكة | V18</title>
     <style>
-        :root { --accent: #00f2fe; --bg: #0a0a0c; }
+        :root { --neon: #00f2fe; --bg: #050507; }
         body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .main-container { width: 90%; max-width: 800px; background: #121214; padding: 40px; border-radius: 40px; border: 1px solid #222; text-align: center; }
-        
-        .speed-box { margin-bottom: 40px; }
-        .speed-value { font-size: 10rem; font-weight: 950; background: linear-gradient(180deg, #fff, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; }
-        
-        .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-        .card { background: #1a1a1c; padding: 20px; border-radius: 20px; border: 1px solid #222; }
-        .card.active { border-color: var(--accent); box-shadow: 0 0 20px rgba(0,242,254,0.15); }
-        .card span { display: block; }
-        .label { font-size: 0.75rem; color: #666; font-weight: bold; margin-bottom: 8px; }
-        .num { font-size: 2rem; font-weight: 900; }
-
-        .go-btn { width: 100%; margin-top: 30px; background: #fff; color: #000; border: none; padding: 20px; border-radius: 100px; font-size: 1.5rem; font-weight: 900; cursor: pointer; transition: 0.3s; }
-        .go-btn:hover { background: var(--accent); transform: scale(1.02); }
-        #status-msg { margin-top: 15px; font-size: 0.8rem; color: #444; letter-spacing: 1px; }
+        .box-master { width: 90%; max-width: 700px; background: #0f0f12; padding: 40px; border-radius: 35px; border: 1px solid #1f1f23; text-align: center; }
+        .hero-speed { font-size: 8rem; font-weight: 950; color: var(--neon); line-height: 1; margin: 20px 0; font-family: 'Consolas', monospace; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 30px; }
+        .stat { background: #16161a; padding: 20px; border-radius: 20px; border: 1px solid #222; }
+        .stat span { display: block; }
+        .label { font-size: 0.7rem; color: #555; font-weight: bold; margin-bottom: 5px; }
+        .val { font-size: 1.8rem; font-weight: 900; color: #f0f0f0; }
+        .btn { width: 100%; margin-top: 30px; background: var(--neon); color: #000; border: none; padding: 20px; border-radius: 50px; font-size: 1.4rem; font-weight: 900; cursor: pointer; transition: 0.3s; }
+        .btn:hover { filter: brightness(1.2); transform: scale(1.02); }
+        #log { margin-top: 15px; font-size: 0.8rem; color: #333; }
     </style>
 </head>
 <body>
-    <div class="main-container">
-        <div class="speed-box">
-            <span style="color:var(--accent); font-weight: 900; letter-spacing: 5px;">DOWNLOAD</span>
-            <div id="dl-text" class="speed-value">0</div>
-            <div style="font-weight: 900; color: #444; font-size: 1.5rem; margin-top: -10px;">Mbps</div>
-        </div>
+    <div class="box-master">
+        <span style="letter-spacing: 5px; color: #444; font-weight: 900;">NETWORK ANALYZER V18</span>
+        <div id="v-dl" class="hero-speed">0</div>
+        <div style="font-weight: 900; color: #222; margin-top: -15px;">Mbps Download</div>
 
-        <div class="metrics">
-            <div class="card" id="c-idle">
-                <span class="label">البينق (استجابة خاملة)</span>
-                <span id="v-idle" class="num">--</span><small>ms</small>
+        <div class="grid">
+            <div class="stat">
+                <span class="label">البينق (خامل)</span>
+                <span id="v-ping" class="val">--</span><small>ms</small>
             </div>
-            <div class="card" id="c-loaded">
-                <span class="label">البينق (تحت الضغط)</span>
-                <span id="v-loaded" class="num">--</span><small>ms</small>
+            <div class="stat">
+                <span class="label">البينق (مثقل)</span>
+                <span id="v-loaded" class="val">--</span><small>ms</small>
             </div>
-            <div class="card" id="c-ul">
+            <div class="stat">
                 <span class="label">الرفع (إرسال)</span>
-                <span id="v-ul" class="num">--</span><small>Mbps</small>
+                <span id="v-ul" class="val">--</span><small>Mbps</small>
             </div>
         </div>
 
-        <button class="go-btn" onclick="startV16Engine()">بدء المعايرة الفنية</button>
-        <div id="status-msg">نظام الفحص جاهز | بروتوكول Anycast نشط</div>
+        <button class="btn" onclick="startEngine()">ابدأ فحص الدقة القصوى</button>
+        <div id="log">محرك STC و Cloudflare مدمج</div>
     </div>
     <script src="script.js"></script>
 </body>
