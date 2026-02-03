@@ -1,113 +1,109 @@
-const CONFIG = {
-    // سيرفر STC لقياس البينق الصافي (مخفي المسمى)
-    ping_url: "https://www.stc.com.sa/favicon.ico",
-    dl_url: "https://speed.cloudflare.com/__down?bytes=26214400", // 25MB
-    ul_url: "https://httpbin.org/post",
-    threads: 32
+const URLS = {
+    // سيرفر STC للفحص المحلي (مخفي)
+    local: "https://www.stc.com.sa/favicon.ico",
+    // سيرفرات الاختبار العالمية
+    dl: "https://speed.cloudflare.com/__down?bytes=8388608", // حزم 8MB للداونلود
+    ul: "https://httpbin.org/post",
+    ping: "https://1.1.1.1/cdn-cgi/trace"
 };
 
-async function startV17Engine() {
-    // 1. فحص البينق الدقيق (تصحيح مشكلة الـ 900ms)
-    const idlePing = await getPrecisionPing();
-    document.getElementById('v-idle').innerText = idlePing.toFixed(1);
+async function startEngine() {
+    const btn = document.querySelector('.btn');
+    btn.disabled = true;
 
-    // 2. فحص الداونلود (32 مسار - 25MB)
-    const dlResult = await runAdvancedDL();
-    document.getElementById('v-dl').innerText = Math.round(dlResult.speed);
-    document.getElementById('v-loaded').innerText = dlResult.lPing.toFixed(1);
+    // 1. فحص البينق الخامل (تصحيح الـ 900ms عبر طلب HEAD)
+    const idlePing = await measureLatency(URLS.local);
+    document.getElementById('v-ping').innerText = idlePing.toFixed(1);
 
-    // 3. فحص الابلود (حل مشكلة التوقف - ملف 20MB مقسم)
-    const ulSpeed = await runStableUL();
+    // 2. فحص الداونلود + البينق المثقل (24 مسار)
+    const dlMetrics = await runDownloadTest(10000);
+    document.getElementById('v-dl').innerText = Math.round(dlMetrics.speed);
+    document.getElementById('v-loaded').innerText = dlMetrics.loadedPing.toFixed(1);
+
+    // 3. فحص الابلود (حل مشكلة التوقف عبر حزم 4MB)
+    const ulSpeed = await runUploadTest(10000);
     document.getElementById('v-ul').innerText = ulSpeed.toFixed(1);
+
+    btn.disabled = false;
 }
 
-// دالة البينق الاحترافية (تجاوز مشكلة التأخير البرمجي)
-function getPrecisionPing() {
-    return new Promise((resolve) => {
-        const xhr = new XMLHttpRequest();
+// دالة البينق فائقة الدقة (تجاوز الـ Handshake الطويل)
+async function measureLatency(url) {
+    const samples = [];
+    for (let i = 0; i < 10; i++) {
         const t0 = performance.now();
-        xhr.open("GET", CONFIG.ping_url + "?t=" + t0, true);
-        // نأخذ الوقت فور استلام "رؤوس البيانات" فقط وليس تحميل الملف كاملاً
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 2) { 
-                const t1 = performance.now();
-                xhr.abort();
-                resolve(t1 - t0);
-            }
-        };
-        xhr.send();
-    });
+        try {
+            // طلب HEAD فقط لتقليل المعالجة
+            await fetch(url + "?t=" + Math.random(), { method: 'HEAD', mode: 'no-cors', cache: 'no-cache' });
+            samples.push(performance.now() - t0);
+        } catch (e) {}
+    }
+    samples.sort((a, b) => a - b);
+    return samples[Math.floor(samples.length / 2)]; // القيمة الوسيطة
 }
 
-// محرك الرفع المستقر (حل مشكلة التوقف)
-async function runStableUL() {
-    let totalUploaded = 0;
-    const startTime = performance.now();
-    const duration = 10000; // 10 ثواني
-    const chunkSize = 1024 * 1024; // 1MB لكل قطعة لتجنب الحظر والتوقف
-    const data = new Uint8Array(chunkSize); 
-
-    const workers = Array(10).fill(0).map(async () => {
-        while (performance.now() - startTime < duration) {
-            try {
-                const uniqueID = Math.random().toString(36).substring(7);
-                await fetch(CONFIG.ul_url + "?id=" + uniqueID, {
-                    method: 'POST',
-                    body: data, // إرسال 1MB تلو الآخر بسرعة عالية
-                    mode: 'no-cors',
-                    priority: 'high'
-                });
-                totalUploaded += chunkSize;
-                // تحديث العداد فوراً
-                const currentElapsed = (performance.now() - startTime) / 1000;
-                const currentMbps = (totalUploaded * 8) / (1024 * 1024) / currentElapsed;
-                document.getElementById('v-ul').innerText = currentMbps.toFixed(1);
-            } catch (e) {
-                console.error("Upload chunk failed, retrying...");
-            }
-        }
-    });
-
-    await new Promise(r => setTimeout(r, duration));
-    const finalElapsed = (performance.now() - startTime) / 1000;
-    return (totalUploaded * 8) / (1024 * 1024) / finalElapsed;
-}
-
-// محرك التحميل المتوازي (25MB)
-async function runAdvancedDL() {
-    let bytesReceived = 0;
-    let lPings = [];
-    const startTime = performance.now();
-    const abort = new AbortController();
+// محرك التحميل (حزم 8MB لضمان السرعة وتجنب الحظر)
+async function runDownloadTest(duration) {
+    let bytes = 0;
+    let pings = [];
+    const start = performance.now();
+    const controller = new AbortController();
 
     const pinger = setInterval(async () => {
-        const p = await getPrecisionPing();
-        lPings.push(p);
+        const p = await measureLatency(URLS.ping);
+        pings.push(p);
     }, 250);
 
-    const threads = Array(CONFIG.threads).fill(0).map(async () => {
-        while (performance.now() - startTime < 10000) {
+    const workers = Array(24).fill(0).map(async () => {
+        while (performance.now() - start < duration) {
             try {
-                const res = await fetch(CONFIG.dl_url + "&cache=" + Math.random(), { signal: abort.signal });
+                const res = await fetch(URLS.dl + "&cache=" + Math.random(), { signal: controller.signal });
                 const reader = res.body.getReader();
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) break;
-                    bytesReceived += value.length;
-                    const elapsed = (performance.now() - startTime) / 1000;
-                    const mbps = (bytesReceived * 8) / (1024 * 1024) / elapsed;
-                    document.getElementById('v-dl').innerText = Math.round(mbps);
-                    if (elapsed >= 10) break;
+                    bytes += value.length;
+                    const elapsed = (performance.now() - start) / 1000;
+                    if (elapsed > 1) {
+                        const mbps = (bytes * 8) / (1024 * 1024) / elapsed;
+                        document.getElementById('v-dl').innerText = Math.round(mbps);
+                    }
                 }
             } catch (e) { break; }
         }
     });
 
-    await new Promise(r => setTimeout(r, 10500));
-    abort.abort();
+    await new Promise(r => setTimeout(r, duration));
+    controller.abort();
     clearInterval(pinger);
     return {
-        speed: (bytesReceived * 8) / (1024 * 1024) / 10,
-        lPing: lPings.length ? lPings.reduce((a,b)=>a+b)/lPings.length : 0
+        speed: (bytes * 8) / (1024 * 1024) / (duration / 1000),
+        loadedPing: pings.reduce((a, b) => a + b, 0) / pings.length
     };
+}
+
+// محرك الرفع المستقر (حزم 4MB لتجنب حظر المتصفح)
+async function runUploadTest(duration) {
+    let bytesUploaded = 0;
+    const start = performance.now();
+    const data = new Uint8Array(4 * 1024 * 1024); // حزمة 4MB مثالية
+
+    const uploadWorkers = Array(12).fill(0).map(async () => {
+        while (performance.now() - start < duration) {
+            try {
+                await fetch(URLS.ul + "?b=" + Math.random(), {
+                    method: 'POST',
+                    body: data,
+                    mode: 'no-cors'
+                });
+                bytesUploaded += data.length;
+                const elapsed = (performance.now() - start) / 1000;
+                const mbps = (bytesUploaded * 8) / (1024 * 1024) / elapsed;
+                document.getElementById('v-ul').innerText = mbps.toFixed(1);
+            } catch (e) { break; }
+        }
+    });
+
+    await new Promise(r => setTimeout(r, duration));
+    return (bytesUploaded * 8) / (1024 * 1024) / (duration / 1000);
 }
