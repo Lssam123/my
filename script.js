@@ -1,121 +1,112 @@
-const RESOURCES = {
-    dl_url: "https://speed.cloudflare.com/__down?bytes=500000000",
-    ul_url: "https://httpbin.org/post",
-    // قائمة السيرفرات لاختيار الأقرب (Precision Targeting)
-    ping_targets: [
-        "https://1.1.1.1/cdn-cgi/trace",
-        "https://8.8.8.8/favicon.ico",
-        "https://speed.cloudflare.com/cdn-cgi/trace"
-    ],
-    threads: 24 // رفع عدد المسارات لضمان إشباع الشبكة
+const CONFIG = {
+    dl_url: "https://speed.cloudflare.com/__down?bytes=500000000", // 500MB
+    ul_url: "https://httpbin.org/post", 
+    ping_url: "https://1.1.1.1/cdn-cgi/trace",
+    threads: 16, // عدد المسارات للسرعات العالية
+    test_time: 12000 // 12 ثانية لكل فحص
 };
 
-async function runExtremeEngine() {
-    const btn = document.getElementById('run-btn');
-    const log = document.getElementById('log-status');
+async function masterEngine() {
+    const btn = document.getElementById('start-btn');
     btn.disabled = true;
+    
+    // 1. فحص البينق الدقيق (Idle)
+    document.getElementById('card-ping').classList.add('active');
+    const idlePing = await runPrecisionPing();
+    document.getElementById('v-ping').innerText = idlePing.toFixed(1) + " ms";
+    document.getElementById('card-ping').classList.remove('active');
 
-    // 1. فحص البينق الفائق (تعدد المصادر)
-    log.innerText = "جاري البحث عن أقرب نقطة استجابة ومعايرة البينق...";
-    document.getElementById('box-idle').classList.add('active');
-    const idlePing = await getPrecisionPing();
-    document.getElementById('v-idle').innerText = idlePing.toFixed(1);
-    document.getElementById('box-idle').classList.remove('active');
+    // 2. فحص التحميل + البينق المثقل (Loaded)
+    document.getElementById('card-loaded').classList.add('active');
+    const dlResult = await runTurboDownload();
+    document.getElementById('main-val').innerText = Math.round(dlResult.speed);
+    document.getElementById('v-loaded').innerText = dlResult.loadedPing.toFixed(1) + " ms";
+    document.getElementById('card-loaded').classList.remove('active');
 
-    // 2. التحميل العملاق + البينق المثقل (الدقة القصوى)
-    log.innerText = "جاري إشباع النطاق الترددي بـ 24 مسار وقياس البينق تحت الضغط...";
-    document.getElementById('box-loaded').classList.add('active');
-    const dlMetrics = await runHyperDownload(15000);
-    document.getElementById('dl-display').innerText = Math.round(dlMetrics.speed);
-    document.getElementById('v-loaded').innerText = dlMetrics.loadedPing.toFixed(1);
-    document.getElementById('box-loaded').classList.remove('active');
+    // 3. فحص الرفع (حل مشكلة التوقف)
+    document.getElementById('card-upload').classList.add('active');
+    const ulSpeed = await runTurboUpload();
+    document.getElementById('v-upload').innerText = ulSpeed.toFixed(1) + " Mbps";
+    document.getElementById('card-upload').classList.remove('active');
 
-    // 3. الرفع بكتل ضخمة (Extreme Upload)
-    log.innerText = "جاري تحليل الرفع باستخدام كتل بيانات 25MB...";
-    document.getElementById('box-upload').classList.add('active');
-    const ulSpeed = await runHyperUpload(15000);
-    document.getElementById('v-upload').innerText = ulSpeed.toFixed(1);
-    document.getElementById('box-upload').classList.remove('active');
-
-    log.innerText = "تم الانتهاء: المعايرة تمت بدقة مخبرية";
     btn.disabled = false;
+    document.getElementById('log').innerText = "اكتمل الفحص بدقة عالية";
 }
 
-// دالة البينق (تختار الأسرع من 3 مصادر عالمية)
-async function getPrecisionPing() {
-    let allResults = [];
-    for (let target of RESOURCES.ping_targets) {
-        let pings = [];
-        for (let i = 0; i < 15; i++) {
-            const t0 = performance.now();
-            try {
-                await fetch(target, { mode: 'no-cors', cache: 'no-cache' });
-                pings.push(performance.now() - t0);
-            } catch (e) {}
-        }
-        allResults.push(...pings);
+// دالة البينق (أقرب سيرفر + دقة Microseconds)
+async function runPrecisionPing() {
+    let samples = [];
+    for(let i=0; i<20; i++) {
+        const t0 = performance.now();
+        await fetch(CONFIG.ping_url, { mode: 'no-cors', cache: 'no-cache' });
+        samples.push(performance.now() - t0);
     }
-    allResults.sort((a, b) => a - b);
-    // نأخذ أفضل 20% من القراءات (الاستجابة الحقيقية للسيرفر الأقرب)
-    const bestSection = allResults.slice(0, Math.floor(allResults.length * 0.2));
-    return bestSection.reduce((a, b) => a + b) / bestSection.length;
+    samples.sort((a,b)=>a-b);
+    return samples[Math.floor(samples.length/2)]; // اختيار القيمة الوسيطة لدقة أعلى
 }
 
-// محرك التحميل بـ 24 مسار
-async function runHyperDownload(ms) {
+// محرك التحميل للسرعات العالية (16 مسار)
+async function runTurboDownload() {
     let totalBytes = 0;
-    let lPings = [];
+    let pings = [];
     const start = performance.now();
     const controller = new AbortController();
 
-    const monitorPing = setInterval(async () => {
+    // قياس البينق المثقل أثناء التحميل
+    const pingInterval = setInterval(async () => {
         const t0 = performance.now();
-        try {
-            await fetch(RESOURCES.ping_targets[0], { mode: 'no-cors' });
-            lPings.push(performance.now() - t0);
-        } catch (e) {}
-    }, 150);
+        await fetch(CONFIG.ping_url, { mode: 'no-cors' });
+        pings.push(performance.now() - t0);
+    }, 100);
 
-    const workers = Array(RESOURCES.threads).fill(0).map(async () => {
-        while (performance.now() - start < ms) {
+    const streams = Array(CONFIG.threads).fill(0).map(async () => {
+        while (performance.now() - start < CONFIG.test_time) {
             try {
-                const res = await fetch(RESOURCES.dl_url + "&nocache=" + Math.random(), { signal: controller.signal });
+                const res = await fetch(CONFIG.dl_url + "&r=" + Math.random(), { signal: controller.signal });
                 const reader = res.body.getReader();
                 while (true) {
                     const { done, value } = await reader.read();
-                    if (done || (performance.now() - start >= ms)) break;
+                    if (done || (performance.now() - start >= CONFIG.test_time)) break;
                     totalBytes += value.length;
-                    const mbps = ((totalBytes * 8) / (1024 * 1024) / ((performance.now() - start) / 1000));
-                    document.getElementById('dl-display').innerText = Math.round(mbps);
+                    // تحديث الواجهة
+                    const currentSpeed = (totalBytes * 8) / (1024 * 1024) / ((performance.now() - start)/1000);
+                    if ((performance.now()-start) > 2000) document.getElementById('main-val').innerText = Math.round(currentSpeed);
                 }
             } catch (e) { break; }
         }
     });
 
-    await new Promise(r => setTimeout(r, ms));
+    await new Promise(r => setTimeout(r, CONFIG.test_time));
     controller.abort();
-    clearInterval(monitorPing);
-
+    clearInterval(pingInterval);
     return {
-        speed: (totalBytes * 8) / (1024 * 1024) / (ms / 1000),
-        loadedPing: lPings.reduce((a, b) => a + b) / lPings.length
+        speed: (totalBytes * 8) / (1024 * 1024) / (CONFIG.test_time/1000),
+        loadedPing: pings.reduce((a,b)=>a+b,0)/pings.length
     };
 }
 
-// محرك الرفع بكتل بيانات ضخمة (حل مشكلة بطء الرفع)
-async function runHyperUpload(ms) {
-    let upBytes = 0;
+// محرك الرفع المطور (حل مشكلة عدم الفحص)
+async function runTurboUpload() {
+    let uploadedBytes = 0;
     const start = performance.now();
-    // إنشاء كتلة بيانات ضخمة 25 ميجابايت لضمان تشبع الرفع
-    const largeBlob = new Blob([new Uint8Array(25 * 1024 * 1024)]);
+    const dataChunk = new Uint8Array(2 * 1024 * 1024); // كتل 2MB
 
-    while (performance.now() - start < ms) {
-        try {
-            await fetch(RESOURCES.ul_url, { method: 'POST', body: largeBlob, mode: 'no-cors' });
-            upBytes += largeBlob.size;
-            const mbps = ((upBytes * 8) / (1024 * 1024) / ((performance.now() - start) / 1000));
-            document.getElementById('v-upload').innerText = mbps.toFixed(1);
-        } catch (e) { break; }
-    }
-    return (upBytes * 8) / (1024 * 1024) / (ms / 1000);
+    // تشغيل عدة طلبات رفع متوازية لإشباع الـ Upload
+    const uploadWorkers = Array(8).fill(0).map(async () => {
+        while (performance.now() - start < CONFIG.test_time) {
+            try {
+                await fetch(CONFIG.ul_url, {
+                    method: 'POST',
+                    body: dataChunk,
+                    mode: 'no-cors'
+                });
+                uploadedBytes += dataChunk.length;
+                const currentUl = (uploadedBytes * 8) / (1024 * 1024) / ((performance.now() - start)/1000);
+                document.getElementById('v-upload').innerText = currentUl.toFixed(1);
+            } catch (e) { break; }
+        }
+    });
+
+    await new Promise(r => setTimeout(r, CONFIG.test_time));
+    return (uploadedBytes * 8) / (1024 * 1024) / (CONFIG.test_time/1000);
 }
