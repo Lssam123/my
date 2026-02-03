@@ -3,65 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام تحليل الشبكة الاحترافي | V6.0</title>
+    <title>محلل الشبكة الاحترافي | النسخة النهائية</title>
     <style>
-        :root { --main-glow: #00f2fe; --bg: #04070f; --card-bg: #0d121f; }
-        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+        :root { --neon: #00f2fe; --bg: #020617; --panel: #0f172a; --glass: rgba(255,255,255,0.03); }
+        body { background: var(--bg); color: #fff; font-family: 'Inter', system-ui; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
         
-        .main-container { width: 90%; max-width: 650px; background: var(--card-bg); padding: 50px 30px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 50px 100px rgba(0,0,0,0.8); position: relative; }
+        .app-shell { width: 90%; max-width: 600px; background: var(--panel); padding: 60px 40px; border-radius: 60px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 100px 200px rgba(0,0,0,0.9); position: relative; }
         
-        /* توهج ديناميكي خلف العداد */
-        .aura { position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%); width: 280px; height: 280px; background: var(--main-glow); filter: blur(140px); opacity: 0.1; z-index: 0; transition: 0.5s; }
+        /* دائرة الطاقة خلف العداد */
+        .power-core { position: absolute; top: 20%; left: 50%; transform: translateX(-50%); width: 300px; height: 300px; background: radial-gradient(circle, var(--neon) 0%, transparent 70%); filter: blur(150px); opacity: 0.1; z-index: 0; }
 
-        .hero-display { position: relative; z-index: 1; margin-bottom: 60px; text-align: center; }
-        .hero-title { font-size: 0.8rem; color: var(--main-glow); font-weight: 900; letter-spacing: 5px; text-transform: uppercase; }
-        .main-number { font-size: 8.5rem; font-weight: 900; background: linear-gradient(180deg, #fff 40%, var(--main-glow) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; margin: 20px 0; font-variant-numeric: tabular-nums; }
+        .speed-gauge { position: relative; z-index: 1; margin-bottom: 50px; }
+        .label-main { font-size: 0.9rem; color: var(--neon); font-weight: 900; letter-spacing: 6px; }
+        .main-num { font-size: 9rem; font-weight: 950; background: linear-gradient(180deg, #fff 50%, var(--neon) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 0.8; margin: 25px 0; }
         
-        /* البطاقات الجانبية المصغرة جداً */
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; z-index: 1; position: relative; }
-        .mini-stat { background: rgba(0,0,0,0.3); padding: 15px 10px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.03); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .mini-stat.active { border-color: var(--main-glow); background: rgba(0, 242, 254, 0.1); transform: scale(1.05); }
-        .mini-stat .tag { font-size: 0.65rem; color: #64748b; display: block; margin-bottom: 8px; font-weight: 700; }
-        .mini-stat .val { font-size: 1.8rem; font-weight: 800; color: #fff; }
-        .mini-stat .unit { font-size: 0.6rem; color: #475569; margin-right: 2px; }
+        .metrics-row { display: flex; gap: 15px; position: relative; z-index: 1; }
+        .metric-card { flex: 1; background: var(--glass); padding: 20px 10px; border-radius: 25px; border: 1px solid rgba(255,255,255,0.05); transition: 0.5s cubic-bezier(0.2, 1, 0.3, 1); }
+        .metric-card.active { border-color: var(--neon); background: rgba(0, 242, 254, 0.05); transform: translateY(-10px); }
+        .card-tag { font-size: 0.65rem; color: #64748b; margin-bottom: 10px; font-weight: 800; }
+        .card-val { font-size: 1.8rem; font-weight: 900; color: #fff; }
+        .card-unit { font-size: 0.6rem; color: #475569; margin-right: 2px; }
 
-        /* التحكم والحالة */
-        .action-area { margin-top: 50px; text-align: center; }
-        .btn-launch { background: #fff; color: #000; border: none; padding: 22px 80px; border-radius: 100px; font-size: 1.3rem; font-weight: 900; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 40px rgba(255,255,255,0.1); }
-        .btn-launch:hover { background: var(--main-glow); box-shadow: 0 0 50px rgba(0, 242, 254, 0.5); transform: translateY(-5px); }
-        .btn-launch:disabled { opacity: 0.1; cursor: wait; }
+        .start-btn { margin-top: 50px; background: #fff; color: #020617; border: none; padding: 22px 90px; border-radius: 100px; font-size: 1.4rem; font-weight: 950; cursor: pointer; transition: 0.4s; }
+        .start-btn:hover { background: var(--neon); box-shadow: 0 0 60px rgba(0, 242, 254, 0.4); transform: scale(1.05); }
+        .start-btn:disabled { opacity: 0.05; cursor: wait; }
         
-        #status-msg { margin-top: 25px; font-size: 0.8rem; color: #475569; font-weight: bold; letter-spacing: 1px; }
+        #status-info { margin-top: 30px; font-size: 0.8rem; color: #475569; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="aura" id="aura"></div>
-    <div class="main-container">
-        <div class="hero-display">
-            <span class="hero-title">سرعة التحميل اللحظية</span>
-            <div id="main-val" class="main-number">0</div>
-            <span style="color: #475569; font-weight: 800;">Mbps</span>
+    <div class="power-core"></div>
+    <div class="app-shell">
+        <div class="speed-gauge">
+            <span class="label-main">تحميل البيانات</span>
+            <div id="hero-num" class="main-num">0</div>
+            <div style="color: #475569; font-weight: 900; letter-spacing: 2px;">MBPS</div>
         </div>
 
-        <div class="stats-grid">
-            <div class="mini-stat" id="box-ping">
-                <span class="tag">بينق خامل</span>
-                <span id="v-ping" class="val">--</span><span class="unit">MS</span>
+        <div class="metrics-row">
+            <div class="metric-card" id="c-ping">
+                <div class="card-tag">استجابة خاملة</div>
+                <span id="v-ping" class="card-val">--</span><span class="card-unit">MS</span>
             </div>
-            <div class="mini-stat" id="box-loaded">
-                <span class="tag">بينق مُثقل</span>
-                <span id="v-loaded" class="val">--</span><span class="unit">MS</span>
+            <div class="metric-card" id="c-loaded">
+                <div class="card-tag">استجابة مُثقلة</div>
+                <span id="v-loaded" class="card-val">--</span><span class="card-unit">MS</span>
             </div>
-            <div class="mini-stat" id="box-upload">
-                <span class="tag">سرعة الرفع</span>
-                <span id="v-upload" class="val">--</span><span class="unit">Mbps</span>
+            <div class="metric-card" id="c-upload">
+                <div class="card-tag">سرعة الرفع</div>
+                <span id="v-upload" class="card-val">--</span><span class="card-unit">Mbps</span>
             </div>
         </div>
 
-        <div class="action-area">
-            <button id="launch-btn" class="btn-launch" onclick="runEngine()">بدء التحليل</button>
-            <div id="status-msg">نظام المعايرة جاهز</div>
-        </div>
+        <button id="go-btn" class="start-btn" onclick="startEngine()">بدء التحليل</button>
+        <div id="status-info">نظام التحليل الإحصائي جاهز</div>
     </div>
     <script src="script.js"></script>
 </body>
