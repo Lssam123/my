@@ -2,60 +2,60 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>محلل الشبكة الفائق | النسخة الاحترافية V8</title>
+    <title>محلل الشبكة الفائق | Ultra-Precision V10</title>
     <style>
-        :root { --neon-blue: #00f2fe; --deep-bg: #010409; --card-glass: rgba(13, 20, 33, 0.95); }
-        body { background: var(--deep-bg); color: #fff; font-family: 'Segoe UI', system-ui; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+        :root { --neon: #00f2fe; --bg: #010204; --card: #0a0f1a; }
+        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
         
-        .main-frame { width: 90%; max-width: 750px; background: var(--card-glass); padding: 60px; border-radius: 60px; border: 1px solid rgba(0, 242, 254, 0.1); box-shadow: 0 0 100px rgba(0,0,0,1); position: relative; backdrop-filter: blur(20px); }
+        .container { width: 95%; max-width: 800px; background: var(--card); padding: 50px; border-radius: 50px; border: 1px solid rgba(0, 242, 254, 0.15); box-shadow: 0 0 150px rgba(0,0,0,1); position: relative; }
         
-        .pulse-light { position: absolute; top: 20%; left: 50%; transform: translateX(-50%); width: 400px; height: 400px; background: radial-gradient(circle, var(--neon-blue) 0%, transparent 75%); filter: blur(120px); opacity: 0.08; z-index: 0; pointer-events: none; }
+        .glow-sphere { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); width: 450px; height: 450px; background: radial-gradient(circle, var(--neon) 0%, transparent 70%); filter: blur(140px); opacity: 0.12; z-index: 0; }
 
-        .gauge-section { position: relative; z-index: 1; margin-bottom: 60px; text-align: center; }
-        .label-top { font-size: 0.8rem; color: var(--neon-blue); font-weight: 900; letter-spacing: 8px; text-shadow: 0 0 10px rgba(0, 242, 254, 0.5); }
-        .big-speed { font-size: 10rem; font-weight: 950; background: linear-gradient(180deg, #fff 50%, var(--neon-blue) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 0.8; margin: 30px 0; font-family: 'Courier New', monospace; }
+        .hero-gauge { position: relative; z-index: 1; text-align: center; margin-bottom: 60px; }
+        .hero-title { font-size: 0.9rem; color: var(--neon); font-weight: 900; letter-spacing: 10px; opacity: 0.8; }
+        .speed-val { font-size: 11rem; font-weight: 950; background: linear-gradient(180deg, #fff 40%, var(--neon) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 0.8; margin: 35px 0; font-family: 'Consolas', monospace; }
         
-        .grid-results { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; position: relative; z-index: 1; }
-        .stat-box { background: rgba(255,255,255,0.02); padding: 25px 15px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.05); transition: 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
-        .stat-box.active { border-color: var(--neon-blue); background: rgba(0, 242, 254, 0.04); transform: translateY(-15px); box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
-        .box-title { display: block; font-size: 0.7rem; color: #586069; margin-bottom: 12px; font-weight: 800; }
-        .box-val { font-size: 2.2rem; font-weight: 900; color: #f0f6fc; }
-        .box-unit { font-size: 0.7rem; color: #484f58; margin-right: 4px; }
+        .grid-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; z-index: 1; position: relative; }
+        .stat-card { background: rgba(255,255,255,0.02); padding: 30px 15px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.06); transition: 0.5s cubic-bezier(0.19, 1, 0.22, 1); }
+        .stat-card.active { border-color: var(--neon); background: rgba(0, 242, 254, 0.06); transform: translateY(-12px); box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+        .tag { display: block; font-size: 0.75rem; color: #586069; margin-bottom: 12px; font-weight: 800; }
+        .num { font-size: 2.5rem; font-weight: 900; color: #f0f6fc; }
+        .unit { font-size: 0.75rem; color: #484f58; margin-right: 5px; }
 
-        .btn-launch { margin-top: 60px; background: #fff; color: #010409; border: none; padding: 24px 100px; border-radius: 100px; font-size: 1.5rem; font-weight: 950; cursor: pointer; transition: 0.4s; box-shadow: 0 0 30px rgba(255,255,255,0.1); }
-        .btn-launch:hover { background: var(--neon-blue); transform: scale(1.08); box-shadow: 0 0 50px rgba(0, 242, 254, 0.4); }
-        .btn-launch:disabled { opacity: 0.03; filter: grayscale(1); cursor: wait; }
+        .btn-run { margin-top: 60px; background: #fff; color: #010204; border: none; padding: 25px 120px; border-radius: 100px; font-size: 1.6rem; font-weight: 950; cursor: pointer; transition: 0.4s; }
+        .btn-run:hover { background: var(--neon); transform: scale(1.05); box-shadow: 0 0 60px rgba(0, 242, 254, 0.5); }
+        .btn-run:disabled { opacity: 0.05; cursor: wait; }
         
-        #engine-status { margin-top: 30px; font-size: 0.85rem; color: #484f58; font-weight: 600; text-transform: uppercase; }
+        #engine-log { margin-top: 30px; font-size: 0.9rem; color: #484f58; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; }
     </style>
 </head>
 <body>
-    <div class="pulse-light"></div>
-    <div class="main-frame">
-        <div class="gauge-section">
-            <span class="label-top">تحميل البيانات المستمر</span>
-            <div id="hero-speed" class="big-speed">0</div>
-            <div style="color: #484f58; font-weight: 900; font-size: 1.2rem;">Mbps</div>
+    <div class="glow-sphere"></div>
+    <div class="container">
+        <div class="hero-gauge">
+            <span class="hero-title">تحميل فائق (20 مسار)</span>
+            <div id="main-speed" class="speed-val">0</div>
+            <div style="color: #484f58; font-weight: 900; font-size: 1.4rem;">Mbps</div>
         </div>
 
-        <div class="grid-results">
-            <div class="stat-box" id="b-ping">
-                <span class="box-title">استجابة خاملة</span>
-                <span id="v-ping" class="box-val">--</span><span class="box-unit">MS</span>
+        <div class="grid-stats">
+            <div class="stat-card" id="b-ping">
+                <span class="tag">بينق (الأقرب)</span>
+                <span id="v-ping" class="num">--</span><span class="unit">ms</span>
             </div>
-            <div class="stat-box" id="b-loaded">
-                <span class="box-title">استجابة مُثقلة</span>
-                <span id="v-loaded" class="box-val">--</span><span class="box-unit">MS</span>
+            <div class="stat-card" id="b-loaded">
+                <span class="tag">بينق (مُثقل)</span>
+                <span id="v-loaded" class="num">--</span><span class="unit">ms</span>
             </div>
-            <div class="stat-box" id="b-upload">
-                <span class="box-title">سرعة الرفع</span>
-                <span id="v-upload" class="box-val">--</span><span class="box-unit">Mbps</span>
+            <div class="stat-card" id="b-upload">
+                <span class="tag">رفع (مُعزز)</span>
+                <span id="v-upload" class="num">--</span><span class="unit">Mbps</span>
             </div>
         </div>
 
         <div style="text-align: center;">
-            <button id="run-btn" class="btn-launch" onclick="initiateHighPrecisionTest()">تشغيل المحرك</button>
-            <div id="engine-status">جاهز للمعايرة الإحصائية</div>
+            <button id="run-btn" class="btn-run" onclick="launchUltraEngine()">تشغيل المحرك V10</button>
+            <div id="engine-log">جاهز للمعايرة القصوى</div>
         </div>
     </div>
     <script src="script.js"></script>
