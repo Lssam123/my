@@ -2,45 +2,64 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>محرك فحص السرعات العالية V12</title>
+    <title>محلل الشبكة السعودي الفائق | Precision V13</title>
     <style>
-        :root { --neon: #00f2fe; --bg: #050505; --panel: #121212; }
-        body { background: var(--bg); color: #fff; font-family: system-ui, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .app-container { width: 90%; max-width: 850px; background: var(--panel); padding: 40px; border-radius: 40px; border: 1px solid #222; text-align: center; }
-        .hero-speed { font-size: 10rem; font-weight: 900; background: linear-gradient(180deg, #fff, var(--neon)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; margin: 20px 0; font-family: 'Courier New', monospace; }
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 40px; }
-        .stat-card { background: #1a1a1a; padding: 20px; border-radius: 20px; border: 1px solid #333; transition: 0.3s; }
-        .stat-card.active { border-color: var(--neon); background: #1d2b2d; transform: translateY(-5px); }
-        .stat-val { font-size: 2rem; font-weight: 800; display: block; }
-        .stat-label { font-size: 0.7rem; color: #777; font-weight: bold; text-transform: uppercase; }
-        .btn-main { margin-top: 40px; background: #fff; color: #000; border: none; padding: 20px 80px; border-radius: 100px; font-size: 1.5rem; font-weight: 900; cursor: pointer; transition: 0.3s; }
-        .btn-main:hover { background: var(--neon); box-shadow: 0 0 30px var(--neon); }
-        #log { margin-top: 20px; color: #555; font-size: 0.8rem; }
+        :root { --stc: #4f2d7f; --mobily: #0067b1; --zain: #91278f; --neon: #00f2fe; }
+        body { background: #050505; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { width: 90%; max-width: 900px; background: #111; padding: 40px; border-radius: 40px; border: 1px solid #222; position: relative; }
+        
+        /* مؤشر السرعة الرئيسي */
+        .gauge-zone { text-align: center; margin-bottom: 40px; }
+        .main-speed { font-size: 11rem; font-weight: 950; background: linear-gradient(180deg, #fff, var(--neon)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 0.8; font-family: 'Consolas', monospace; }
+        
+        /* رادار الشركات */
+        .isp-radar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 30px; }
+        .isp-box { padding: 10px; border-radius: 15px; background: #1a1a1a; font-size: 0.8rem; border-bottom: 4px solid #333; }
+        .isp-box.stc { border-color: var(--stc); }
+        .isp-box.mobily { border-color: var(--mobily); }
+        .isp-box.zain { border-color: var(--zain); }
+        
+        /* شبكة النتائج */
+        .results-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+        .card { background: #181818; padding: 25px; border-radius: 25px; border: 1px solid #282828; transition: 0.3s; }
+        .card.active { border-color: var(--neon); box-shadow: 0 0 20px rgba(0, 242, 254, 0.2); }
+        .label { display: block; font-size: 0.75rem; color: #666; font-weight: bold; margin-bottom: 10px; }
+        .value { font-size: 2.2rem; font-weight: 900; color: #fff; }
+
+        .btn-run { width: 100%; margin-top: 30px; background: #fff; color: #000; border: none; padding: 25px; border-radius: 100px; font-size: 1.5rem; font-weight: 900; cursor: pointer; transition: 0.3s; }
+        .btn-run:hover { background: var(--neon); transform: scale(1.02); }
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <span style="color:var(--neon); letter-spacing: 5px; font-weight: 900;">REAL-TIME BANDWIDTH</span>
-        <div id="main-val" class="hero-speed">0</div>
-        <div style="font-size: 1.5rem; color: #444; font-weight: 900; margin-top: -20px;">MBPS</div>
+    <div class="container">
+        <div class="isp-radar">
+            <div class="isp-box stc">STC Ping: <span id="p-stc">--</span></div>
+            <div class="isp-box mobily">Mobily Ping: <span id="p-mobily">--</span></div>
+            <div class="isp-box zain">Zain Ping: <span id="p-zain">--</span></div>
+        </div>
 
-        <div class="stats-grid">
-            <div class="stat-card" id="card-ping">
-                <span class="stat-label">بينق خامل</span>
-                <span id="v-ping" class="stat-val">--</span>
+        <div class="gauge-zone">
+            <span style="color:var(--neon); font-weight: 900; letter-spacing: 3px;">SAUDI EDGE DOWNLOAD</span>
+            <div id="v-dl" class="main-speed">0</div>
+            <div style="font-size: 1.5rem; color: #444; font-weight: 900;">Mbps</div>
+        </div>
+
+        <div class="results-grid">
+            <div class="card" id="c-idle">
+                <span class="label">البينق الأسرع (Idle)</span>
+                <span id="v-ping" class="value">--</span><small>ms</small>
             </div>
-            <div class="stat-card" id="card-loaded">
-                <span class="stat-label">بينق مثقل</span>
-                <span id="v-loaded" class="stat-val">--</span>
+            <div class="card" id="c-loaded">
+                <span class="label">البينق المثقل (Loaded)</span>
+                <span id="v-loaded" class="value">--</span><small>ms</small>
             </div>
-            <div class="stat-card" id="card-upload">
-                <span class="stat-label">سرعة الرفع</span>
-                <span id="v-upload" class="stat-val">--</span>
+            <div class="card" id="c-ul">
+                <span class="label">الرفع (Upload)</span>
+                <span id="v-ul" class="value">--</span><small>Mbps</small>
             </div>
         </div>
 
-        <button class="btn-main" id="start-btn" onclick="masterEngine()">ابدأ التحليل</button>
-        <div id="log">المحرك جاهز لفحص شبكات الألياف (Fiber)</div>
+        <button class="btn-run" onclick="launchSaudiEngine()">تشغيل الفحص المحلي</button>
     </div>
     <script src="script.js"></script>
 </body>
