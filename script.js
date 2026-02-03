@@ -1,124 +1,113 @@
-const CORE_RESOURCES = {
-    // سيرفر STC للفحص الصامت للبينق
-    ping_server: "https://www.stc.com.sa/favicon.ico",
-    // سيرفرات عالمية للتحميل والرفع
-    global_dl: "https://speed.cloudflare.com/__down?bytes=26214400", // ملف 25MB للداونلود
-    global_ul: "https://httpbin.org/post", 
-    global_ping: "https://1.1.1.1/cdn-cgi/trace",
-    dl_threads: 30, // عدد مسارات ضخم لتجاوز الحظر
-    ul_threads: 12  // مسارات متوازنة للرفع
+const CONFIG = {
+    // سيرفر STC لقياس البينق الصافي (مخفي المسمى)
+    ping_url: "https://www.stc.com.sa/favicon.ico",
+    dl_url: "https://speed.cloudflare.com/__down?bytes=26214400", // 25MB
+    ul_url: "https://httpbin.org/post",
+    threads: 32
 };
 
-async function startV16Engine() {
-    const btn = document.querySelector('.go-btn');
-    const status = document.getElementById('status-msg');
-    btn.disabled = true;
+async function startV17Engine() {
+    // 1. فحص البينق الدقيق (تصحيح مشكلة الـ 900ms)
+    const idlePing = await getPrecisionPing();
+    document.getElementById('v-idle').innerText = idlePing.toFixed(1);
 
-    // 1. فحص البينق (يتم من STC داخلياً ولكن يظهر كـ "بينق عام")
-    status.innerText = "جاري معايرة زمن الاستجابة الأولي...";
-    document.getElementById('c-idle').classList.add('active');
-    const idleVal = await runSilentPing();
-    document.getElementById('v-idle').innerText = idleVal.toFixed(1);
-    document.getElementById('c-idle').classList.remove('active');
+    // 2. فحص الداونلود (32 مسار - 25MB)
+    const dlResult = await runAdvancedDL();
+    document.getElementById('v-dl').innerText = Math.round(dlResult.speed);
+    document.getElementById('v-loaded').innerText = dlResult.lPing.toFixed(1);
 
-    // 2. فحص التحميل (25MB Chunks) + البينق المثقل
-    status.innerText = "جاري تشغيل 30 مسار تحميل عالمي...";
-    document.getElementById('c-loaded').classList.add('active');
-    const dlMetrics = await runHyperDownload(12000);
-    document.getElementById('dl-text').innerText = Math.round(dlMetrics.speed);
-    document.getElementById('v-loaded').innerText = dlMetrics.loadedPing.toFixed(1);
-    document.getElementById('c-loaded').classList.remove('active');
-
-    // 3. فحص الرفع (20MB Chunks) مع منع الحظر
-    status.innerText = "جاري تحليل سرعة الإرسال (الرفع المطور)...";
-    document.getElementById('c-ul').classList.add('active');
-    const ulSpeed = await runHyperUpload(10000);
+    // 3. فحص الابلود (حل مشكلة التوقف - ملف 20MB مقسم)
+    const ulSpeed = await runStableUL();
     document.getElementById('v-ul').innerText = ulSpeed.toFixed(1);
-    document.getElementById('c-ul').classList.remove('active');
-
-    status.innerText = "تمت عملية الفحص بنجاح.";
-    btn.disabled = false;
 }
 
-// فحص البينق الصامت (لا يظهر المصدر للمستخدم)
-async function runSilentPing() {
-    let pings = [];
-    for(let i=0; i<12; i++) {
+// دالة البينق الاحترافية (تجاوز مشكلة التأخير البرمجي)
+function getPrecisionPing() {
+    return new Promise((resolve) => {
+        const xhr = new XMLHttpRequest();
         const t0 = performance.now();
-        try {
-            await fetch(CORE_RESOURCES.ping_server + "?v=" + Math.random(), { mode: 'no-cors' });
-            pings.push(performance.now() - t0);
-        } catch(e) {}
-    }
-    pings.sort((a,b) => a-b);
-    return pings[Math.floor(pings.length / 2)]; // القيمة الوسيطة لدقة مذهلة
+        xhr.open("GET", CONFIG.ping_url + "?t=" + t0, true);
+        // نأخذ الوقت فور استلام "رؤوس البيانات" فقط وليس تحميل الملف كاملاً
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 2) { 
+                const t1 = performance.now();
+                xhr.abort();
+                resolve(t1 - t0);
+            }
+        };
+        xhr.send();
+    });
 }
 
-// محرك التحميل (30 مسار + ملفات 25MB)
-async function runHyperDownload(ms) {
-    let totalBytes = 0;
+// محرك الرفع المستقر (حل مشكلة التوقف)
+async function runStableUL() {
+    let totalUploaded = 0;
+    const startTime = performance.now();
+    const duration = 10000; // 10 ثواني
+    const chunkSize = 1024 * 1024; // 1MB لكل قطعة لتجنب الحظر والتوقف
+    const data = new Uint8Array(chunkSize); 
+
+    const workers = Array(10).fill(0).map(async () => {
+        while (performance.now() - startTime < duration) {
+            try {
+                const uniqueID = Math.random().toString(36).substring(7);
+                await fetch(CONFIG.ul_url + "?id=" + uniqueID, {
+                    method: 'POST',
+                    body: data, // إرسال 1MB تلو الآخر بسرعة عالية
+                    mode: 'no-cors',
+                    priority: 'high'
+                });
+                totalUploaded += chunkSize;
+                // تحديث العداد فوراً
+                const currentElapsed = (performance.now() - startTime) / 1000;
+                const currentMbps = (totalUploaded * 8) / (1024 * 1024) / currentElapsed;
+                document.getElementById('v-ul').innerText = currentMbps.toFixed(1);
+            } catch (e) {
+                console.error("Upload chunk failed, retrying...");
+            }
+        }
+    });
+
+    await new Promise(r => setTimeout(r, duration));
+    const finalElapsed = (performance.now() - startTime) / 1000;
+    return (totalUploaded * 8) / (1024 * 1024) / finalElapsed;
+}
+
+// محرك التحميل المتوازي (25MB)
+async function runAdvancedDL() {
+    let bytesReceived = 0;
     let lPings = [];
-    const start = performance.now();
-    const controller = new AbortController();
+    const startTime = performance.now();
+    const abort = new AbortController();
 
     const pinger = setInterval(async () => {
-        const t0 = performance.now();
-        await fetch(CORE_RESOURCES.global_ping, { mode: 'no-cors' });
-        lPings.push(performance.now() - t0);
-    }, 150);
+        const p = await getPrecisionPing();
+        lPings.push(p);
+    }, 250);
 
-    const streams = Array(CORE_RESOURCES.dl_threads).fill(0).map(async () => {
-        while (performance.now() - start < ms) {
+    const threads = Array(CONFIG.threads).fill(0).map(async () => {
+        while (performance.now() - startTime < 10000) {
             try {
-                // تقنية Anti-Ban عبر توليد مسارات فريدة
-                const streamID = Math.random().toString(36).substring(7);
-                const res = await fetch(CORE_RESOURCES.global_dl + "&stream=" + streamID, { signal: controller.signal });
+                const res = await fetch(CONFIG.dl_url + "&cache=" + Math.random(), { signal: abort.signal });
                 const reader = res.body.getReader();
                 while (true) {
                     const { done, value } = await reader.read();
-                    if (done || (performance.now() - start >= ms)) break;
-                    totalBytes += value.length;
-                    const elapsed = (performance.now() - start) / 1000;
-                    if (elapsed > 1.5) {
-                        const speed = (totalBytes * 8) / (1024 * 1024) / elapsed;
-                        document.getElementById('dl-text').innerText = Math.round(speed);
-                    }
+                    if (done) break;
+                    bytesReceived += value.length;
+                    const elapsed = (performance.now() - startTime) / 1000;
+                    const mbps = (bytesReceived * 8) / (1024 * 1024) / elapsed;
+                    document.getElementById('v-dl').innerText = Math.round(mbps);
+                    if (elapsed >= 10) break;
                 }
             } catch (e) { break; }
         }
     });
 
-    await new Promise(r => setTimeout(r, ms));
-    controller.abort();
+    await new Promise(r => setTimeout(r, 10500));
+    abort.abort();
     clearInterval(pinger);
     return {
-        speed: (totalBytes * 8) / (1024 * 1024) / (ms / 1000),
-        loadedPing: lPings.reduce((a,b)=>a+b,0) / lPings.length
+        speed: (bytesReceived * 8) / (1024 * 1024) / 10,
+        lPing: lPings.length ? lPings.reduce((a,b)=>a+b)/lPings.length : 0
     };
-}
-
-// محرك الرفع (12 مسار + ملفات 20MB)
-async function runHyperUpload(ms) {
-    let upBytes = 0;
-    const start = performance.now();
-    const blob = new Blob([new Uint8Array(20 * 1024 * 1024)]); // ملف رفع 20MB
-
-    const uploaders = Array(CORE_RESOURCES.ul_threads).fill(0).map(async () => {
-        while (performance.now() - start < ms) {
-            try {
-                const uniqueKey = Math.random().toString(36).substring(7);
-                await fetch(CORE_RESOURCES.global_ul + "?auth=" + uniqueKey, {
-                    method: 'POST',
-                    body: blob,
-                    mode: 'no-cors'
-                });
-                upBytes += blob.size;
-                const elapsed = (performance.now() - start) / 1000;
-                document.getElementById('v-ul').innerText = ((upBytes * 8) / (1024 * 1024) / elapsed).toFixed(1);
-            } catch (e) { break; }
-        }
-    });
-
-    await new Promise(r => setTimeout(r, ms));
-    return (upBytes * 8) / (1024 * 1024) / (ms / 1000);
 }
