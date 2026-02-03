@@ -2,56 +2,47 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>محلل الشبكة المتقدم - دقة مخبرية</title>
+    <title>نظام معايرة الشبكة عالي الدقة</title>
     <style>
-        :root { --neon-cyan: #00f2fe; --bg-dark: #020617; --card-hex: #0f172a; }
-        body { background: var(--bg-dark); color: #fff; font-family: 'Segoe UI', system-ui; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        
-        .master-panel { width: 90%; max-width: 800px; background: var(--card-hex); padding: 50px; border-radius: 40px; border: 1px solid rgba(0, 242, 254, 0.2); box-shadow: 0 0 80px rgba(0,0,0,0.8); text-align: center; }
-        
-        .hero-gauge { margin-bottom: 50px; position: relative; }
-        .hero-label { font-size: 0.85rem; color: var(--neon-cyan); font-weight: 800; letter-spacing: 5px; }
-        .speed-digit { font-size: 10rem; font-weight: 900; background: linear-gradient(180deg, #fff 40%, var(--neon-cyan) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; margin: 20px 0; }
-        
-        .stats-grid { display: flex; gap: 20px; justify-content: center; }
-        .mini-card { background: rgba(255,255,255,0.03); padding: 25px; border-radius: 25px; flex: 1; border: 1px solid transparent; transition: 0.4s; }
-        .mini-card.active { border-color: var(--neon-cyan); background: rgba(0, 242, 254, 0.08); transform: translateY(-10px); }
-        .tag { display: block; font-size: 0.7rem; color: #94a3b8; margin-bottom: 10px; font-weight: bold; }
-        .val { font-size: 2.2rem; font-weight: 800; }
-        .unit { font-size: 0.7rem; color: #475569; margin-right: 3px; }
-
-        .launch-btn { margin-top: 50px; background: #fff; color: #020617; border: none; padding: 22px 90px; border-radius: 100px; font-size: 1.4rem; font-weight: 900; cursor: pointer; transition: 0.3s; }
-        .launch-btn:hover { background: var(--neon-cyan); transform: scale(1.05); box-shadow: 0 0 50px rgba(0, 242, 254, 0.4); }
-        .launch-btn:disabled { opacity: 0.1; cursor: wait; }
-
-        #engine-log { margin-top: 25px; font-size: 0.8rem; color: #64748b; font-weight: bold; letter-spacing: 1px; }
+        :root { --neon: #00f2fe; --bg: #030712; --card: #111827; }
+        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .master-panel { width: 90%; max-width: 800px; background: var(--card); padding: 50px; border-radius: 40px; border: 1px solid rgba(0, 242, 254, 0.2); box-shadow: 0 0 100px rgba(0,0,0,0.8); text-align: center; }
+        .speed-digit { font-size: 9rem; font-weight: 900; background: linear-gradient(180deg, #fff 40%, var(--neon) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; margin: 20px 0; font-family: 'Consolas', monospace; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 30px; }
+        .box { background: rgba(255,255,255,0.03); padding: 25px; border-radius: 25px; border: 1px solid transparent; transition: 0.3s; }
+        .box.active { border-color: var(--neon); background: rgba(0, 242, 254, 0.05); }
+        .tag { display: block; font-size: 0.8rem; color: #94a3b8; font-weight: bold; margin-bottom: 5px; }
+        .val { font-size: 2.5rem; font-weight: 800; }
+        .unit { font-size: 0.8rem; color: #475569; margin-right: 5px; }
+        .launch-btn { margin-top: 40px; background: #fff; color: #000; border: none; padding: 20px 80px; border-radius: 100px; font-size: 1.4rem; font-weight: 900; cursor: pointer; transition: 0.3s; }
+        .launch-btn:hover { background: var(--neon); transform: scale(1.05); }
+        #log { margin-top: 20px; font-size: 0.85rem; color: #64748b; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="master-panel">
-        <div class="hero-gauge">
-            <span class="hero-label">تحليل الاستقبال (DOWNLOAD)</span>
+        <div>
+            <span style="color:var(--neon); font-weight: 800; letter-spacing: 5px;">DOWNLOAD</span>
             <div id="dl-val" class="speed-digit">0</div>
-            <span style="color: #475569; font-weight: 900; font-size: 1.2rem;">Mbps</span>
         </div>
 
-        <div class="stats-grid">
-            <div class="mini-card" id="c-ping">
-                <span class="tag">بينق دقيق</span>
+        <div class="grid">
+            <div class="box" id="b-ping">
+                <span class="tag">البينق غير المثقل (Idle)</span>
                 <span id="v-ping" class="val">--</span><span class="unit">ms</span>
             </div>
-            <div class="mini-card" id="c-jitter">
-                <span class="tag">التذبذب (Jitter)</span>
-                <span id="v-jitter" class="val">--</span><span class="unit">ms</span>
+            <div class="box" id="b-loaded">
+                <span class="tag">البينق المثقل (Loaded)</span>
+                <span id="v-loaded" class="val">--</span><span class="unit">ms</span>
             </div>
-            <div class="mini-card" id="c-upload">
-                <span class="tag">تحليل الإرسال</span>
+            <div class="box" id="b-upload" style="grid-column: span 2;">
+                <span class="tag">سرعة الرفع (UPLOAD)</span>
                 <span id="v-upload" class="val">--</span><span class="unit">Mbps</span>
             </div>
         </div>
 
-        <button id="run-btn" class="launch-btn" onclick="startUltraPrecisionTest()">بدء المعايرة</button>
-        <div id="engine-log">نظام المعالجة جاهز</div>
+        <button id="run-btn" class="launch-btn" onclick="startEngine()">بدء الفحص الدقيق</button>
+        <div id="log">جاهز للمعايرة الفيزيائية</div>
     </div>
     <script src="script.js"></script>
 </body>
