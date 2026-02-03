@@ -1,85 +1,78 @@
-const SERVERS = {
-    // سيرفرات البينق المحلي السعودي
-    local: {
-        stc: "https://www.stc.com.sa/favicon.ico",
-        mobily: "https://www.mobily.com.sa/favicon.ico",
-        zain: "https://www.sa.zain.com/favicon.ico"
-    },
-    // السيرفرات العالمية للسرعة العالية
-    global_dl: "https://speed.cloudflare.com/__down?bytes=500000000",
-    global_ping: "https://1.1.1.1/cdn-cgi/trace",
-    global_ul: "https://httpbin.org/post"
+const CORE = {
+    stc_ping: "https://www.stc.com.sa/favicon.ico",
+    dl_node: "https://speed.cloudflare.com/__down?bytes=26214400", // 25MB
+    ul_node: "https://httpbin.org/post",
+    ping_node: "https://1.1.1.1/cdn-cgi/trace",
+    threads: 32 // أقصى عدد مسارات لتجاوز الحظر وإشباع القناة
 };
 
-async function startHybridEngine() {
-    const btn = document.querySelector('.start-btn');
+async function runV15Engine() {
+    const status = document.getElementById('status');
+    const btn = document.querySelector('.btn');
     btn.disabled = true;
 
-    // 1. فحص البينق المحلي فقط (أقرب السيرفرات)
-    await measureLocalPings();
+    // 1. فحص بينق STC المخفي (Precision Idle)
+    status.innerText = "جاري المعايرة المخفية عبر سيرفرات STC...";
+    const hiddenStcPing = await measureHiddenPing();
+    console.log("Hidden STC Ping Reference:", hiddenStcPing.toFixed(2));
 
-    // 2. فحص التحميل + البينق المثقل (باستخدام السيرفر العالمي)
+    // 2. الداونلود بـ 32 مسار (ملفات 25MB) + البينق المثقل
+    status.innerText = "جاري إطلاق 32 مسار تحميل (25MB Chunks)...";
     document.getElementById('c-loaded').classList.add('active');
-    const dlMetrics = await runGlobalDownload(12000);
+    const dlMetrics = await runHyperDL(12000);
     document.getElementById('v-dl').innerText = Math.round(dlMetrics.speed);
     document.getElementById('v-loaded').innerText = dlMetrics.loadedPing.toFixed(1);
     document.getElementById('c-loaded').classList.remove('active');
 
-    // 3. فحص الرفع (حل مشكلة التوقف عبر كتل متوازية)
+    // 3. الابلود (ملفات 20MB) مع تقنية Anti-Ban
+    status.innerText = "جاري تحليل الرفع (20MB Chunks) مع تقنية منع الحظر...";
     document.getElementById('c-ul').classList.add('active');
-    const ulSpeed = await runGlobalUpload(10000);
+    const ulSpeed = await runHyperUL(10000);
     document.getElementById('v-ul').innerText = ulSpeed.toFixed(1);
     document.getElementById('c-ul').classList.remove('active');
 
+    status.innerText = "اكتمل الفحص بأعلى دقة فيزيائية ممكنة.";
     btn.disabled = false;
 }
 
-// فحص البينق المحلي (STC, Mobily, Zain)
-async function measureLocalPings() {
-    const targets = Object.keys(SERVERS.local);
-    let best = 999;
-
-    for (let isp of targets) {
-        let pings = [];
-        for (let i = 0; i < 8; i++) {
-            const t0 = performance.now();
-            try {
-                await fetch(SERVERS.local[isp] + "?n=" + Math.random(), { mode: 'no-cors' });
-                pings.push(performance.now() - t0);
-            } catch (e) {}
-        }
-        const avg = pings.length ? (pings.reduce((a, b) => a + b) / pings.length) : 0;
-        document.getElementById(`p-${isp}`).innerText = avg.toFixed(1);
-        if (avg > 0 && avg < best) best = avg;
+// دالة البينق المخفي (STC)
+async function measureHiddenPing() {
+    let results = [];
+    for(let i=0; i<15; i++) {
+        const t0 = performance.now();
+        await fetch(CORE.stc_ping + "?cache=" + Math.random(), { mode: 'no-cors' });
+        results.push(performance.now() - t0);
     }
-    document.getElementById('v-idle').innerText = best.toFixed(1);
+    return results.sort((a,b)=>a-b)[Math.floor(results.length/2)];
 }
 
-// فحص التحميل العالمي + البينق تحت الضغط
-async function runGlobalDownload(duration) {
+// محرك التحميل الفائق (32 مسار)
+async function runHyperDL(ms) {
     let bytes = 0;
     let loadedPings = [];
-    const startTime = performance.now();
+    const start = performance.now();
     const abort = new AbortController();
 
-    // قياس البينق العالمي أثناء التحميل
-    const pingInterval = setInterval(async () => {
+    // فحص البينق العالمي أثناء الضغط
+    const pinger = setInterval(async () => {
         const t0 = performance.now();
-        await fetch(SERVERS.global_ping, { mode: 'no-cors' });
+        await fetch(CORE.ping_node, { mode: 'no-cors' });
         loadedPings.push(performance.now() - t0);
-    }, 200);
+    }, 150);
 
-    const streams = Array(20).fill(0).map(async () => {
-        while (performance.now() - startTime < duration) {
+    const streams = Array(CORE.threads).fill(0).map(async () => {
+        while (performance.now() - start < ms) {
             try {
-                const res = await fetch(SERVERS.global_dl + "&nocache=" + Math.random(), { signal: abort.signal });
+                // استخدام معرفات فريدة لتجنب الحظر
+                const uniqueID = Math.random().toString(36).substring(7);
+                const res = await fetch(CORE.dl_node + "&id=" + uniqueID, { signal: abort.signal });
                 const reader = res.body.getReader();
                 while (true) {
                     const { done, value } = await reader.read();
-                    if (done || (performance.now() - startTime >= duration)) break;
+                    if (done || (performance.now() - start >= ms)) break;
                     bytes += value.length;
-                    const elapsed = (performance.now() - startTime) / 1000;
-                    if (elapsed > 2) {
+                    const elapsed = (performance.now() - start) / 1000;
+                    if (elapsed > 1.5) {
                         const mbps = (bytes * 8) / (1024 * 1024) / elapsed;
                         document.getElementById('v-dl').innerText = Math.round(mbps);
                     }
@@ -88,39 +81,37 @@ async function runGlobalDownload(duration) {
         }
     });
 
-    await new Promise(r => setTimeout(r, duration));
+    await new Promise(r => setTimeout(r, ms));
     abort.abort();
-    clearInterval(pingInterval);
-
+    clearInterval(pinger);
     return {
-        speed: (bytes * 8) / (1024 * 1024) / (duration / 1000),
-        loadedPing: (loadedPings.reduce((a, b) => a + b, 0) / loadedPings.length)
+        speed: (bytes * 8) / (1024 * 1024) / (ms / 1000),
+        loadedPing: loadedPings.reduce((a,b)=>a+b,0) / loadedPings.length
     };
 }
 
-// حل مشكلة الرفع: استخدام كتل بيانات 2MB عبر 8 مسارات متزامنة
-async function runGlobalUpload(duration) {
+// محرك الرفع الفائق (20MB Chunks)
+async function runHyperUL(ms) {
     let upBytes = 0;
     const start = performance.now();
-    const chunk = new Uint8Array(2 * 1024 * 1024); // 2MB
+    const payload = new Uint8Array(20 * 1024 * 1024); // ملف رفع 20MB
 
-    const uploaders = Array(8).fill(0).map(async () => {
-        while (performance.now() - start < duration) {
+    const uploaders = Array(12).fill(0).map(async () => {
+        while (performance.now() - start < ms) {
             try {
-                await fetch(SERVERS.global_ul, {
+                const uniqueID = Math.random().toString(36).substring(7);
+                await fetch(CORE.ul_node + "?ban_prevent=" + uniqueID, {
                     method: 'POST',
-                    body: chunk,
-                    mode: 'no-cors',
-                    keepalive: true
+                    body: payload,
+                    mode: 'no-cors'
                 });
-                upBytes += chunk.length;
+                upBytes += payload.length;
                 const elapsed = (performance.now() - start) / 1000;
-                const mbps = (upBytes * 8) / (1024 * 1024) / elapsed;
-                document.getElementById('v-ul').innerText = mbps.toFixed(1);
+                document.getElementById('v-ul').innerText = ((upBytes * 8) / (1024 * 1024) / elapsed).toFixed(1);
             } catch (e) { break; }
         }
     });
 
-    await new Promise(r => setTimeout(r, duration));
-    return (upBytes * 8) / (1024 * 1024) / (duration / 1000);
+    await new Promise(r => setTimeout(r, ms));
+    return (upBytes * 8) / (1024 * 1024) / (ms / 1000);
 }
