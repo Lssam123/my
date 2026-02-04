@@ -2,48 +2,43 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>المحلل الفيزيائي V23 | النسخة القصوى</title>
+    <title>المحلل الذكي V24 | كاشف المزود الآلي</title>
     <style>
         :root { --neon: #00f2fe; --bg: #030305; --panel: #0d0d10; }
         body { background: var(--bg); color: #fff; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .master-panel { width: 95%; max-width: 750px; background: var(--panel); padding: 45px; border-radius: 40px; border: 1px solid #1f1f23; text-align: center; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
-        .speed-hero { margin-bottom: 40px; }
-        .speed-num { font-size: 11rem; font-weight: 950; color: var(--neon); line-height: 0.8; font-family: 'Arial Black', sans-serif; text-shadow: 0 0 40px rgba(0, 242, 254, 0.3); }
-        .speed-unit { font-size: 1.6rem; color: #333; font-weight: 900; letter-spacing: 5px; margin-top: 15px; }
+        .master-panel { width: 95%; max-width: 750px; background: var(--panel); padding: 45px; border-radius: 40px; border: 1px solid #1f1f23; text-align: center; }
+        .isp-badge { display: inline-block; padding: 8px 20px; border-radius: 50px; background: #1a1a1e; color: var(--neon); font-size: 0.8rem; font-weight: 900; margin-bottom: 20px; border: 1px solid #333; }
+        .speed-num { font-size: 11rem; font-weight: 950; color: var(--neon); line-height: 0.8; font-family: 'Arial Black', sans-serif; }
         .grid-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 35px; }
-        .stat-card { background: #121216; padding: 25px 10px; border-radius: 25px; border: 1px solid #1f1f23; transition: 0.3s; }
-        .stat-card.active { border-color: var(--neon); background: rgba(0, 242, 254, 0.05); transform: scale(1.05); }
-        .stat-card .lbl { display: block; font-size: 0.8rem; color: #555; font-weight: 900; margin-bottom: 10px; }
-        .stat-card .val { font-size: 2.4rem; font-weight: 900; color: #fff; }
+        .stat-card { background: #121216; padding: 25px 10px; border-radius: 25px; border: 1px solid #1f1f23; }
+        .val { font-size: 2.4rem; font-weight: 900; display: block; }
+        .lbl { font-size: 0.75rem; color: #555; font-weight: 900; }
         .btn-run { width: 100%; margin-top: 40px; background: #fff; color: #000; border: none; padding: 24px; border-radius: 100px; font-size: 1.7rem; font-weight: 950; cursor: pointer; transition: 0.4s; }
-        .btn-run:hover { background: var(--neon); box-shadow: 0 0 40px rgba(0, 242, 254, 0.4); transform: translateY(-3px); }
-        .btn-run:disabled { opacity: 0.1; cursor: progress; }
-        #status-bar { margin-top: 20px; font-size: 0.8rem; color: #222; font-weight: bold; text-transform: uppercase; }
+        .btn-run:hover { background: var(--neon); transform: scale(1.02); }
     </style>
 </head>
 <body>
     <div class="master-panel">
+        <div id="isp-info" class="isp-badge">جاري تحديد مزود الخدمة...</div>
         <div class="speed-hero">
             <div id="dl-val" class="speed-num">0</div>
-            <div class="speed-unit">Mbps DOWNLOAD</div>
+            <div style="color:#222; font-weight:900; letter-spacing:5px;">Mbps DOWNLOAD</div>
         </div>
         <div class="grid-stats">
-            <div class="stat-card" id="card-ping">
-                <span class="lbl">البينق الخامل</span>
+            <div class="stat-card">
+                <span class="lbl">البينق المحلي</span>
                 <span id="v-ping" class="val">--</span><small>ms</small>
             </div>
-            <div class="stat-card" id="card-loaded">
+            <div class="stat-card">
                 <span class="lbl">تحت الضغط</span>
                 <span id="v-loaded" class="val">--</span><small>ms</small>
             </div>
-            <div class="stat-card" id="card-ul">
+            <div class="stat-card">
                 <span class="lbl">سرعة الرفع</span>
                 <span id="v-ul" class="val">--</span><small>Mbps</small>
             </div>
         </div>
-        <button class="btn-run" onclick="runPhysicalTest()">تشغيل الفحص العميق</button>
-        <div id="status-bar">Engine Status: Ready | Protocol: Fresh-Socket V23</div>
+        <button class="btn-run" onclick="startV24()">بدء الفحص الذكي</button>
     </div>
     <script src="script.js"></script>
 </body>
