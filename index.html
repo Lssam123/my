@@ -3,32 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>محلل الشبكة السعودي | Saudi ISP Analyzer</title>
+    <title>محلل الشبكة الاحترافي | اختيار السيرفر</title>
     <style>
         :root { --primary: #00f2fe; --bg: #050508; --card: #101014; }
         body { background: var(--bg); color: #fff; font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .panel { width: 95%; max-width: 750px; background: var(--card); padding: 40px; border-radius: 40px; border: 1px solid #1f1f23; text-align: center; box-shadow: 0 50px 100px rgba(0,0,0,0.8); }
-        .isp-tag { display: inline-flex; align-items: center; gap: 10px; padding: 10px 25px; border-radius: 50px; background: #1a1a20; color: var(--primary); font-size: 0.9rem; font-weight: 900; border: 1px solid #333; margin-bottom: 25px; }
-        .isp-tag.detected { border-color: var(--primary); box-shadow: 0 0 15px rgba(0, 242, 254, 0.2); }
-        .hero-speed { margin-bottom: 35px; }
-        .speed-val { font-size: 11rem; font-weight: 950; color: var(--primary); line-height: 0.8; font-family: 'Arial Black', sans-serif; }
-        .speed-unit { font-size: 1.5rem; color: #333; font-weight: 900; letter-spacing: 4px; margin-top: 15px; }
+        .panel { width: 95%; max-width: 750px; background: var(--card); padding: 40px; border-radius: 40px; border: 1px solid #1f1f23; text-align: center; }
+        
+        /* تصميم قائمة اختيار السيرفر */
+        .selector-container { margin-bottom: 25px; }
+        .server-select { background: #1a1a20; color: var(--primary); border: 1px solid #333; padding: 12px 25px; border-radius: 50px; font-weight: 900; outline: none; cursor: pointer; font-family: inherit; }
+        
+        .speed-val { font-size: 10rem; font-weight: 950; color: var(--primary); line-height: 0.8; font-family: 'Arial Black', sans-serif; }
         .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 30px; }
         .stat { background: #16161c; padding: 25px 10px; border-radius: 25px; border: 1px solid #222; }
-        .stat .val { font-size: 2.5rem; font-weight: 900; color: #fff; display: block; }
+        .stat .val { font-size: 2.5rem; font-weight: 900; display: block; }
         .stat .lbl { font-size: 0.75rem; color: #555; font-weight: 900; }
         .btn-test { width: 100%; margin-top: 40px; background: #fff; color: #000; border: none; padding: 22px; border-radius: 100px; font-size: 1.6rem; font-weight: 950; cursor: pointer; transition: 0.3s; }
         .btn-test:hover { background: var(--primary); transform: scale(1.02); }
-        .btn-test:disabled { opacity: 0.1; }
     </style>
 </head>
 <body>
     <div class="panel">
-        <div id="isp-badge" class="isp-tag">جاري فحص المزود المحلي...</div>
+        <div class="selector-container">
+            <label style="color: #666; font-size: 0.8rem; display: block; margin-bottom: 10px;">اختر سيرفر فحص البينق:</label>
+            <select id="server-selector" class="server-select" onchange="updateServer()">
+                <option value="auto">🔍 اكتشاف تلقائي (مستحسن)</option>
+                <option value="stc">🇸🇦 STC - السعودية</option>
+                <option value="mobily">🇸🇦 Mobily - السعودية</option>
+                <option value="zain">🇸🇦 Zain - السعودية</option>
+                <option value="salam">🇸🇦 Salam - السعودية</option>
+                <option value="google">🌐 Google DNS - دولي</option>
+                <option value="cloudflare">🌐 Cloudflare - دولي</option>
+            </select>
+        </div>
+
         <div class="hero-speed">
             <div id="dl-val" class="speed-val">0</div>
-            <div class="speed-unit">Mbps DOWNLOAD</div>
+            <div style="color:#222; font-weight:900; letter-spacing:5px;">Mbps DOWNLOAD</div>
         </div>
+
         <div class="grid">
             <div class="stat">
                 <span class="lbl">البينق المحلي</span>
@@ -43,7 +56,7 @@
                 <span id="v-ul" class="val">--</span><small>Mbps</small>
             </div>
         </div>
-        <button class="btn-test" onclick="startSaudiEngine()">تشغيل فحص السيادة</button>
+        <button class="btn-test" onclick="startV26()">تشغيل الفحص</button>
     </div>
     <script src="script.js"></script>
 </body>
