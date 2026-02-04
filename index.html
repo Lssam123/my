@@ -2,43 +2,48 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>المحلل الذكي V24 | كاشف المزود الآلي</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>محلل الشبكة السعودي | Saudi ISP Analyzer</title>
     <style>
-        :root { --neon: #00f2fe; --bg: #030305; --panel: #0d0d10; }
-        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .master-panel { width: 95%; max-width: 750px; background: var(--panel); padding: 45px; border-radius: 40px; border: 1px solid #1f1f23; text-align: center; }
-        .isp-badge { display: inline-block; padding: 8px 20px; border-radius: 50px; background: #1a1a1e; color: var(--neon); font-size: 0.8rem; font-weight: 900; margin-bottom: 20px; border: 1px solid #333; }
-        .speed-num { font-size: 11rem; font-weight: 950; color: var(--neon); line-height: 0.8; font-family: 'Arial Black', sans-serif; }
-        .grid-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 35px; }
-        .stat-card { background: #121216; padding: 25px 10px; border-radius: 25px; border: 1px solid #1f1f23; }
-        .val { font-size: 2.4rem; font-weight: 900; display: block; }
-        .lbl { font-size: 0.75rem; color: #555; font-weight: 900; }
-        .btn-run { width: 100%; margin-top: 40px; background: #fff; color: #000; border: none; padding: 24px; border-radius: 100px; font-size: 1.7rem; font-weight: 950; cursor: pointer; transition: 0.4s; }
-        .btn-run:hover { background: var(--neon); transform: scale(1.02); }
+        :root { --primary: #00f2fe; --bg: #050508; --card: #101014; }
+        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .panel { width: 95%; max-width: 750px; background: var(--card); padding: 40px; border-radius: 40px; border: 1px solid #1f1f23; text-align: center; box-shadow: 0 50px 100px rgba(0,0,0,0.8); }
+        .isp-tag { display: inline-flex; align-items: center; gap: 10px; padding: 10px 25px; border-radius: 50px; background: #1a1a20; color: var(--primary); font-size: 0.9rem; font-weight: 900; border: 1px solid #333; margin-bottom: 25px; }
+        .isp-tag.detected { border-color: var(--primary); box-shadow: 0 0 15px rgba(0, 242, 254, 0.2); }
+        .hero-speed { margin-bottom: 35px; }
+        .speed-val { font-size: 11rem; font-weight: 950; color: var(--primary); line-height: 0.8; font-family: 'Arial Black', sans-serif; }
+        .speed-unit { font-size: 1.5rem; color: #333; font-weight: 900; letter-spacing: 4px; margin-top: 15px; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 30px; }
+        .stat { background: #16161c; padding: 25px 10px; border-radius: 25px; border: 1px solid #222; }
+        .stat .val { font-size: 2.5rem; font-weight: 900; color: #fff; display: block; }
+        .stat .lbl { font-size: 0.75rem; color: #555; font-weight: 900; }
+        .btn-test { width: 100%; margin-top: 40px; background: #fff; color: #000; border: none; padding: 22px; border-radius: 100px; font-size: 1.6rem; font-weight: 950; cursor: pointer; transition: 0.3s; }
+        .btn-test:hover { background: var(--primary); transform: scale(1.02); }
+        .btn-test:disabled { opacity: 0.1; }
     </style>
 </head>
 <body>
-    <div class="master-panel">
-        <div id="isp-info" class="isp-badge">جاري تحديد مزود الخدمة...</div>
-        <div class="speed-hero">
-            <div id="dl-val" class="speed-num">0</div>
-            <div style="color:#222; font-weight:900; letter-spacing:5px;">Mbps DOWNLOAD</div>
+    <div class="panel">
+        <div id="isp-badge" class="isp-tag">جاري فحص المزود المحلي...</div>
+        <div class="hero-speed">
+            <div id="dl-val" class="speed-val">0</div>
+            <div class="speed-unit">Mbps DOWNLOAD</div>
         </div>
-        <div class="grid-stats">
-            <div class="stat-card">
+        <div class="grid">
+            <div class="stat">
                 <span class="lbl">البينق المحلي</span>
                 <span id="v-ping" class="val">--</span><small>ms</small>
             </div>
-            <div class="stat-card">
+            <div class="stat">
                 <span class="lbl">تحت الضغط</span>
                 <span id="v-loaded" class="val">--</span><small>ms</small>
             </div>
-            <div class="stat-card">
+            <div class="stat">
                 <span class="lbl">سرعة الرفع</span>
                 <span id="v-ul" class="val">--</span><small>Mbps</small>
             </div>
         </div>
-        <button class="btn-run" onclick="startV24()">بدء الفحص الذكي</button>
+        <button class="btn-test" onclick="startSaudiEngine()">تشغيل فحص السيادة</button>
     </div>
     <script src="script.js"></script>
 </body>
