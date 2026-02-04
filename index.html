@@ -3,48 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>محلل الشبكة الدقيق | Precision V21</title>
+    <title>محرك الفحص الفيزيائي | المرجع V22</title>
     <style>
-        :root { --neon: #00f2fe; --bg: #08080a; --card: #121215; }
-        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .container { width: 90%; max-width: 700px; background: var(--card); padding: 40px; border-radius: 35px; border: 1px solid #222; text-align: center; box-shadow: 0 40px 100px rgba(0,0,0,0.7); }
-        .main-speed { margin-bottom: 30px; }
-        .speed-num { font-size: 9rem; font-weight: 900; color: var(--neon); line-height: 1; font-family: 'Consolas', monospace; }
-        .unit { font-size: 1.2rem; color: #444; font-weight: bold; letter-spacing: 2px; }
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 30px; }
-        .stat-box { background: #1a1a1e; padding: 20px 10px; border-radius: 20px; border: 1px solid #282828; }
-        .stat-box.active { border-color: var(--neon); background: rgba(0, 242, 254, 0.05); }
-        .label { display: block; font-size: 0.7rem; color: #666; font-weight: bold; margin-bottom: 8px; }
-        .value { font-size: 1.8rem; font-weight: 800; color: #eee; }
-        .btn-start { width: 100%; margin-top: 35px; background: #fff; color: #000; border: none; padding: 20px; border-radius: 100px; font-size: 1.4rem; font-weight: 900; cursor: pointer; transition: 0.3s; }
-        .btn-start:hover { background: var(--neon); transform: scale(1.02); box-shadow: 0 0 30px rgba(0, 242, 254, 0.3); }
-        .btn-start:disabled { opacity: 0.2; cursor: not-allowed; }
-        #status { margin-top: 15px; font-size: 0.8rem; color: #333; }
+        :root { --neon: #00f2fe; --bg: #050507; --panel: #0f0f12; }
+        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+        .master-panel { width: 95%; max-width: 750px; background: var(--panel); padding: 40px; border-radius: 40px; border: 1px solid #1f1f23; text-align: center; position: relative; }
+        .speed-display { margin: 20px 0 40px 0; }
+        .speed-num { font-size: 10rem; font-weight: 950; color: var(--neon); line-height: 0.8; font-family: 'Consolas', monospace; text-shadow: 0 0 30px rgba(0, 242, 254, 0.2); }
+        .speed-unit { font-size: 1.4rem; color: #444; font-weight: 900; letter-spacing: 3px; margin-top: 10px; }
+        .metrics-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .card { background: #16161a; padding: 25px 10px; border-radius: 25px; border: 1px solid #222; }
+        .card.active { border-color: var(--neon); box-shadow: 0 0 20px rgba(0, 242, 254, 0.1); }
+        .card .lbl { display: block; font-size: 0.75rem; color: #666; font-weight: 800; margin-bottom: 8px; }
+        .card .val { font-size: 2.2rem; font-weight: 900; color: #fff; }
+        .btn-go { width: 100%; margin-top: 35px; background: #fff; color: #000; border: none; padding: 22px; border-radius: 100px; font-size: 1.6rem; font-weight: 950; cursor: pointer; transition: 0.3s; }
+        .btn-go:hover { background: var(--neon); transform: scale(1.02); }
+        .btn-go:disabled { opacity: 0.1; cursor: not-allowed; }
+        #log { margin-top: 20px; font-size: 0.8rem; color: #333; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <span style="color:#333; letter-spacing: 3px; font-weight: 900; font-size: 0.8rem;">ULTRA-PRECISION ENGINE</span>
-        <div class="main-speed">
+    <div class="master-panel">
+        <span style="color:#222; font-weight:900; letter-spacing:5px; font-size:0.8rem;">PHYSICAL LAYER ANALYZER</span>
+        <div class="speed-display">
             <div id="dl-val" class="speed-num">0</div>
-            <div class="unit">Mbps DOWNLOAD</div>
+            <div class="speed-unit">Mbps DOWNLOAD</div>
         </div>
-        <div class="stats-grid">
-            <div class="stat-box" id="b-ping">
-                <span class="label">البينق (HEAD)</span>
-                <span id="v-ping" class="value">--</span><small>ms</small>
+        <div class="metrics-row">
+            <div class="card" id="c-ping">
+                <span class="lbl">البينق (الخامل)</span>
+                <span id="v-ping" class="val">--</span><small>ms</small>
             </div>
-            <div class="stat-box" id="b-loaded">
-                <span class="label">البينق المثقل</span>
-                <span id="v-loaded" class="value">--</span><small>ms</small>
+            <div class="card" id="c-loaded">
+                <span class="lbl">البينق (المثقل)</span>
+                <span id="v-loaded" class="val">--</span><small>ms</small>
             </div>
-            <div class="stat-box" id="b-ul">
-                <span class="label">الرفع (Stable)</span>
-                <span id="v-ul" class="value">--</span><small>Mbps</small>
+            <div class="card" id="c-ul">
+                <span class="lbl">الرفع (المحاكي)</span>
+                <span id="v-ul" class="val">--</span><small>Mbps</small>
             </div>
         </div>
-        <button class="btn-start" onclick="initTest()">ابدأ فحص الدقة</button>
-        <div id="status">جاهز للمعايرة (Edge Nodes Active)</div>
+        <button class="btn-go" onclick="startV22()">بدء الفحص المعاير</button>
+        <div id="log">Reference: Google 204 & Cloudflare Edge</div>
     </div>
     <script src="script.js"></script>
 </body>
