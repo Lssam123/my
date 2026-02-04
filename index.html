@@ -2,72 +2,73 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>محلل الشبكة الغربية V29 | مكة وجدة</title>
+    <title>محلل الشبكة المتقدم V30</title>
     <style>
-        :root { --neon: #00f2fe; --bg: #050508; --card: #0d0d12; }
+        :root { --accent: #00f2fe; --bg: #060609; --card: #0f0f14; }
         body { background: var(--bg); color: #fff; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .panel { width: 95%; max-width: 780px; background: var(--card); padding: 40px; border-radius: 40px; border: 1px solid #1f1f25; text-align: center; box-shadow: 0 40px 100px rgba(0,0,0,0.9); }
+        .master-panel { width: 95%; max-width: 700px; background: var(--card); padding: 40px; border-radius: 35px; border: 1px solid #1f1f26; text-align: center; box-shadow: 0 40px 100px rgba(0,0,0,0.8); }
         
-        .server-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 30px; }
-        .srv-select { background: #000; color: var(--neon); border: 2px solid #222; padding: 18px; border-radius: 15px; width: 100%; cursor: pointer; font-weight: 900; font-size: 1.1rem; outline: none; transition: 0.3s; }
-        .srv-select:focus { border-color: var(--neon); }
+        .server-section { margin-bottom: 30px; }
+        .server-select { background: #000; color: var(--accent); border: 2px solid #222; padding: 15px; border-radius: 15px; width: 100%; cursor: pointer; font-weight: 900; font-size: 1rem; transition: 0.3s; }
+        .server-select:focus { border-color: var(--accent); }
 
-        .speed-box { display: flex; justify-content: space-around; background: #111116; padding: 30px; border-radius: 30px; margin-bottom: 25px; border: 1px solid #1a1a20; }
-        .num { font-size: 7rem; font-weight: 950; color: var(--neon); line-height: 1; font-family: 'Consolas', monospace; }
-        .unit { color: #333; font-weight: 900; font-size: 0.9rem; margin-top: 10px; }
+        /* الداونلود في الأعلى */
+        .download-hero { margin-bottom: 40px; }
+        .dl-num { font-size: 9rem; font-weight: 950; color: var(--accent); line-height: 0.8; font-family: 'Consolas', monospace; }
+        .dl-label { font-size: 1.2rem; color: #333; font-weight: 900; letter-spacing: 3px; margin-top: 10px; }
 
-        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-        .stat { background: #16161c; padding: 20px 10px; border-radius: 20px; border: 1px solid #222; }
-        .stat.active { border-color: var(--neon); box-shadow: 0 0 15px rgba(0, 242, 254, 0.1); }
-        .stat .val { font-size: 2.2rem; font-weight: 900; display: block; }
-        .stat .lbl { font-size: 0.7rem; color: #555; font-weight: 900; margin-bottom: 5px; }
+        /* البطاقات الثلاث في الأسفل */
+        .bottom-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .card { background: #14141b; padding: 25px 10px; border-radius: 20px; border: 1px solid #222; transition: 0.3s; }
+        .card.active { border-color: var(--accent); box-shadow: 0 0 20px rgba(0, 242, 254, 0.1); }
+        .card .val { font-size: 2.2rem; font-weight: 900; display: block; color: #fff; }
+        .card .lbl { font-size: 0.75rem; color: #555; font-weight: 900; margin-bottom: 8px; }
 
-        .go-btn { width: 100%; margin-top: 30px; background: #fff; color: #000; border: none; padding: 22px; border-radius: 100px; font-size: 1.6rem; font-weight: 950; cursor: pointer; transition: 0.3s; }
-        .go-btn:disabled { opacity: 0.1; cursor: not-allowed; }
-        #status { margin-top: 15px; font-size: 0.8rem; color: #333; font-weight: bold; text-transform: uppercase; }
+        .btn-start { width: 100%; margin-top: 35px; background: #fff; color: #000; border: none; padding: 22px; border-radius: 100px; font-size: 1.6rem; font-weight: 950; cursor: pointer; transition: 0.3s; }
+        .btn-start:disabled { background: #1a1a1a; color: #444; cursor: not-allowed; }
+        .btn-start:not(:disabled):hover { background: var(--accent); transform: scale(1.02); }
     </style>
 </head>
 <body>
-    <div class="panel">
-        <div class="server-grid">
-            <label style="color: #666; font-size: 0.85rem; margin-bottom: 5px; display: block;">اختر مزود الخدمة المحلي (جدة/مكة):</label>
-            <select id="isp-selector" class="srv-select" onchange="unlockTest()">
-                <option value="" disabled selected>-- اختر الشركة المزودة --</option>
-                <option value="stc">📶 STC - الغربية (جدة)</option>
-                <option value="mobily">📶 Mobily - الغربية (جدة)</option>
-                <option value="zain">📶 Zain - الغربية (جدة)</option>
-                <option value="salam">📶 Salam - الغربية (جدة)</option>
+    <div class="master-panel">
+        <div class="server-section">
+            <label style="color: #666; font-size: 0.8rem; display: block; margin-bottom: 10px;">إجباري: اختر السيرفر لبدء الفحص</label>
+            <select id="srv-node" class="server-select" onchange="unlock()">
+                <option value="" disabled selected>-- اختر سيرفر فحص البينق --</option>
+                <optgroup label="المملكة العربية السعودية">
+                    <option value="stc">STC - جدة، السعودية 🇸🇦</option>
+                    <option value="mobily">Mobily - الرياض، السعودية 🇸🇦</option>
+                    <option value="zain">Zain - جدة، السعودية 🇸🇦</option>
+                    <option value="salam">Salam - الرياض، السعودية 🇸🇦</option>
+                </optgroup>
+                <optgroup label="سيرفرات عالمية">
+                    <option value="google">Google Cloud - دولي 🌐</option>
+                    <option value="cloudflare">Cloudflare Edge - دولي 🌐</option>
+                </optgroup>
             </select>
         </div>
 
-        <div class="speed-box">
-            <div>
-                <div id="dl-val" class="num">0</div>
-                <div class="unit">DOWNLOAD Mbps</div>
-            </div>
-            <div>
-                <div id="ul-val" class="num">0</div>
-                <div class="unit">UPLOAD Mbps</div>
-            </div>
+        <div class="download-hero">
+            <div id="dl-val" class="dl-num">0</div>
+            <div class="dl-label">DOWNLOAD Mbps</div>
         </div>
 
-        <div class="stats-row">
-            <div class="stat" id="ping-pre">
-                <span class="lbl">بينق خامل (قبل)</span>
-                <span id="v-pre" class="val">--</span><small>ms</small>
+        <div class="bottom-grid">
+            <div class="card" id="c-ping">
+                <span class="lbl">البينق الخامل</span>
+                <span id="v-ping" class="val">--</span><small>ms</small>
             </div>
-            <div class="stat" id="ping-load">
+            <div class="card" id="c-loaded">
                 <span class="lbl">البينق المثقل</span>
                 <span id="v-loaded" class="val">--</span><small>ms</small>
             </div>
-            <div class="stat" id="ping-post">
-                <span class="lbl">بينق خامل (بعد)</span>
-                <span id="v-post" class="val">--</span><small>ms</small>
+            <div class="card" id="c-ul">
+                <span class="lbl">سرعة الرفع</span>
+                <span id="v-ul" class="val">--</span><small>Mbps</small>
             </div>
         </div>
 
-        <button id="main-btn" class="go-btn" disabled onclick="startProfessionalTest()">ابدأ الفحص الاحترافي</button>
-        <div id="status">جاهز للفحص</div>
+        <button id="go-btn" class="btn-start" disabled onclick="runV30()">ابدأ فحص الدقة</button>
     </div>
     <script src="script.js"></script>
 </body>
