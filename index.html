@@ -2,61 +2,75 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>المحلل الاحترافي V27 | فحص السيادة</title>
+    <title>محلل الشبكة الغربية V28 | جدة ومكة</title>
     <style>
-        :root { --neon: #00f2fe; --bg: #050508; --card: #0d0d11; }
-        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .panel { width: 95%; max-width: 750px; background: var(--card); padding: 40px; border-radius: 40px; border: 1px solid #1f1f23; text-align: center; box-shadow: 0 50px 100px rgba(0,0,0,0.9); }
+        :root { --neon: #00f2fe; --bg: #040406; --card: #0c0c10; }
+        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .panel { width: 95%; max-width: 800px; background: var(--card); padding: 40px; border-radius: 40px; border: 1px solid #1a1a20; text-align: center; box-shadow: 0 40px 100px rgba(0,0,0,0.9); }
         
-        .server-box { margin-bottom: 30px; padding: 20px; background: #16161c; border-radius: 25px; border: 2px dashed #333; }
-        .server-select { background: #000; color: var(--neon); border: 1px solid var(--neon); padding: 12px 20px; border-radius: 50px; font-weight: 900; width: 80%; cursor: pointer; outline: none; }
-        .server-select:invalid { border-color: #ff4444; }
+        .selector-box { background: #14141a; padding: 25px; border-radius: 30px; border: 2px solid #222; margin-bottom: 30px; }
+        .srv-select { background: #000; color: var(--neon); border: 1px solid var(--neon); padding: 15px; border-radius: 50px; width: 100%; cursor: pointer; font-weight: 900; font-size: 1rem; }
 
-        .speed-num { font-size: 10rem; font-weight: 950; color: var(--neon); line-height: 0.8; font-family: 'Consolas', monospace; }
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 30px; }
-        .stat { background: #121216; padding: 20px 10px; border-radius: 20px; border: 1px solid #1f1f23; }
-        .stat.active { border-color: var(--neon); background: rgba(0, 242, 254, 0.05); }
-        .val { font-size: 2.2rem; font-weight: 900; display: block; color: #fff; }
-        .lbl { font-size: 0.7rem; color: #555; font-weight: 900; text-transform: uppercase; }
+        .main-display { display: flex; justify-content: space-around; align-items: center; margin: 40px 0; }
+        .speed-unit { font-family: 'Consolas', monospace; }
+        .big-num { font-size: 8rem; font-weight: 950; color: var(--neon); line-height: 1; }
+        
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 20px; }
+        .stat-card { background: #111116; padding: 15px 5px; border-radius: 20px; border: 1px solid #1f1f25; }
+        .stat-card.highlight { border-color: var(--neon); background: rgba(0, 242, 254, 0.03); }
+        .val { font-size: 1.8rem; font-weight: 900; display: block; }
+        .lbl { font-size: 0.65rem; color: #555; font-weight: 800; margin-bottom: 5px; }
 
-        .btn-main { width: 100%; margin-top: 35px; background: #fff; color: #000; border: none; padding: 22px; border-radius: 100px; font-size: 1.5rem; font-weight: 950; cursor: pointer; transition: 0.3s; }
-        .btn-main:disabled { background: #222; color: #444; cursor: not-allowed; }
-        .btn-main.retry { background: var(--neon); color: #000; }
+        .btn-action { width: 100%; margin-top: 30px; background: #fff; color: #000; border: none; padding: 22px; border-radius: 100px; font-size: 1.5rem; font-weight: 950; cursor: pointer; transition: 0.3s; }
+        .btn-action:disabled { background: #222; color: #444; }
+        #status-text { margin-top: 15px; font-size: 0.8rem; color: #333; font-weight: bold; letter-spacing: 1px; }
     </style>
 </head>
 <body>
     <div class="panel">
-        <div class="server-box" id="selector-area">
-            <label style="display:block; margin-bottom:10px; font-weight:bold; color: #888;">يجب اختيار السيرفر أولاً لبدء الفحص:</label>
-            <select id="server-selector" class="server-select" required onchange="enableStart()">
-                <option value="" disabled selected>-- اختر سيرفر الفحص --</option>
-                <option value="stc">🇸🇦 STC (شركة الاتصالات السعودية)</option>
-                <option value="mobily">🇸🇦 Mobily (اتحاد اتصالات)</option>
-                <option value="zain">🇸🇦 Zain (زين السعودية)</option>
-                <option value="salam">🇸🇦 Salam (سلام السعودية)</option>
-                <option value="cloudflare">🌐 Cloudflare Edge (دولي)</option>
+        <div class="selector-box">
+            <label style="color: #666; font-size: 0.8rem; margin-bottom: 10px; display: block;">سيرفرات المنطقة الغربية (جدة/مكة):</label>
+            <select id="ping-node" class="srv-select" onchange="enableTest()">
+                <option value="" disabled selected>-- اختر السيرفر المحلي للفحص --</option>
+                <option value="https://www.uqu.edu.sa/favicon.ico">🕋 جامعة أم القرى - مكة المكرمة</option>
+                <option value="https://www.kau.edu.sa/favicon.ico">🌊 جامعة الملك عبد العزيز - جدة</option>
+                <option value="https://www.jeddah.gov.sa/favicon.ico">🏢 أمانة جدة - السيرفر الحكومي</option>
+                <option value="https://www.stc.com.sa/favicon.ico">📶 STC - عقدة جدة الرئيسية</option>
             </select>
         </div>
 
-        <div id="dl-val" class="speed-num">0</div>
-        <div style="color:#222; font-weight:900; letter-spacing:5px; margin-bottom:20px;">Mbps DOWNLOAD</div>
-
-        <div class="grid">
-            <div class="stat" id="box-ping">
-                <span class="lbl">البينق (بعد الفحص)</span>
-                <span id="v-ping" class="val">--</span><small>ms</small>
+        <div class="main-display">
+            <div>
+                <span id="dl-val" class="big-num">0</span>
+                <div style="color:#222; font-weight:900;">DOWNLOAD Mbps</div>
             </div>
-            <div class="stat" id="box-loaded">
-                <span class="lbl">البينق المثقل</span>
-                <span id="v-loaded" class="val">--</span><small>ms</small>
-            </div>
-            <div class="stat" id="box-ul">
-                <span class="lbl">سرعة الرفع</span>
-                <span id="v-ul" class="val">--</span><small>Mbps</small>
+            <div>
+                <span id="ul-val" class="big-num">0</span>
+                <div style="color:#222; font-weight:900;">UPLOAD Mbps</div>
             </div>
         </div>
 
-        <button id="start-btn" class="btn-main" disabled onclick="runEngineV27()">ابدأ الفحص</button>
+        <div class="grid">
+            <div class="stat-card" id="s1">
+                <span class="lbl">بينق (قبل)</span>
+                <span id="v-ping1" class="val">--</span><small>ms</small>
+            </div>
+            <div class="stat-card" id="s2">
+                <span class="lbl">البينق المثقل</span>
+                <span id="v-loaded" class="val">--</span><small>ms</small>
+            </div>
+            <div class="stat-card" id="s3">
+                <span class="lbl">بينق (بعد)</span>
+                <span id="v-ping2" class="val">--</span><small>ms</small>
+            </div>
+            <div class="stat-card" id="s4">
+                <span class="lbl">التذبذب (Jitter)</span>
+                <span id="v-jitter" class="val">--</span><small>ms</small>
+            </div>
+        </div>
+
+        <button id="run-btn" class="btn-action" disabled onclick="masterEngine()">بدء فحص الدقة</button>
+        <div id="status-text">System Ready</div>
     </div>
     <script src="script.js"></script>
 </body>
