@@ -2,61 +2,61 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>محلل الشبكة الاحترافي | اختيار السيرفر</title>
+    <title>المحلل الاحترافي V27 | فحص السيادة</title>
     <style>
-        :root { --primary: #00f2fe; --bg: #050508; --card: #101014; }
+        :root { --neon: #00f2fe; --bg: #050508; --card: #0d0d11; }
         body { background: var(--bg); color: #fff; font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .panel { width: 95%; max-width: 750px; background: var(--card); padding: 40px; border-radius: 40px; border: 1px solid #1f1f23; text-align: center; }
+        .panel { width: 95%; max-width: 750px; background: var(--card); padding: 40px; border-radius: 40px; border: 1px solid #1f1f23; text-align: center; box-shadow: 0 50px 100px rgba(0,0,0,0.9); }
         
-        /* تصميم قائمة اختيار السيرفر */
-        .selector-container { margin-bottom: 25px; }
-        .server-select { background: #1a1a20; color: var(--primary); border: 1px solid #333; padding: 12px 25px; border-radius: 50px; font-weight: 900; outline: none; cursor: pointer; font-family: inherit; }
-        
-        .speed-val { font-size: 10rem; font-weight: 950; color: var(--primary); line-height: 0.8; font-family: 'Arial Black', sans-serif; }
+        .server-box { margin-bottom: 30px; padding: 20px; background: #16161c; border-radius: 25px; border: 2px dashed #333; }
+        .server-select { background: #000; color: var(--neon); border: 1px solid var(--neon); padding: 12px 20px; border-radius: 50px; font-weight: 900; width: 80%; cursor: pointer; outline: none; }
+        .server-select:invalid { border-color: #ff4444; }
+
+        .speed-num { font-size: 10rem; font-weight: 950; color: var(--neon); line-height: 0.8; font-family: 'Consolas', monospace; }
         .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 30px; }
-        .stat { background: #16161c; padding: 25px 10px; border-radius: 25px; border: 1px solid #222; }
-        .stat .val { font-size: 2.5rem; font-weight: 900; display: block; }
-        .stat .lbl { font-size: 0.75rem; color: #555; font-weight: 900; }
-        .btn-test { width: 100%; margin-top: 40px; background: #fff; color: #000; border: none; padding: 22px; border-radius: 100px; font-size: 1.6rem; font-weight: 950; cursor: pointer; transition: 0.3s; }
-        .btn-test:hover { background: var(--primary); transform: scale(1.02); }
+        .stat { background: #121216; padding: 20px 10px; border-radius: 20px; border: 1px solid #1f1f23; }
+        .stat.active { border-color: var(--neon); background: rgba(0, 242, 254, 0.05); }
+        .val { font-size: 2.2rem; font-weight: 900; display: block; color: #fff; }
+        .lbl { font-size: 0.7rem; color: #555; font-weight: 900; text-transform: uppercase; }
+
+        .btn-main { width: 100%; margin-top: 35px; background: #fff; color: #000; border: none; padding: 22px; border-radius: 100px; font-size: 1.5rem; font-weight: 950; cursor: pointer; transition: 0.3s; }
+        .btn-main:disabled { background: #222; color: #444; cursor: not-allowed; }
+        .btn-main.retry { background: var(--neon); color: #000; }
     </style>
 </head>
 <body>
     <div class="panel">
-        <div class="selector-container">
-            <label style="color: #666; font-size: 0.8rem; display: block; margin-bottom: 10px;">اختر سيرفر فحص البينق:</label>
-            <select id="server-selector" class="server-select" onchange="updateServer()">
-                <option value="auto">🔍 اكتشاف تلقائي (مستحسن)</option>
-                <option value="stc">🇸🇦 STC - السعودية</option>
-                <option value="mobily">🇸🇦 Mobily - السعودية</option>
-                <option value="zain">🇸🇦 Zain - السعودية</option>
-                <option value="salam">🇸🇦 Salam - السعودية</option>
-                <option value="google">🌐 Google DNS - دولي</option>
-                <option value="cloudflare">🌐 Cloudflare - دولي</option>
+        <div class="server-box" id="selector-area">
+            <label style="display:block; margin-bottom:10px; font-weight:bold; color: #888;">يجب اختيار السيرفر أولاً لبدء الفحص:</label>
+            <select id="server-selector" class="server-select" required onchange="enableStart()">
+                <option value="" disabled selected>-- اختر سيرفر الفحص --</option>
+                <option value="stc">🇸🇦 STC (شركة الاتصالات السعودية)</option>
+                <option value="mobily">🇸🇦 Mobily (اتحاد اتصالات)</option>
+                <option value="zain">🇸🇦 Zain (زين السعودية)</option>
+                <option value="salam">🇸🇦 Salam (سلام السعودية)</option>
+                <option value="cloudflare">🌐 Cloudflare Edge (دولي)</option>
             </select>
         </div>
 
-        <div class="hero-speed">
-            <div id="dl-val" class="speed-val">0</div>
-            <div style="color:#222; font-weight:900; letter-spacing:5px;">Mbps DOWNLOAD</div>
-        </div>
+        <div id="dl-val" class="speed-num">0</div>
+        <div style="color:#222; font-weight:900; letter-spacing:5px; margin-bottom:20px;">Mbps DOWNLOAD</div>
 
         <div class="grid">
-            <div class="stat">
-                <span class="lbl">البينق المحلي</span>
+            <div class="stat" id="box-ping">
+                <span class="lbl">البينق (بعد الفحص)</span>
                 <span id="v-ping" class="val">--</span><small>ms</small>
             </div>
-            <div class="stat">
-                <span class="lbl">تحت الضغط</span>
+            <div class="stat" id="box-loaded">
+                <span class="lbl">البينق المثقل</span>
                 <span id="v-loaded" class="val">--</span><small>ms</small>
             </div>
-            <div class="stat">
+            <div class="stat" id="box-ul">
                 <span class="lbl">سرعة الرفع</span>
                 <span id="v-ul" class="val">--</span><small>Mbps</small>
             </div>
         </div>
-        <button class="btn-test" onclick="startV26()">تشغيل الفحص</button>
+
+        <button id="start-btn" class="btn-main" disabled onclick="runEngineV27()">ابدأ الفحص</button>
     </div>
     <script src="script.js"></script>
 </body>
