@@ -2,55 +2,56 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>المحلل السعودي V28 | Elite Edition</title>
+    <title>محلل الشبكة المتقدم V29 | إصدار GO</title>
     <style>
-        :root { --neon: #00f2fe; --bg: #020203; --card: #08080a; }
+        :root { --neon: #00f2fe; --bg: #020204; --card: #0a0a0d; }
         body { background: var(--bg); color: #fff; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .master-panel { width: 95%; max-width: 780px; background: var(--card); padding: 40px; border-radius: 45px; border: 1px solid #111; text-align: center; }
-        .server-box { margin-bottom: 25px; }
-        .server-select { background: #111; color: var(--neon); border: 1px solid #222; padding: 12px 25px; border-radius: 50px; font-weight: 900; outline: none; cursor: pointer; }
-        .speed-val { font-size: 11rem; font-weight: 950; color: var(--neon); line-height: 0.8; font-family: 'Arial Black', sans-serif; }
-        .unit { font-size: 1.4rem; color: #333; font-weight: 900; letter-spacing: 5px; margin-top: 10px; }
+        .master-panel { width: 95%; max-width: 800px; background: var(--card); padding: 40px; border-radius: 40px; border: 1px solid #1a1a1f; text-align: center; box-shadow: 0 40px 80px rgba(0,0,0,0.9); }
+        .server-selector { margin-bottom: 30px; }
+        .styled-select { background: #111; color: var(--neon); border: 1px solid #222; padding: 12px 25px; border-radius: 50px; font-weight: 900; cursor: pointer; font-size: 0.9rem; outline: none; }
+        .speed-val { font-size: 11rem; font-weight: 950; color: var(--neon); line-height: 0.8; font-family: 'Arial Black', sans-serif; letter-spacing: -5px; }
+        .unit { font-size: 1.4rem; color: #2a2a2a; font-weight: 900; letter-spacing: 5px; margin-top: 15px; }
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 40px; }
-        .s-card { background: #0c0c0e; padding: 25px 10px; border-radius: 30px; border: 1px solid #151515; }
-        .s-card.active { border-color: var(--neon); box-shadow: 0 0 20px rgba(0, 242, 254, 0.1); }
-        .s-card .val { font-size: 2.5rem; font-weight: 900; display: block; }
-        .s-card .lbl { font-size: 0.75rem; color: #444; font-weight: 900; }
-        .btn-ignite { width: 100%; margin-top: 35px; background: #fff; color: #000; border: none; padding: 22px; border-radius: 100px; font-size: 1.7rem; font-weight: 950; cursor: pointer; transition: 0.3s; }
-        .btn-ignite:hover { background: var(--neon); transform: scale(1.02); }
-        #log { font-size: 0.7rem; color: #222; margin-top: 15px; font-weight: bold; }
+        .stat-card { background: #0e0e12; padding: 25px 10px; border-radius: 25px; border: 1px solid #16161a; position: relative; }
+        .stat-card.active { border-color: var(--neon); box-shadow: 0 0 15px rgba(0, 242, 254, 0.1); }
+        .stat-card .val { font-size: 2.5rem; font-weight: 900; display: block; }
+        .stat-card .lbl { font-size: 0.75rem; color: #444; font-weight: 900; text-transform: uppercase; }
+        .btn-ignite { width: 100%; margin-top: 40px; background: #fff; color: #000; border: none; padding: 24px; border-radius: 100px; font-size: 1.8rem; font-weight: 950; cursor: pointer; transition: 0.4s; }
+        .btn-ignite:hover { background: var(--neon); transform: translateY(-3px); box-shadow: 0 15px 30px rgba(0, 242, 254, 0.3); }
+        #status-log { margin-top: 20px; font-size: 0.75rem; color: #333; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="master-panel">
-        <div class="server-box">
-            <select id="isp-selector" class="server-select" onchange="userChangeServer()">
-                <option value="auto">⚡ اختيار آلي (الأسرع)</option>
-                <option value="stc">STC</option>
-                <option value="mobily">Mobily</option>
-                <option value="zain">Zain</option>
-                <option value="salam">Salam</option>
-                <option value="dawiyat">Dawiyat</option>
+        <div class="server-selector">
+            <select id="isp-select" class="styled-select" onchange="manualNodeChange()">
+                <option value="auto">🔄 اختيار السيرفر الأسرع تلقائياً</option>
+                <option value="stc">STC - شركة الاتصالات</option>
+                <option value="mobily">Mobily - موبايلي</option>
+                <option value="zain">Zain - زين</option>
+                <option value="salam">Salam - سلام</option>
+                <option value="go">GO - عذيب للاتصالات</option>
+                <option value="dawiyat">Dawiyat - ضوئيات</option>
             </select>
         </div>
         <div id="dl-val" class="speed-val">0</div>
         <div class="unit">Mbps DOWNLOAD</div>
         <div class="stats-grid">
-            <div class="s-card">
+            <div class="stat-card">
                 <span class="lbl">البينق</span>
                 <span id="v-ping" class="val">--</span>
             </div>
-            <div class="s-card" id="loaded-card">
+            <div class="stat-card" id="loaded-card">
                 <span class="lbl">المثقل</span>
                 <span id="v-loaded" class="val">--</span>
             </div>
-            <div class="s-card">
+            <div class="stat-card">
                 <span class="lbl">الرفع</span>
                 <span id="v-ul" class="val">--</span>
             </div>
         </div>
-        <button class="btn-ignite" onclick="runEliteTest()">ابدأ الفحص</button>
-        <div id="log">AUTO-SERVER: INITIALIZING...</div>
+        <button class="btn-ignite" onclick="startV29()">ابدأ الفحص الاحترافي</button>
+        <div id="status-log">الأنظمة جاهزة...</div>
     </div>
     <script src="script.js"></script>
 </body>
