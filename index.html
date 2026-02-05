@@ -2,67 +2,55 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>المحلل السعودي الشامل V27 | Saudi Precision Engine</title>
+    <title>المحلل السعودي V28 | Elite Edition</title>
     <style>
-        :root { --neon: #00f2fe; --bg: #040406; --card: #0c0c0f; }
+        :root { --neon: #00f2fe; --bg: #020203; --card: #08080a; }
         body { background: var(--bg); color: #fff; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .master-container { width: 95%; max-width: 800px; background: var(--card); padding: 40px; border-radius: 45px; border: 1px solid #1a1a1f; box-shadow: 0 50px 100px rgba(0,0,0,0.9); text-align: center; }
-        
-        .server-grid { margin-bottom: 30px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
-        .server-select { background: #16161b; color: var(--neon); border: 1px solid #222; padding: 14px 30px; border-radius: 100px; font-weight: 900; width: 300px; outline: none; appearance: none; text-align: center; cursor: pointer; }
-        
-        .main-display { margin: 30px 0; position: relative; }
-        .speed-val { font-size: 11rem; font-weight: 950; color: var(--neon); line-height: 0.8; font-family: 'Arial Black', sans-serif; transition: 0.1s; }
-        .unit { font-size: 1.5rem; color: #222; font-weight: 900; letter-spacing: 6px; }
-
-        .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 40px; }
-        .m-card { background: #111115; padding: 25px 15px; border-radius: 30px; border: 1px solid #1a1a1f; position: relative; overflow: hidden; }
-        .m-card.active { border-color: var(--neon); background: rgba(0, 242, 254, 0.03); }
-        .m-card .lbl { display: block; font-size: 0.7rem; color: #444; font-weight: 900; text-transform: uppercase; margin-bottom: 10px; }
-        .m-card .val { font-size: 2.6rem; font-weight: 950; color: #fff; }
-        
-        .btn-start { width: 100%; margin-top: 40px; background: #fff; color: #000; border: none; padding: 25px; border-radius: 100px; font-size: 1.8rem; font-weight: 950; cursor: pointer; transition: 0.4s; box-shadow: 0 10px 30px rgba(255,255,255,0.05); }
-        .btn-start:hover { background: var(--neon); transform: translateY(-5px); box-shadow: 0 15px 40px rgba(0, 242, 254, 0.3); }
-        .btn-start:disabled { opacity: 0.1; cursor: not-allowed; }
+        .master-panel { width: 95%; max-width: 780px; background: var(--card); padding: 40px; border-radius: 45px; border: 1px solid #111; text-align: center; }
+        .server-box { margin-bottom: 25px; }
+        .server-select { background: #111; color: var(--neon); border: 1px solid #222; padding: 12px 25px; border-radius: 50px; font-weight: 900; outline: none; cursor: pointer; }
+        .speed-val { font-size: 11rem; font-weight: 950; color: var(--neon); line-height: 0.8; font-family: 'Arial Black', sans-serif; }
+        .unit { font-size: 1.4rem; color: #333; font-weight: 900; letter-spacing: 5px; margin-top: 10px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 40px; }
+        .s-card { background: #0c0c0e; padding: 25px 10px; border-radius: 30px; border: 1px solid #151515; }
+        .s-card.active { border-color: var(--neon); box-shadow: 0 0 20px rgba(0, 242, 254, 0.1); }
+        .s-card .val { font-size: 2.5rem; font-weight: 900; display: block; }
+        .s-card .lbl { font-size: 0.75rem; color: #444; font-weight: 900; }
+        .btn-ignite { width: 100%; margin-top: 35px; background: #fff; color: #000; border: none; padding: 22px; border-radius: 100px; font-size: 1.7rem; font-weight: 950; cursor: pointer; transition: 0.3s; }
+        .btn-ignite:hover { background: var(--neon); transform: scale(1.02); }
+        #log { font-size: 0.7rem; color: #222; margin-top: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="master-container">
-        <div class="server-grid">
-            <label style="font-size: 0.7rem; color: #333; font-weight: 900;">اختيار عقدة الفحص (Node Selection)</label>
-            <select id="isp-select" class="server-select" onchange="manualSwitch()">
-                <option value="auto">⚡ تحديد تلقائي (الأسرع)</option>
-                <option value="stc">🇸🇦 STC - شركة الاتصالات</option>
-                <option value="mobily">🇸🇦 Mobily - موبايلي</option>
-                <option value="zain">🇸🇦 Zain - زين</option>
-                <option value="salam">🇸🇦 Salam - سلام</option>
-                <option value="go">🇸🇦 GO - عذيب</option>
-                <option value="dawiyat">🇸🇦 Dawiyat - ضوئيات</option>
-                <option value="google">🌐 Google Edge - دولي</option>
+    <div class="master-panel">
+        <div class="server-box">
+            <select id="isp-selector" class="server-select" onchange="userChangeServer()">
+                <option value="auto">⚡ اختيار آلي (الأسرع)</option>
+                <option value="stc">STC</option>
+                <option value="mobily">Mobily</option>
+                <option value="zain">Zain</option>
+                <option value="salam">Salam</option>
+                <option value="dawiyat">Dawiyat</option>
             </select>
         </div>
-
-        <div class="main-display">
-            <div id="dl-display" class="speed-val">0</div>
-            <div class="unit">Mbps DOWNLOAD</div>
-        </div>
-
-        <div class="metrics">
-            <div class="m-card" id="ping-card">
-                <span class="lbl">البينق المحلي</span>
-                <span id="v-ping" class="val">--</span><small>ms</small>
+        <div id="dl-val" class="speed-val">0</div>
+        <div class="unit">Mbps DOWNLOAD</div>
+        <div class="stats-grid">
+            <div class="s-card">
+                <span class="lbl">البينق</span>
+                <span id="v-ping" class="val">--</span>
             </div>
-            <div class="m-card" id="loaded-card">
-                <span class="lbl">البينق المثقل</span>
-                <span id="v-loaded" class="val">--</span><small>ms</small>
+            <div class="s-card" id="loaded-card">
+                <span class="lbl">المثقل</span>
+                <span id="v-loaded" class="val">--</span>
             </div>
-            <div class="m-card" id="ul-card">
-                <span class="lbl">سرعة الرفع</span>
-                <span id="v-ul" class="val">--</span><small>Mbps</small>
+            <div class="s-card">
+                <span class="lbl">الرفع</span>
+                <span id="v-ul" class="val">--</span>
             </div>
         </div>
-
-        <button class="btn-start" onclick="igniteEngine()">بدء فحص المعايرة</button>
+        <button class="btn-ignite" onclick="runEliteTest()">ابدأ الفحص</button>
+        <div id="log">AUTO-SERVER: INITIALIZING...</div>
     </div>
     <script src="script.js"></script>
 </body>
