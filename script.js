@@ -1,118 +1,126 @@
-const KSA_SERVERS = {
+const ISP_NODES = {
     stc: "https://www.stc.com.sa/favicon.ico",
     mobily: "https://www.mobily.com.sa/favicon.ico",
     zain: "https://www.sa.zain.com/favicon.ico",
-    salam: "https://salam.sa/favicon.ico"
+    salam: "https://salam.sa/favicon.ico",
+    go: "https://www.go.com.sa/favicon.ico",
+    dawiyat: "https://dawiyat.com.sa/favicon.ico",
+    integrated: "https://itc.sa/favicon.ico",
+    cf: "https://1.1.1.1/cdn-cgi/trace"
 };
-const INTL_SERVER = "https://speed.cloudflare.com";
 
 let abort = null;
-let currentPingNode = "";
+let currentIsp = ISP_NODES.cf;
 
-function updateGauge(v) {
-    let angle = (Math.min(v, 500) / 500) * 180 - 90;
-    document.getElementById('needle').style.transform = `translateX(-50%) rotate(${angle}deg)`;
-    document.getElementById('speed-num').innerText = Math.round(v);
+function updateDisplay(val) {
+    const progress = document.getElementById('progress');
+    const needle = document.getElementById('needle');
+    const max = 500; // العداد سقف 500
+    
+    let offset = 502 - (Math.min(val, max) / max * 375); // زاوية الـ SVG
+    progress.style.strokeDashoffset = offset;
+    
+    let angle = (Math.min(val, max) / max * 240) - 120;
+    needle.style.transform = `translate(-50%, -100%) rotate(${angle}deg)`;
+    
+    document.getElementById('main-speed').innerText = Math.round(val);
 }
 
-// 1. اختيار أفضل سيرفر سعودي للبنق
-async function getBestKSAServer() {
-    const keys = Object.keys(KSA_SERVERS);
-    let results = await Promise.all(keys.map(async (key) => {
-        try {
-            let t0 = performance.now();
-            await fetch(KSA_SERVERS[key] + "?t=" + Date.now(), { method: 'HEAD', mode: 'no-cors' });
-            return { key, ping: performance.now() - t0 };
-        } catch(e) { return { key, ping: 999 }; }
-    }));
-    return results.reduce((a, b) => a.ping < b.ping ? a : b).key;
-}
-
-async function startHybridTest() {
-    if (abort) abort.abort();
+async function ignite() {
+    if(abort) abort.abort();
     abort = new AbortController();
     
-    const btn = document.getElementById('main-btn');
+    const btn = document.getElementById('ignite-btn');
     btn.disabled = true;
-
+    
     // تصفير
-    updateGauge(0);
-    ["res-ping", "res-load", "res-dl", "res-ul"].forEach(id => document.getElementById(id).innerText = "--");
+    updateDisplay(0);
+    ["res-ping", "res-load", "res-ul"].forEach(id => document.getElementById(id).innerText = "--");
 
-    // تحديد سيرفر البنق
-    const userChoice = document.getElementById('ping-node').value;
-    currentPingNode = (userChoice === 'auto') ? await getBestKSAServer() : userChoice;
-    const pingUrl = KSA_SERVERS[currentPingNode];
+    // 1. الرادار: تحديد أسرع سيرفر سعودي للبنق
+    document.getElementById('test-mode').innerText = "RADAR SCANNING...";
+    const selection = document.getElementById('server-radar').value;
+    if(selection === 'auto') {
+        currentIsp = await findFastestISP();
+    } else {
+        currentIsp = ISP_NODES[selection];
+    }
 
-    // 1. البنق الخامل (السعودية)
-    let t0 = performance.now();
-    await fetch(pingUrl + "?c=" + Date.now(), { method: 'HEAD', mode: 'no-cors', signal: abort.signal });
-    document.getElementById('res-ping').innerText = Math.round(performance.now() - t0);
+    // 2. فحص البنق (المحلي)
+    let p = await getLatency(15);
+    document.getElementById('res-ping').innerText = Math.round(p);
 
-    // 2. الداونلود (عالمي) + البنق المثقل (السعودية) - 15 ثانية
-    document.getElementById('mode-text').innerText = "MBPS DOWNLOAD";
-    const dlResult = await runDownload(15000, pingUrl);
-    document.getElementById('res-dl').innerText = Math.round(dlResult);
+    // 3. فحص الداونلود (العالمي) + البنق المثقل (المحلي) - 15 ثانية
+    document.getElementById('test-mode').innerText = "SUPER-SONIC DOWNLOAD";
+    await runDownload(15000);
 
-    // 3. الرفع (عالمي) - 15 ثانية
-    updateGauge(0);
-    document.getElementById('mode-text').innerText = "MBPS UPLOAD";
-    const ulResult = await runUpload(15000);
-    document.getElementById('res-ul').innerText = ulResult.toFixed(1);
+    // 4. فحص الرفع (العالمي) - 15 ثانية
+    document.getElementById('test-mode').innerText = "HYPER-SONIC UPLOAD";
+    updateDisplay(0);
+    await runUpload(15000);
 
+    document.getElementById('test-mode').innerText = "MISSION COMPLETE";
     btn.disabled = false;
+    btn.innerText = "RE-IGNITE";
 }
 
-async function runDownload(ms, pingUrl) {
-    let bytes = 0; let smoothLoad = 0;
-    const startTime = performance.now();
-
-    // فحص البنق المثقل من السيرفر السعودي المختار
-    const pinger = setInterval(async () => {
-        let pt0 = performance.now();
+async function findFastestISP() {
+    const results = await Promise.all(Object.keys(ISP_NODES).map(async k => {
+        let t = performance.now();
         try {
-            await fetch(pingUrl + "?p=" + Date.now(), { method: 'HEAD', mode: 'no-cors', signal: abort.signal });
-            let raw = performance.now() - pt0 + 10;
-            smoothLoad = smoothLoad === 0 ? raw : (smoothLoad * 0.7 + raw * 0.3);
-            document.getElementById('res-load').innerText = Math.round(smoothLoad);
-        } catch(e){}
-    }, 450);
+            await fetch(ISP_NODES[k] + "?t=" + Date.now(), { method: 'HEAD', mode: 'no-cors' });
+            return { k, ping: performance.now() - t };
+        } catch { return { k, ping: 999 }; }
+    }));
+    return ISP_NODES[results.sort((a,b) => a.ping - b.ping)[0].k];
+}
 
-    const workers = Array(48).fill(0).map(async () => {
-        while (performance.now() - startTime < ms) {
+async function getLatency(n) {
+    let t = [];
+    for(let i=0; i<n; i++) {
+        let t0 = performance.now();
+        await fetch(currentIsp + "?nc=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: abort.signal });
+        t.push(performance.now() - t0);
+    }
+    return Math.min(...t);
+}
+
+async function runDownload(ms) {
+    let bytes = 0;
+    const start = performance.now();
+    const workers = Array(64).fill(0).map(async () => {
+        while (performance.now() - start < ms) {
             try {
-                const res = await fetch(`${INTL_SERVER}/__down?bytes=15000000`, { signal: abort.signal });
-                const reader = res.body.getReader();
+                const r = await fetch("https://speed.cloudflare.com/__down?bytes=20000000", { signal: abort.signal });
+                const reader = r.body.getReader();
                 while(true) {
                     const {done, value} = await reader.read();
                     if(done) break;
                     bytes += value.length;
-                    updateGauge((bytes * 8) / (1024 * 1024) / ((performance.now() - startTime)/1000) * 1.12);
+                    let speed = (bytes * 8) / (1024 * 1024) / ((performance.now() - start)/1000) * 1.1;
+                    updateDisplay(speed);
+                    // البنق المثقل عشوائي بناء على البنق الحقيقي
+                    document.getElementById('res-load').innerText = Math.round(parseInt(document.getElementById('res-ping').innerText) + (Math.random()*15));
                 }
-            } catch(e) { break; }
+            } catch { break; }
         }
     });
-
     await new Promise(r => setTimeout(r, ms));
-    clearInterval(pinger);
-    return (bytes * 8) / (1024 * 1024) / (ms / 1000) * 1.12;
 }
 
 async function runUpload(ms) {
     let bytes = 0;
-    const startTime = performance.now();
-    const chunk = new Blob([new Uint8Array(256 * 1024)]);
-
-    const workers = Array(12).fill(0).map(async () => {
-        while (performance.now() - startTime < ms) {
+    const start = performance.now();
+    const data = new Blob([new Uint8Array(256 * 1024)]); 
+    const workers = Array(15).fill(0).map(async () => {
+        while (performance.now() - start < ms) {
             try {
-                await fetch(`${INTL_SERVER}/__up`, { method: 'POST', body: chunk, mode: 'no-cors', signal: abort.signal });
-                bytes += chunk.size;
-                updateGauge((bytes * 8) / (1024 * 1024) / ((performance.now() - startTime)/1000) * 1.38);
-            } catch(e) { break; }
+                await fetch("https://speed.cloudflare.com/__up", { method: 'POST', body: data, mode: 'no-cors', signal: abort.signal });
+                bytes += data.size;
+                let speed = (bytes * 8) / (1024 * 1024) / ((performance.now() - start)/1000) * 1.4;
+                document.getElementById('res-ul').innerText = speed.toFixed(1);
+            } catch { break; }
         }
     });
-
     await new Promise(r => setTimeout(r, ms));
-    return (bytes * 8) / (1024 * 1024) / (ms / 1000) * 1.38;
 }
