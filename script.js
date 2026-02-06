@@ -1,4 +1,4 @@
-const ISP_NODES = {
+const SERVERS = {
     stc: "https://www.stc.com.sa/favicon.ico",
     mobily: "https://www.mobily.com.sa/favicon.ico",
     zain: "https://www.sa.zain.com/favicon.ico",
@@ -8,54 +8,55 @@ const ISP_NODES = {
 };
 
 let abort = null;
-let activePingUrl = "";
+let currentUrl = "";
 
 function updateGauge(val) {
     const needle = document.getElementById('needle');
     const max = 500;
-    // -120 هي البداية عند الصفر، و 240 هو مدى القوس الكامل
     let angle = (Math.min(val, max) / max * 240) - 120;
     needle.style.transform = `translate(-50%, -100%) rotate(${angle}deg)`;
     document.getElementById('main-speed').innerText = Math.round(val);
 }
 
-async function startV66() {
+async function startV67() {
     if(abort) abort.abort();
     abort = new AbortController();
     
     document.getElementById('ignite-btn').disabled = true;
     updateGauge(0);
+    ["res-ping", "res-load", "res-ul"].forEach(id => document.getElementById(id).innerText = "--");
 
     const selection = document.getElementById('server-selector').value;
-    activePingUrl = (selection === 'auto') ? ISP_NODES[await findBest()] : ISP_NODES[selection];
+    currentUrl = (selection === 'auto') ? SERVERS[await findFastest()] : SERVERS[selection];
 
-    // 1. خامل (Idle)
-    const idle = await getLatency(activePingUrl, 10);
+    // 1. فحص البنق
+    document.getElementById('mode-text').innerText = "فحص الاستجابة...";
+    const idle = await getPing(currentUrl, 10);
     document.getElementById('res-ping').innerText = idle;
 
-    // 2. تحميل + مثقل (15 ثانية)
-    document.getElementById('unit-text').innerText = "DOWNLOAD";
-    await runDownloadAndLoaded(15000);
+    // 2. تحميل + بنق مثقل (15 ثانية)
+    document.getElementById('mode-text').innerText = "جارِ التحميل...";
+    await runDownload(15000);
 
     // 3. رفع (15 ثانية)
     updateGauge(0);
-    document.getElementById('unit-text').innerText = "UPLOAD";
+    document.getElementById('mode-text').innerText = "جارِ الرفع...";
     await runUpload(15000);
 
+    document.getElementById('mode-text').innerText = "اكتمل الفحص";
     document.getElementById('ignite-btn').disabled = false;
-    document.getElementById('unit-text').innerText = "COMPLETE";
 }
 
-async function findBest() {
-    const results = await Promise.all(Object.keys(ISP_NODES).map(async k => {
+async function findFastest() {
+    const results = await Promise.all(Object.keys(SERVERS).map(async k => {
         let t0 = performance.now();
-        try { await fetch(ISP_NODES[k] + "?t=" + Date.now(), { method: 'HEAD', mode: 'no-cors' }); return { k, p: performance.now() - t0 }; }
+        try { await fetch(SERVERS[k] + "?t=" + Date.now(), { method: 'HEAD', mode: 'no-cors' }); return { k, p: performance.now() - t0 }; }
         catch { return { k, p: 999 }; }
     }));
     return results.sort((a,b) => a.p - b.p)[0].k;
 }
 
-async function getLatency(url, count) {
+async function getPing(url, count) {
     let s = [];
     for(let i=0; i<count; i++) {
         let t0 = performance.now();
@@ -65,14 +66,14 @@ async function getLatency(url, count) {
     return Math.round(Math.min(...s));
 }
 
-async function runDownloadAndLoaded(ms) {
+async function runDownload(ms) {
     let bytes = 0; let smoothLoad = 0;
     const start = performance.now();
 
     const pinger = setInterval(async () => {
         let t0 = performance.now();
         try {
-            await fetch(activePingUrl + "?lp=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: abort.signal });
+            await fetch(currentUrl + "?lp=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: abort.signal });
             let raw = performance.now() - t0 + 10;
             smoothLoad = smoothLoad === 0 ? raw : (smoothLoad * 0.8 + raw * 0.2);
             document.getElementById('res-load').innerText = Math.round(smoothLoad);
