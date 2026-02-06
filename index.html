@@ -2,147 +2,76 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>S-Speed Elite V51 | Zero Error</title>
+    <title>S-Speed Elite V52 | التحليل المتزامن</title>
     <style>
         :root {
             --neon: #00f2fe;
-            --bg: #020308;
+            --bg: #010206;
             --glass: rgba(255, 255, 255, 0.02);
             --border: rgba(255, 255, 255, 0.1);
         }
 
         body {
-            background-color: var(--bg);
-            color: white;
-            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background-color: var(--bg); color: white;
+            font-family: 'Segoe UI', system-ui, sans-serif;
             display: flex; justify-content: center; align-items: center;
             min-height: 100vh; margin: 0; overflow: hidden;
         }
 
-        .master-panel {
+        .main-panel {
             width: 850px; background: var(--glass); backdrop-filter: blur(40px);
             border-radius: 50px; padding: 40px; border: 1px solid var(--border); text-align: center;
         }
 
-        /* حاوية العداد المصححة */
-        .gauge-area {
-            position: relative;
-            width: 450px;
-            height: 300px;
-            margin: 0 auto;
-        }
-
-        .gauge-svg { width: 100%; height: 100%; }
-
-        /* الإبرة الفيزيائية */
+        /* العداد */
+        .gauge-container { position: relative; width: 450px; height: 300px; margin: 0 auto; }
         .needle {
-            position: absolute;
-            bottom: 30px; /* مركز الدوران الدقيق */
-            left: 50%;
-            width: 4px;
-            height: 140px;
+            position: absolute; bottom: 30px; left: 50%; width: 4px; height: 140px;
             background: linear-gradient(to top, transparent, var(--neon));
-            transform-origin: bottom center;
-            transform: translateX(-50%) rotate(-90deg); /* وضع الصفر */
+            transform-origin: bottom center; transform: translateX(-50%) rotate(-90deg);
             transition: transform 0.6s cubic-bezier(0.1, 0.5, 0.5, 1);
-            filter: drop-shadow(0 0 10px var(--neon));
-            z-index: 5;
+            filter: drop-shadow(0 0 10px var(--neon)); z-index: 5;
         }
 
-        .pivot {
-            position: absolute;
-            bottom: 22px;
-            left: 50%;
-            width: 16px;
-            height: 16px;
-            background: var(--neon);
-            border-radius: 50%;
-            transform: translateX(-50%);
-            box-shadow: 0 0 20px var(--neon);
-            z-index: 6;
-        }
+        #dl-speed { font-size: 6.5rem; font-weight: 950; font-family: 'Arial Black'; line-height: 1; margin-top: 170px; display: block; }
+        .unit-lbl { color: #444; font-weight: 900; letter-spacing: 5px; font-size: 0.8rem; }
 
-        #speed-num {
-            font-size: 6rem;
-            font-weight: 900;
-            color: #fff;
-            line-height: 0.8;
-            font-family: 'Arial Black', sans-serif;
-            margin-top: -30px;
-        }
-
-        .label { color: #444; font-weight: 900; letter-spacing: 5px; font-size: 0.8rem; display: block; margin-top: 10px; }
-
-        /* البطاقات السفلية */
+        /* البطاقات */
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 40px; }
-        .stat-card { background: rgba(255,255,255,0.01); padding: 25px; border-radius: 30px; border: 1px solid var(--border); }
-        .stat-card .v { font-size: 2rem; font-weight: 900; color: #fff; display: block; }
-        .stat-card .l { font-size: 0.7rem; color: #555; font-weight: 900; }
+        .card { background: rgba(255,255,255,0.01); padding: 25px; border-radius: 30px; border: 1px solid var(--border); transition: 0.4s; }
+        .card.active { border-color: var(--neon); box-shadow: 0 0 20px rgba(0, 242, 254, 0.15); }
+        .card .v { font-size: 2.2rem; font-weight: 950; display: block; color: #fff; }
+        .card .l { font-size: 0.7rem; color: #555; font-weight: 900; }
 
         .btn-start {
             width: 90px; height: 90px; border-radius: 50%; background: #fff; color: #000;
             border: none; font-size: 1.2rem; font-weight: 900; cursor: pointer;
             margin-top: 20px; transition: 0.4s;
         }
-
-        .btn-start:hover { transform: scale(1.1); background: var(--neon); box-shadow: 0 0 30px var(--neon); }
-        .btn-start:disabled { opacity: 0.1; }
-
-        .isp-select {
-            background: #111; color: var(--neon); border: 1px solid #222;
-            padding: 10px 25px; border-radius: 100px; font-weight: bold; margin-bottom: 20px;
-        }
+        .btn-start:hover { transform: scale(1.1); background: var(--neon); }
     </style>
 </head>
 <body>
 
-<div class="master-panel">
-    <select id="node-sel" class="isp-select" onchange="manualNode()">
-        <option value="auto">⚡ اختيار تلقائي ذكي</option>
-        <option value="stc">STC</option>
-        <option value="mobily">Mobily</option>
-        <option value="zain">Zain</option>
-        <option value="salam">Salam</option>
-        <option value="go">GO</option>
-        <option value="dawiyat">Dawiyat</option>
-    </select>
-
-    <div class="gauge-area">
-        <svg class="gauge-svg" viewBox="0 0 400 220">
+<div class="main-panel">
+    <div class="gauge-container">
+        <svg viewBox="0 0 400 210" style="width:100%; height:100%;">
             <path d="M 50 190 A 150 150 0 0 1 350 190" fill="none" stroke="#111" stroke-width="12" stroke-linecap="round"/>
-            <g fill="#444" font-size="12" font-weight="900" text-anchor="middle">
-                <text x="50" y="210">0</text>
-                <text x="65" y="130">100</text>
-                <text x="125" y="75">200</text>
-                <text x="200" y="55">300</text>
-                <text x="275" y="75">400</text>
-                <text x="350" y="210">500</text>
+            <g fill="#222" font-size="12" font-weight="900" text-anchor="middle">
+                <text x="50" y="208">0</text><text x="125" y="70">200</text><text x="275" y="70">400</text><text x="350" y="208">500</text>
             </g>
         </svg>
         <div id="needle" class="needle"></div>
-        <div class="pivot"></div>
+        <span id="dl-speed">0</span>
+        <span class="unit-lbl">DOWNLOAD MBPS</span>
     </div>
 
-    <div class="speed-readout">
-        <div id="speed-num">0</div>
-        <span class="label">Mbps DOWNLOAD</span>
-    </div>
-
-    <button id="start-btn" class="btn-start" onclick="runV51()">بدء</button>
+    <button class="btn-start" onclick="runV52()">بدء</button>
 
     <div class="stats-grid">
-        <div class="stat-card">
-            <span class="l">PING (ms)</span>
-            <span id="v-p" class="v">--</span>
-        </div>
-        <div class="stat-card">
-            <span class="l">JITTER (ms)</span>
-            <span id="v-j" class="v">--</span>
-        </div>
-        <div class="stat-card">
-            <span class="l">UPLOAD (Mbps)</span>
-            <span id="v-u" class="v">--</span>
-        </div>
+        <div class="card" id="ping-card"><span class="l">البنق الخامل</span><span id="res-ping" class="v">--</span></div>
+        <div class="card" id="load-card"><span class="l">البنق المثقل (تحت الضغط)</span><span id="res-load" class="v">--</span></div>
+        <div class="card" id="ul-card"><span class="l">الرفع (Upload)</span><span id="res-ul" class="v">--</span></div>
     </div>
 </div>
 
