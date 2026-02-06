@@ -2,24 +2,25 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>S-SPEED V64 | STABLE FLOW</title>
+    <title>S-SPEED V65 | MODERN PRECISION</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="cyber-bg"></div>
+    
     <div class="master-hub">
-        
-        <div class="server-panel">
-            <span class="panel-lbl">سيرفر البنق:</span>
-            <select id="server-selector" class="cyber-select">
-                <option value="auto">⚡ تلقائي (الأسرع)</option>
-                <option value="stc">STC - الاتصالات السعودية</option>
-                <option value="mobily">Mobily - موبايلي</option>
-                <option value="zain">Zain - زين</option>
-                <option value="salam">Salam - سلام</option>
-                <option value="dawiyat">Dawiyat - ضوئيات</option>
-                <option value="itc">ITC - المتكاملة</option>
-            </select>
+        <div class="server-control">
+            <div class="select-wrapper">
+                <label for="server-selector">NODE SELECTOR</label>
+                <select id="server-selector" class="modern-select">
+                    <option value="auto">⚡ AUTO RADAR (BEST PING)</option>
+                    <option value="stc">STC - SAUDI TELECOM</option>
+                    <option value="mobily">MOBILY - ETISALAT</option>
+                    <option value="zain">ZAIN - KSA</option>
+                    <option value="salam">SALAM - INTEGRATED</option>
+                    <option value="dawiyat">DAWIYAT - FIBER</option>
+                </select>
+            </div>
         </div>
 
         <div class="gauge-container">
@@ -39,9 +40,9 @@
                 <div id="needle" class="digital-needle"></div>
             </div>
             
-            <div class="speed-box">
+            <div class="speed-readout">
                 <div id="main-speed">0</div>
-                <div class="unit" id="unit-text">MBPS DOWNLOAD</div>
+                <div class="unit" id="unit-text">DOWNLOAD MBPS</div>
             </div>
         </div>
 
@@ -63,7 +64,7 @@
             </div>
         </div>
 
-        <button id="ignite-btn" class="ignite-btn" onclick="startV64()">إطلاق الفحص</button>
+        <button id="ignite-btn" class="ignite-btn" onclick="startV65()">IGNITE</button>
     </div>
     <script src="script.js"></script>
 </body>
