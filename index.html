@@ -2,71 +2,59 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S-SPEED ELITE V60 | SUPER-SONIC</title>
+    <title>S-SPEED V62 | DIGITAL TURBINE</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="cyber-bg"></div>
     <div class="master-hub">
-        <div class="status-bar">
-            <div class="isp-info">
-                <span class="glitch-text" data-text="NETWORK STATUS">NETWORK STATUS</span>
-                <select id="server-radar" class="cyber-select">
-                    <option value="auto">⚡ رادار تلقائي (الأسرع)</option>
-                    <option value="stc">STC - الاتصالات السعودية</option>
-                    <option value="mobily">Mobily - موبايلي</option>
-                    <option value="zain">Zain - زين السعودية</option>
-                    <option value="salam">Salam - سلام</option>
-                    <option value="go">GO - عذيب</option>
-                    <option value="dawiyat">Dawiyat - ضوئيات</option>
-                    <option value="nournet">NourNet - نورنت</option>
-                    <option value="integrated">ITC - المتكاملة</option>
-                </select>
-            </div>
+        
+        <div class="top-info">
+            <div class="isp-badge" id="isp-name">SELECTING BEST KSA ROUTE...</div>
         </div>
 
-        <div class="gauge-world">
+        <div class="gauge-container">
+            <div class="gauge-ticks">
+                <span style="--i:1;">100</span>
+                <span style="--i:2;">200</span>
+                <span style="--i:3;">300</span>
+                <span style="--i:4;">400</span>
+                <span style="--i:5;">500</span>
+            </div>
+            
             <div class="turbine-wrap">
                 <svg class="main-gauge" viewBox="0 0 200 200">
-                    <defs>
-                        <linearGradient id="glow-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" style="stop-color:#00f2fe;stop-opacity:1" />
-                            <stop offset="100%" style="stop-color:#7000ff;stop-opacity:1" />
-                        </linearGradient>
-                    </defs>
-                    <circle class="track" cx="100" cy="100" r="80"></circle>
-                    <circle id="progress" class="fill" cx="100" cy="100" r="80"></circle>
+                    <circle class="track" cx="100" cy="100" r="85"></circle>
+                    <circle id="progress" class="fill" cx="100" cy="100" r="85"></circle>
                 </svg>
                 <div id="needle" class="digital-needle"></div>
             </div>
             
             <div class="speed-box">
                 <div id="main-speed">0</div>
-                <div class="unit">MBPS</div>
-                <div id="test-mode" class="mode-lbl">IDLE</div>
+                <div class="unit" id="unit-text">MBPS DOWNLOAD</div>
             </div>
         </div>
 
-        <div class="results-grid">
-            <div class="res-card" id="ping-box">
-                <span class="lbl">PING</span>
+        <div class="results-matrix">
+            <div class="res-card">
+                <span class="lbl">IDLE PING</span>
                 <span class="val" id="res-ping">--</span>
-                <div class="mini-graph"></div>
+                <span class="unit-min">ms</span>
             </div>
-            <div class="res-card" id="jitter-box">
-                <span class="lbl">LOADED</span>
+            <div class="res-card active-pulse">
+                <span class="lbl">LOADED PING</span>
                 <span class="val" id="res-load">--</span>
-                <div class="mini-graph"></div>
+                <span class="unit-min">ms</span>
             </div>
-            <div class="res-card" id="upload-box">
+            <div class="res-card">
                 <span class="lbl">UPLOAD</span>
                 <span class="val" id="res-ul">--</span>
-                <div class="mini-graph"></div>
+                <span class="unit-min">Mbps</span>
             </div>
         </div>
 
-        <button id="ignite-btn" class="ignite-btn" onclick="ignite()">IGNITE</button>
+        <button id="ignite-btn" class="ignite-btn" onclick="startV62()">IGNITE</button>
     </div>
     <script src="script.js"></script>
 </body>
