@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S-Speed Elite V39 | GO Support</title>
+    <title>S-Speed Elite V40 | Engineering Precision</title>
     <style>
         :root {
             --neon: #00f2fe;
-            --purple: #7000ff;
             --bg: #030008;
-            --glass: rgba(255, 255, 255, 0.03);
+            --glass: rgba(255, 255, 255, 0.02);
             --border: rgba(255, 255, 255, 0.08);
         }
 
@@ -22,130 +21,109 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            overflow-x: hidden;
+            overflow: hidden;
         }
 
-        .main-panel {
-            width: 90%;
-            max-width: 850px;
+        .master-container {
+            width: 850px;
             background: var(--glass);
             backdrop-filter: blur(50px);
             border-radius: 60px;
             padding: 40px;
             border: 1px solid var(--border);
             text-align: center;
-            box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+            box-shadow: 0 40px 120px rgba(0,0,0,0.8);
         }
 
         /* اختيار السيرفر */
-        .server-section {
-            margin-bottom: 20px;
-        }
-
+        .server-wrap { margin-bottom: 10px; }
         .server-select {
             background: #111;
             color: var(--neon);
-            border: 1px solid #333;
-            padding: 10px 20px;
+            border: 1px solid #222;
+            padding: 8px 20px;
             border-radius: 100px;
-            font-weight: bold;
-            outline: none;
+            font-size: 0.85rem;
             cursor: pointer;
-            font-size: 0.9rem;
         }
 
-        /* منطقة العداد */
-        .gauge-container {
+        /* حاوية العداد الدائري */
+        .gauge-module {
             position: relative;
-            width: 420px;
-            height: 380px;
+            width: 450px;
+            height: 350px;
             margin: 0 auto;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
         }
 
-        /* قوس العداد */
         .gauge-svg {
             position: absolute;
-            top: 0;
             width: 100%;
             height: 100%;
         }
 
+        /* الإبرة الفيزيائية */
         .needle {
             position: absolute;
-            bottom: 120px; /* تم تعديل الوضع ليتناسب مع التصميم الدائري */
-            width: 4px;
-            height: 140px;
+            bottom: 38%; /* متممركزة مع القوس */
+            width: 3px;
+            height: 130px;
             background: linear-gradient(to top, transparent, var(--neon));
             transform-origin: bottom center;
-            transform: rotate(-100deg);
-            transition: transform 0.5s cubic-bezier(0.1, 0.5, 0.5, 1);
-            filter: drop-shadow(0 0 8px var(--neon));
+            transform: rotate(-120deg);
+            transition: transform 0.6s cubic-bezier(0.1, 0.5, 0.5, 1);
+            filter: drop-shadow(0 0 10px var(--neon));
             z-index: 5;
         }
 
-        .speed-info {
+        /* رقم السرعة الصغير المنسق */
+        .speed-readout {
             z-index: 10;
-            margin-top: -40px;
+            margin-top: 80px; /* دفع الأرقام لأسفل قليلاً لعدم التداخل مع قمة القوس */
         }
 
-        .speed-value {
-            font-size: 7.5rem;
+        .speed-val {
+            font-size: 5.5rem; /* تصغير الرقم بناءً على طلبك */
             font-weight: 900;
-            line-height: 0.8;
+            line-height: 1;
             font-family: 'Arial Black', sans-serif;
-            background: linear-gradient(to bottom, #fff, var(--neon));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(0, 242, 254, 0.3);
         }
 
         .speed-unit {
-            font-size: 1.1rem;
+            font-size: 0.9rem;
             color: #444;
-            letter-spacing: 6px;
+            letter-spacing: 5px;
             font-weight: 900;
-            margin-top: 10px;
+            margin-top: 5px;
         }
 
-        /* زر البدء الدائري تحت العداد */
-        .btn-start-wrap {
-            margin-top: 20px;
-            z-index: 20;
-        }
-
-        .btn-circle {
-            width: 100px;
-            height: 100px;
+        /* زر بدء دائري تحت العداد */
+        .btn-start {
+            width: 90px;
+            height: 90px;
             border-radius: 50%;
             background: white;
             color: black;
             border: none;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: 900;
             cursor: pointer;
             transition: 0.4s;
-            box-shadow: 0 0 20px rgba(255,255,255,0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto;
+            margin-top: 20px;
+            box-shadow: 0 0 20px rgba(255,255,255,0.1);
         }
 
-        .btn-circle:hover {
+        .btn-start:hover {
             background: var(--neon);
             transform: scale(1.1);
             box-shadow: 0 0 40px var(--neon);
         }
 
-        .btn-circle:disabled {
-            opacity: 0.1;
-            cursor: wait;
-        }
-
-        /* الإحصائيات السفلية */
+        /* شبكة الإحصائيات المنظمة */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -153,68 +131,68 @@
             margin-top: 40px;
         }
 
-        .stat-box {
-            background: rgba(255,255,255,0.02);
+        .stat-card {
+            background: rgba(255,255,255,0.01);
             padding: 20px;
             border-radius: 30px;
             border: 1px solid var(--border);
         }
 
-        .stat-box .lbl { font-size: 0.7rem; color: #555; display: block; margin-bottom: 5px; font-weight: 900; }
-        .stat-box .val { font-size: 1.8rem; font-weight: 900; color: #fff; }
+        .stat-card .lbl { font-size: 0.65rem; color: #555; display: block; margin-bottom: 5px; font-weight: 900; }
+        .stat-card .val { font-size: 1.8rem; font-weight: 900; color: #fff; }
 
     </style>
 </head>
 <body>
 
-<div class="main-panel">
-    <div class="server-section">
+<div class="master-container">
+    <div class="server-wrap">
         <select id="server-select" class="server-select" onchange="manualNode()">
-            <option value="auto">⚡ تحديد تلقائي ذكي</option>
-            <option value="stc">STC - الاتصالات السعودية</option>
-            <option value="mobily">Mobily - موبايلي</option>
-            <option value="zain">Zain - زين</option>
-            <option value="salam">Salam - سلام</option>
-            <option value="go">GO - عذيب للاتصالات</option>
+            <option value="auto">⚡ اختيار تلقائي ذكي</option>
+            <option value="stc">STC</option>
+            <option value="mobily">Mobily</option>
+            <option value="zain">Zain</option>
+            <option value="salam">Salam</option>
+            <option value="go">GO (Atheeb)</option>
         </select>
     </div>
 
-    <div class="gauge-container">
-        <svg class="gauge-svg" viewBox="0 0 400 300">
-            <path d="M 100 250 A 120 120 0 1 1 300 250" fill="none" stroke="#15151b" stroke-width="12" stroke-linecap="round"/>
+    <div class="gauge-module">
+        <svg class="gauge-svg" viewBox="0 0 400 400">
+            <path d="M 100 300 A 140 140 0 1 1 300 300" fill="none" stroke="#111" stroke-width="12" stroke-linecap="round"/>
             
-            <text x="80" y="260" fill="#444" font-size="12" font-weight="900">0</text>
-            <text x="65" y="160" fill="#444" font-size="12" font-weight="900">100</text>
-            <text x="120" y="80" fill="#444" font-size="12" font-weight="900">250</text>
-            <text x="190" y="60" fill="#444" font-size="12" font-weight="900">500</text>
-            <text x="270" y="80" fill="#444" font-size="12" font-weight="900">750</text>
-            <text x="325" y="160" fill="#444" font-size="12" font-weight="900">900</text>
-            <text x="310" y="260" fill="#444" font-size="12" font-weight="900">1000+</text>
+            <g class="ticks" fill="#444" font-size="11" font-weight="900" text-anchor="middle">
+                <text x="85" y="310">0</text>
+                <text x="65" y="210">100</text>
+                <text x="120" y="115">250</text>
+                <text x="200" y="90">500</text>
+                <text x="285" y="115">750</text>
+                <text x="340" y="210">900</text>
+                <text x="320" y="310">1000+</text>
+            </g>
         </svg>
 
         <div id="needle" class="needle"></div>
 
-        <div class="speed-info">
-            <div id="main-speed" class="speed-value">0</div>
+        <div class="speed-readout">
+            <div id="main-speed" class="speed-val">0</div>
             <div class="speed-unit">MBPS</div>
         </div>
     </div>
 
-    <div class="btn-start-wrap">
-        <button id="start-btn" class="btn-circle" onclick="runV39()">بدء</button>
-    </div>
+    <button id="start-btn" class="btn-start" onclick="runV40()">بدء</button>
 
     <div class="stats-grid">
-        <div class="stat-box">
-            <span class="lbl">البنق (ms)</span>
+        <div class="stat-card">
+            <span class="lbl">PING (ms)</span>
             <span id="v-ping" class="val">--</span>
         </div>
-        <div class="stat-box">
-            <span class="lbl">المثقل (ms)</span>
+        <div class="stat-card">
+            <span class="lbl">LOADED (ms)</span>
             <span id="v-loaded" class="val">--</span>
         </div>
-        <div class="stat-box">
-            <span class="lbl">الرفع (Mbps)</span>
+        <div class="stat-card">
+            <span class="lbl">UPLOAD (Mbps)</span>
             <span id="v-ul" class="val">--</span>
         </div>
     </div>
