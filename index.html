@@ -2,57 +2,163 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>S-Speed Elite V46 | Auto-Radar & Turbo UL</title>
+    <title>S-Speed Pro V47 | ISP Selector</title>
     <style>
-        :root { --neon: #00f2fe; --bg: #020205; --border: rgba(255, 255, 255, 0.1); }
-        body { background: var(--bg); color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .panel { width: 850px; background: rgba(255,255,255,0.02); backdrop-filter: blur(50px); border-radius: 50px; padding: 40px; border: 1px solid var(--border); text-align: center; }
-        
-        /* العداد */
-        .gauge-box { position: relative; width: 450px; height: 300px; margin: 0 auto; }
-        .needle { position: absolute; bottom: 20px; left: 50%; width: 4px; height: 140px; background: linear-gradient(to top, transparent, var(--neon)); transform-origin: bottom center; transform: translateX(-50%) rotate(-90deg); transition: transform 0.6s cubic-bezier(0.1, 0.5, 0.5, 1); filter: drop-shadow(0 0 8px var(--neon)); }
-        
-        /* الأرقام */
-        .speed-val { font-size: 6rem; font-weight: 900; font-family: 'Arial Black'; line-height: 1; margin-top: -20px; }
-        .label { color: var(--neon); letter-spacing: 3px; font-size: 0.8rem; font-weight: 900; }
+        :root {
+            --neon: #00f2fe;
+            --bg: #020308;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.1);
+        }
 
-        /* البطاقات */
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 40px; }
-        .card { background: rgba(255,255,255,0.02); padding: 25px; border-radius: 30px; border: 1px solid var(--border); position: relative; }
-        .card.active { border-color: var(--neon); box-shadow: 0 0 15px rgba(0,242,254,0.1); }
-        .card .v { font-size: 2.2rem; font-weight: 900; display: block; }
-        .card .l { font-size: 0.7rem; color: #555; font-weight: 900; }
+        body {
+            background-color: var(--bg);
+            color: white;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
 
-        .btn { width: 100px; height: 100px; border-radius: 50%; background: #fff; color: #000; border: none; font-size: 1.2rem; font-weight: 900; cursor: pointer; margin-top: 30px; transition: 0.4s; }
-        .btn:hover { transform: scale(1.1); background: var(--neon); }
-        
-        #node-info { font-size: 0.8rem; color: #444; margin-bottom: 15px; }
+        .master-panel {
+            width: 850px;
+            background: var(--glass);
+            backdrop-filter: blur(50px);
+            border-radius: 60px;
+            padding: 40px;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        /* اختيار السيرفر */
+        .server-box {
+            margin-bottom: 30px;
+        }
+
+        .custom-select {
+            background: #111;
+            color: var(--neon);
+            border: 1px solid #333;
+            padding: 12px 25px;
+            border-radius: 100px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .custom-select:hover { border-color: var(--neon); }
+
+        /* العداد الهندسي */
+        .gauge-container {
+            position: relative;
+            width: 480px;
+            height: 320px;
+            margin: 0 auto;
+        }
+
+        .needle {
+            position: absolute;
+            bottom: 35px;
+            left: 50%;
+            width: 4px;
+            height: 145px;
+            background: linear-gradient(to top, transparent, var(--neon));
+            transform-origin: bottom center;
+            transform: translateX(-50%) rotate(-90deg); /* البداية من الصفر */
+            transition: transform 0.6s cubic-bezier(0.1, 0.6, 0.6, 1);
+            filter: drop-shadow(0 0 8px var(--neon));
+            z-index: 5;
+        }
+
+        .needle-pivot {
+            position: absolute;
+            bottom: 27px;
+            left: 50%;
+            width: 16px;
+            height: 16px;
+            background: var(--neon);
+            border-radius: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 20px var(--neon);
+            z-index: 6;
+        }
+
+        #speed-num {
+            font-size: 6rem;
+            font-weight: 900;
+            display: block;
+            margin-top: 190px;
+            font-family: 'Arial Black', sans-serif;
+        }
+
+        .unit { color: #444; font-weight: 900; letter-spacing: 5px; font-size: 0.8rem; }
+
+        /* أزرار وبطاقات */
+        .btn-start {
+            width: 90px; height: 90px; border-radius: 50%; border: none;
+            background: #fff; color: #000; font-weight: 900; cursor: pointer;
+            margin: 20px 0; transition: 0.4s;
+        }
+
+        .btn-start:hover { transform: scale(1.1); background: var(--neon); }
+        .btn-start:disabled { opacity: 0.3; }
+
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.01); padding: 25px; border-radius: 30px; border: 1px solid var(--border);
+        }
+
+        .stat-card .v { font-size: 2rem; font-weight: 900; display: block; }
+        .stat-card .l { font-size: 0.65rem; color: #555; font-weight: 900; }
     </style>
 </head>
 <body>
 
-<div class="panel">
-    <div id="node-info">جاري البحث عن أفضل سيرفر...</div>
-    
-    <div class="gauge-box">
-        <svg viewBox="0 0 400 200" style="width:100%;">
-            <path d="M 50 180 A 150 150 0 0 1 350 180" fill="none" stroke="#111" stroke-width="12" stroke-linecap="round"/>
+<div class="master-panel">
+    <div class="server-box">
+        <select id="server-selector" class="custom-select">
+            <option value="auto">⚡ اختيار تلقائي ذكي</option>
+            <option value="stc">STC - الاتصالات السعودية</option>
+            <option value="mobily">Mobily - موبايلي</option>
+            <option value="zain">Zain - زين</option>
+            <option value="salam">Salam - سلام</option>
+            <option value="go">GO - عذيب</option>
+            <option value="dawiyat">Dawiyat - ضوئيات</option>
+            <option value="nournet">NourNet - نورنت</option>
+        </select>
+    </div>
+
+    <div class="gauge-container">
+        <svg viewBox="0 0 400 220" style="width:100%; height:100%;">
+            <path d="M 50 190 A 150 150 0 0 1 350 190" fill="none" stroke="#111" stroke-width="12" stroke-linecap="round"/>
             <g fill="#333" font-size="12" font-weight="900" text-anchor="middle">
-                <text x="50" y="198">0</text><text x="125" y="65">200</text><text x="275" y="65">400</text><text x="350" y="198">500</text>
+                <text x="50" y="210">0</text>
+                <text x="65" y="130">100</text>
+                <text x="125" y="75">200</text>
+                <text x="200" y="55">300</text>
+                <text x="275" y="75">400</text>
+                <text x="350" y="210">500</text>
             </g>
         </svg>
         <div id="needle" class="needle"></div>
+        <div class="needle-pivot"></div>
+        <span id="speed-num">0</span>
+        <span class="unit">MBPS DOWNLOAD</span>
     </div>
 
-    <div class="speed-val" id="main-num">0</div>
-    <div class="label" id="status">READY</div>
+    <button id="main-btn" class="btn-start" onclick="startTest()">بدء</button>
 
-    <button class="btn" id="go-btn" onclick="startV46()">بدء</button>
-
-    <div class="grid">
-        <div class="card" id="p-card"><span class="l">PING</span><span class="v" id="res-p">--</span></div>
-        <div class="card" id="j-card"><span class="l">JITTER</span><span class="v" id="res-j">--</span></div>
-        <div class="card" id="u-card"><span class="l">UPLOAD</span><span class="v" id="res-u">--</span></div>
+    <div class="stats-grid">
+        <div class="stat-card"><span class="l">PING (ms)</span><span id="v-ping" class="v">--</span></div>
+        <div class="stat-card"><span class="l">JITTER (ms)</span><span id="v-jitter" class="v">--</span></div>
+        <div class="stat-card"><span class="l">UPLOAD (Mbps)</span><span id="v-upload" class="v">--</span></div>
     </div>
 </div>
 
