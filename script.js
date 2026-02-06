@@ -8,12 +8,12 @@ const ISP_NODES = {
     cf: "https://1.1.1.1/cdn-cgi/trace"
 };
 
-let activeNode = ISP_NODES.cf;
 let abortCtrl = null;
 
-// دالة تحريك الإبرة (معايرة 180 درجة لـ 500Mbps)
+// دالة تحريك الإبرة بدقة 180 درجة
 function updateGauge(speed) {
     const max = 500;
+    // -90 درجة تعني 0، و +90 درجة تعني 500
     let angle = (Math.min(speed, max) / max) * 180 - 90;
     document.getElementById('needle').style.transform = `translateX(-50%) rotate(${angle}deg)`;
     document.getElementById('speed-num').innerText = Math.round(speed);
@@ -23,7 +23,7 @@ function lerp(start, end, amt) {
     return (1 - amt) * start + amt * end;
 }
 
-async function runV53() {
+async function runV54() {
     if (abortCtrl) abortCtrl.abort();
     abortCtrl = new AbortController();
 
@@ -36,19 +36,20 @@ async function runV53() {
     document.getElementById('v-load').innerText = "--";
     document.getElementById('v-ul').innerText = "--";
 
-    // اختيار السيرفر
     const selection = document.getElementById('isp-node').value;
-    activeNode = selection === 'auto' ? ISP_NODES.cf : ISP_NODES[selection];
+    const activeNode = selection === 'auto' ? ISP_NODES.cf : ISP_NODES[selection];
 
-    // 1. فحص البنق الخامل
-    const p0 = performance.now();
-    await fetch(activeNode + "?v=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: abortCtrl.signal });
-    document.getElementById('v-ping').innerText = Math.round(performance.now() - p0);
+    // 1. فحص البنق
+    const t0 = performance.now();
+    try {
+        await fetch(activeNode + "?v=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: abortCtrl.signal });
+        document.getElementById('v-ping').innerText = Math.round(performance.now() - t0);
+    } catch(e) {}
 
-    // 2. فحص الداونلود (15 ثانية) + البنق المثقل المتزامن
-    await startDownload(15000);
+    // 2. فحص الداونلود والبنق المثقل (15 ثانية)
+    await startDownload(15000, activeNode);
 
-    // 3. فحص الرفع (15 ثانية - انسيابي في مكانه)
+    // 3. فحص الرفع (15 ثانية)
     updateGauge(0);
     await startUpload(15000);
 
@@ -56,18 +57,20 @@ async function runV53() {
     btn.innerText = "إعادة";
 }
 
-async function startDownload(ms) {
+async function startDownload(ms, node) {
     let bytes = 0;
     let smoothLoadPing = 0;
     const start = performance.now();
 
     // فحص البنق المثقل أثناء التحميل
     const pinger = setInterval(async () => {
-        let t0 = performance.now();
-        await fetch(activeNode + "?p=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: abortCtrl.signal });
-        let rawP = performance.now() - t0 + 20; // معامل الضغط
-        smoothLoadPing = lerp(smoothLoadPing || rawP, rawP, 0.2);
-        document.getElementById('v-load').innerText = Math.floor(smoothLoadPing);
+        const pt0 = performance.now();
+        try {
+            await fetch(node + "?p=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: abortCtrl.signal });
+            let rawP = performance.now() - pt0 + 15;
+            smoothLoadPing = lerp(smoothLoadPing || rawP, rawP, 0.2);
+            document.getElementById('v-load').innerText = Math.floor(smoothLoadPing);
+        } catch(e) {}
     }, 400);
 
     const workers = Array(64).fill(0).map(async () => {
@@ -82,7 +85,7 @@ async function startDownload(ms) {
                     let speed = (bytes * 8) / (1024 * 1024) / ((performance.now() - start)/1000) * 1.12;
                     updateGauge(speed);
                 }
-            } catch { break; }
+            } catch(e) { break; }
         }
     });
 
@@ -94,26 +97,18 @@ async function startUpload(ms) {
     let bytes = 0;
     let visualUL = 0;
     const start = performance.now();
-    const data = new Blob([new Uint8Array(512 * 1024)]);
+    const blob = new Blob([new Uint8Array(512 * 1024)]);
 
     const workers = Array(40).fill(0).map(async () => {
         while (performance.now() - start < ms) {
             try {
-                await fetch("https://speed.cloudflare.com/__up", { 
-                    method: 'POST', body: data, mode: 'no-cors', signal: abortCtrl.signal 
-                });
-                bytes += data.size;
+                await fetch("https://speed.cloudflare.com/__up", { method: 'POST', body: blob, mode: 'no-cors', signal: abortCtrl.signal });
+                bytes += blob.size;
                 let actual = (bytes * 8) / (1024 * 1024) / ((performance.now() - start)/1000) * 1.25;
-                
-                // حركة انسيابية للرقم في مكانه
                 visualUL = lerp(visualUL, actual, 0.1);
                 document.getElementById('v-ul').innerText = visualUL.toFixed(1);
-            } catch { break; }
+            } catch(e) { break; }
         }
     });
     await new Promise(r => setTimeout(r, ms));
-}
-
-function manualNode() {
-    activeNode = ISP_NODES[document.getElementById('isp-node').value] || ISP_NODES.cf;
 }
