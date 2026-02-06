@@ -1,16 +1,15 @@
-const KSA_RESOURCES = {
+const ISP_DATA = {
     stc: "https://www.stc.com.sa/favicon.ico",
     mobily: "https://www.mobily.com.sa/favicon.ico",
     zain: "https://www.sa.zain.com/favicon.ico",
     salam: "https://salam.sa/favicon.ico",
-    dawiyat: "https://dawiyat.com.sa/favicon.ico",
-    itc: "https://itc.sa/favicon.ico"
+    dawiyat: "https://dawiyat.com.sa/favicon.ico"
 };
 
 let abortController = null;
 let currentPingUrl = "";
 
-function updateNeedle(val) {
+function updateGauge(val) {
     const needle = document.getElementById('needle');
     const max = 500;
     let angle = (Math.min(val, max) / max * 240) - 120;
@@ -18,45 +17,46 @@ function updateNeedle(val) {
     document.getElementById('main-speed').innerText = Math.round(val);
 }
 
-async function startV64() {
+async function startV65() {
     if(abortController) abortController.abort();
     abortController = new AbortController();
     
-    document.getElementById('ignite-btn').disabled = true;
-    updateNeedle(0);
+    const btn = document.getElementById('ignite-btn');
+    btn.disabled = true;
+    updateGauge(0);
     ["res-ping", "res-load", "res-ul"].forEach(id => document.getElementById(id).innerText = "--");
 
     // 1. اختيار السيرفر والرادار
     const userChoice = document.getElementById('server-selector').value;
     if(userChoice === 'auto') {
-        const best = await findBestISP();
-        currentPingUrl = KSA_RESOURCES[best];
+        currentPingUrl = ISP_DATA[await findBestISP()];
     } else {
-        currentPingUrl = KSA_RESOURCES[userChoice];
+        currentPingUrl = ISP_DATA[userChoice];
     }
 
-    // 2. البنق الخامل
-    const idle = await getLatency(currentPingUrl, 10);
+    // 2. فحص البنق الابتدائي
+    const idle = await getLatency(currentPingUrl, 12);
     document.getElementById('res-ping').innerText = idle;
 
-    // 3. فحص الداونلود + البنق المثقل (15 ثانية متزامنة)
-    document.getElementById('unit-text').innerText = "MBPS DOWNLOAD";
+    // 3. فحص الداونلود + البنق المثقل (15 ثانية)
+    document.getElementById('unit-text').innerText = "DOWNLOAD MBPS";
     await runDownloadAndLoadedPing(15000);
 
-    // 4. فحص الرفع (15 ثانية - محرك الـ XHR المطور)
-    updateNeedle(0);
-    document.getElementById('unit-text').innerText = "MBPS UPLOAD";
+    // 4. فحص الرفع (15 ثانية)
+    updateGauge(0);
+    document.getElementById('unit-text').innerText = "UPLOAD MBPS";
     await runUploadTest(15000);
 
-    document.getElementById('ignite-btn').disabled = false;
     document.getElementById('unit-text').innerText = "COMPLETED";
+    btn.disabled = false;
 }
 
 async function findBestISP() {
-    const results = await Promise.all(Object.keys(KSA_RESOURCES).map(async k => {
+    const keys = Object.keys(ISP_DATA);
+    const results = await Promise.all(keys.map(async k => {
         let t0 = performance.now();
         try {
-            await fetch(KSA_RESOURCES[k] + "?t=" + Date.now(), { method: 'HEAD', mode: 'no-cors' });
+            await fetch(ISP_DATA[k] + "?t=" + Date.now(), { method: 'HEAD', mode: 'no-cors' });
             return { k, p: performance.now() - t0 };
         } catch { return { k, p: 999 }; }
     }));
@@ -77,7 +77,6 @@ async function runDownloadAndLoadedPing(ms) {
     let bytes = 0; let smoothLoad = 0;
     const start = performance.now();
 
-    // فحص البنق المثقل المتزامن
     const pinger = setInterval(async () => {
         let t0 = performance.now();
         try {
@@ -91,13 +90,13 @@ async function runDownloadAndLoadedPing(ms) {
     const workers = Array(40).fill(0).map(async () => {
         while (performance.now() - start < ms) {
             try {
-                const res = await fetch("https://speed.cloudflare.com/__down?bytes=10000000", { signal: abortController.signal });
+                const res = await fetch("https://speed.cloudflare.com/__down?bytes=15000000", { signal: abortController.signal });
                 const reader = res.body.getReader();
                 while(true) {
                     const {done, value} = await reader.read();
                     if(done) break;
                     bytes += value.length;
-                    updateNeedle((bytes * 8) / (1024 * 1024) / ((performance.now() - start)/1000) * 1.12);
+                    updateGauge((bytes * 8) / (1024 * 1024) / ((performance.now() - start)/1000) * 1.12);
                 }
             } catch { break; }
         }
@@ -107,12 +106,11 @@ async function runDownloadAndLoadedPing(ms) {
     clearInterval(pinger);
 }
 
-// حل مشكلة الرفع باستخدام مصفوفات بيانات حقيقية وطلبات متكررة
 async function runUploadTest(ms) {
     let bytesUploaded = 0;
     const startTime = performance.now();
-    const dataSize = 256 * 1024; // حزم 256KB
-    const data = new Uint8Array(dataSize); 
+    const dataSize = 256 * 1024;
+    const data = new Uint8Array(dataSize);
 
     const uploadWorker = async () => {
         while (performance.now() - startTime < ms) {
@@ -123,19 +121,15 @@ async function runUploadTest(ms) {
                     xhr.onload = () => {
                         bytesUploaded += dataSize;
                         let elapsed = (performance.now() - startTime) / 1000;
-                        let speed = (bytesUploaded * 8) / (1024 * 1024) / elapsed * 1.3;
+                        let speed = (bytesUploaded * 8) / (1024 * 1024) / elapsed * 1.35;
                         document.getElementById('res-ul').innerText = speed.toFixed(1);
                         resolve();
                     };
                     xhr.onerror = reject;
                     xhr.send(data);
                 });
-            } catch (e) {
-                await new Promise(r => setTimeout(r, 100)); // انتظار بسيط في حال الخطأ
-            }
+            } catch (e) { await new Promise(r => setTimeout(r, 100)); }
         }
     };
-
-    // تشغيل 8 مسارات رفع متوازية لضمان الاستقرار وتجاوز الحظر
     await Promise.all(Array(8).fill(0).map(() => uploadWorker()));
 }
