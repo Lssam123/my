@@ -2,12 +2,12 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>S-Speed Pro V56 | Precision UI</title>
+    <title>S-Speed Elite V57 | Hybrid Precision</title>
     <style>
         :root {
             --neon: #00f2fe;
-            --bg: #020308;
-            --glass: rgba(255, 255, 255, 0.02);
+            --bg: #010206;
+            --glass: rgba(255, 255, 255, 0.03);
             --border: rgba(255, 255, 255, 0.1);
         }
 
@@ -23,72 +23,82 @@
             border-radius: 60px; padding: 40px; border: 1px solid var(--border); text-align: center;
         }
 
-        /* شريط النتائج العلوي الجديد */
         .top-results {
             display: flex; justify-content: space-around;
-            background: rgba(255,255,255,0.03); padding: 15px;
-            border-radius: 20px; margin-bottom: 20px; border: 1px solid var(--border);
+            background: rgba(255,255,255,0.02); padding: 20px;
+            border-radius: 25px; margin-bottom: 25px; border: 1px solid var(--border);
         }
-        .res-item { text-align: center; }
-        .res-item span { display: block; }
-        .res-item .val { font-size: 1.4rem; font-weight: 900; color: var(--neon); }
-        .res-item .lbl { font-size: 0.6rem; color: #555; font-weight: 900; }
+        .res-item .val { font-size: 1.6rem; font-weight: 950; color: var(--neon); display: block; }
+        .res-item .lbl { font-size: 0.65rem; color: #555; font-weight: 900; letter-spacing: 1px; }
 
+        .controls { margin-bottom: 20px; display: flex; justify-content: center; gap: 10px; align-items: center; }
         .server-select {
             background: #111; color: var(--neon); border: 1px solid #333;
-            padding: 10px 25px; border-radius: 100px; font-weight: bold; cursor: pointer; margin-bottom: 20px;
+            padding: 12px 20px; border-radius: 100px; font-weight: bold; cursor: pointer;
         }
 
-        /* العداد (لم يتم لمسه) */
+        /* العداد المطور بصرياً */
         .gauge-module {
             position: relative; width: 480px; height: 350px;
             margin: 0 auto; display: flex; justify-content: center; align-items: center;
         }
         .gauge-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        
         .needle {
             position: absolute; bottom: 60px; left: 50%; width: 4px; height: 150px;
             background: linear-gradient(to top, transparent, var(--neon));
             transform-origin: bottom center; transform: translateX(-50%) rotate(-90deg);
             transition: transform 0.6s cubic-bezier(0.1, 0.5, 0.5, 1);
-            filter: drop-shadow(0 0 10px var(--neon)); z-index: 5;
+            filter: drop-shadow(0 0 15px var(--neon)); z-index: 5;
         }
+
         .speed-readout {
             position: absolute; top: 55%; left: 50%;
             transform: translate(-50%, -50%); z-index: 10; text-align: center;
         }
-        #speed-num { font-size: 6.5rem; font-weight: 950; font-family: 'Arial Black'; line-height: 1; color: #fff; }
+        #speed-num { font-size: 6.8rem; font-weight: 950; font-family: 'Arial Black'; line-height: 1; color: #fff; text-shadow: 0 0 20px rgba(0,242,254,0.3); }
         .unit-label { color: #444; font-weight: 900; letter-spacing: 5px; font-size: 0.8rem; }
 
         .btn-start {
-            width: 90px; height: 90px; border-radius: 50%; border: none;
+            width: 100px; height: 100px; border-radius: 50%; border: none;
             background: #fff; color: #000; font-weight: 950; cursor: pointer;
-            margin-top: 20px; transition: 0.4s;
+            margin-top: 20px; transition: 0.4s; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
         }
-        .btn-start:hover { transform: scale(1.1); background: var(--neon); }
+        .btn-start:hover { transform: scale(1.1); background: var(--neon); box-shadow: 0 0 30px var(--neon); }
+        .btn-start:disabled { opacity: 0.2; }
     </style>
 </head>
 <body>
 
 <div class="master-panel">
     <div class="top-results">
-        <div class="res-item"><span id="top-ping" class="val">--</span><span class="lbl">PING (ms)</span></div>
-        <div class="res-item"><span id="top-load" class="val">--</span><span class="lbl">LOADED (ms)</span></div>
-        <div class="res-item"><span id="top-dl" class="val">--</span><span class="lbl">DOWNLOAD (Mb)</span></div>
-        <div class="res-item"><span id="top-ul" class="val">--</span><span class="lbl">UPLOAD (Mb)</span></div>
+        <div class="res-item"><span id="res-ping" class="val">--</span><span class="lbl">PING (KSA)</span></div>
+        <div class="res-item"><span id="res-load" class="val">--</span><span class="lbl">LOADED (KSA)</span></div>
+        <div class="res-item"><span id="res-dl" class="val">--</span><span class="lbl">DOWNLOAD (INTL)</span></div>
+        <div class="res-item"><span id="res-ul" class="val">--</span><span class="lbl">UPLOAD (INTL)</span></div>
     </div>
 
-    <select id="isp-node" class="server-select" onchange="manualChange()">
-        <option value="cf">Cloudflare (تلقائي)</option>
-        <option value="stc">STC - الاتصالات السعودية</option>
-        <option value="mobily">Mobily - موبايلي</option>
-        <option value="zain">Zain - زين السعودية</option>
-        <option value="salam">Salam - سلام</option>
-        <option value="go">GO - عذيب</option>
-    </select>
+    <div class="controls">
+        <span style="font-size: 0.8rem; color: #666;">سيرفر البنق:</span>
+        <select id="ping-node" class="server-select">
+            <option value="auto">⚡ تلقائي (الأسرع)</option>
+            <option value="stc">STC - الاتصالات</option>
+            <option value="mobily">Mobily - موبايلي</option>
+            <option value="zain">Zain - زين</option>
+            <option value="salam">Salam - سلام</option>
+        </select>
+    </div>
 
     <div class="gauge-module">
         <svg class="gauge-svg" viewBox="0 0 400 300">
-            <path d="M 50 240 A 150 150 0 0 1 350 240" fill="none" stroke="#111" stroke-width="12" stroke-linecap="round"/>
+            <defs>
+                <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" style="stop-color:#111; stop-opacity:1" />
+                    <stop offset="50%" style="stop-color:var(--neon); stop-opacity:0.2" />
+                    <stop offset="100%" style="stop-color:#111; stop-opacity:1" />
+                </linearGradient>
+            </defs>
+            <path d="M 50 240 A 150 150 0 0 1 350 240" fill="none" stroke="url(#arcGrad)" stroke-width="15" stroke-linecap="round"/>
             <g fill="#333" font-size="14" font-weight="950" text-anchor="middle">
                 <text x="50" y="270">0</text><text x="200" y="90">300</text><text x="350" y="270">500</text>
             </g>
@@ -96,11 +106,11 @@
         <div id="needle" class="needle"></div>
         <div class="speed-readout">
             <span id="speed-num">0</span>
-            <span class="unit-label" id="mode-label">MBPS DOWNLOAD</span>
+            <span class="unit-label" id="mode-text">MBPS DOWNLOAD</span>
         </div>
     </div>
 
-    <button id="main-btn" class="btn-start" onclick="runV56()">بدء</button>
+    <button id="main-btn" class="btn-start" onclick="startHybridTest()">بدء</button>
 </div>
 
 <script src="script.js"></script>
