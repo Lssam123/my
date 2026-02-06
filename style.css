@@ -5,7 +5,7 @@
 body {
     background: var(--bg); margin: 0; overflow: hidden;
     display: flex; justify-content: center; align-items: center;
-    height: 100vh; font-family: 'Segoe UI', Tahoma, sans-serif; color: white;
+    height: 100vh; font-family: 'Segoe UI', sans-serif; color: white;
 }
 
 .cyber-bg {
@@ -17,7 +17,7 @@ body {
 .master-hub {
     width: 700px; padding: 30px; background: rgba(255,255,255,0.01);
     backdrop-filter: blur(50px); border-radius: 50px; border: 1px solid rgba(255,255,255,0.1);
-    text-align: center; box-shadow: 0 0 60px rgba(0,0,0,0.5);
+    text-align: center;
 }
 
 .modern-select {
@@ -25,7 +25,6 @@ body {
     padding: 8px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; direction: ltr;
 }
 
-/* العداد المصغر والمصحح */
 .gauge-world {
     position: relative; width: 350px; height: 350px; margin: 0 auto;
     display: flex; align-items: center; justify-content: center;
@@ -48,7 +47,6 @@ body {
     z-index: 5;
 }
 
-/* الصندوق المركزي - تم تثبيته بالوسط */
 .center-display {
     position: absolute; top: 50%; left: 50%;
     transform: translate(-50%, -40%); text-align: center; width: 100%;
@@ -67,11 +65,8 @@ body {
 .res-card { background: rgba(0,0,0,0.4); padding: 15px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); }
 .res-card .val { font-size: 1.8rem; font-weight: 900; color: var(--neon); display: block; }
 .res-card .lbl { font-size: 0.65rem; color: #666; display: block; margin-bottom: 4px; }
-.res-card .unit { font-size: 0.55rem; color: #333; }
 
 .ignite-btn {
     width: 90px; height: 90px; border-radius: 50%; border: 2px solid var(--neon);
     background: transparent; color: white; font-weight: bold; cursor: pointer; margin-top: 25px;
-    transition: 0.3s;
 }
-.ignite-btn:hover { background: var(--neon); color: black; box-shadow: 0 0 30px var(--neon); }
