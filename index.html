@@ -2,117 +2,72 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>S-Speed Elite V57 | Hybrid Precision</title>
-    <style>
-        :root {
-            --neon: #00f2fe;
-            --bg: #010206;
-            --glass: rgba(255, 255, 255, 0.03);
-            --border: rgba(255, 255, 255, 0.1);
-        }
-
-        body {
-            background-color: var(--bg); color: white;
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            display: flex; justify-content: center; align-items: center;
-            min-height: 100vh; margin: 0; overflow: hidden;
-        }
-
-        .master-panel {
-            width: 850px; background: var(--glass); backdrop-filter: blur(50px);
-            border-radius: 60px; padding: 40px; border: 1px solid var(--border); text-align: center;
-        }
-
-        .top-results {
-            display: flex; justify-content: space-around;
-            background: rgba(255,255,255,0.02); padding: 20px;
-            border-radius: 25px; margin-bottom: 25px; border: 1px solid var(--border);
-        }
-        .res-item .val { font-size: 1.6rem; font-weight: 950; color: var(--neon); display: block; }
-        .res-item .lbl { font-size: 0.65rem; color: #555; font-weight: 900; letter-spacing: 1px; }
-
-        .controls { margin-bottom: 20px; display: flex; justify-content: center; gap: 10px; align-items: center; }
-        .server-select {
-            background: #111; color: var(--neon); border: 1px solid #333;
-            padding: 12px 20px; border-radius: 100px; font-weight: bold; cursor: pointer;
-        }
-
-        /* العداد المطور بصرياً */
-        .gauge-module {
-            position: relative; width: 480px; height: 350px;
-            margin: 0 auto; display: flex; justify-content: center; align-items: center;
-        }
-        .gauge-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-        
-        .needle {
-            position: absolute; bottom: 60px; left: 50%; width: 4px; height: 150px;
-            background: linear-gradient(to top, transparent, var(--neon));
-            transform-origin: bottom center; transform: translateX(-50%) rotate(-90deg);
-            transition: transform 0.6s cubic-bezier(0.1, 0.5, 0.5, 1);
-            filter: drop-shadow(0 0 15px var(--neon)); z-index: 5;
-        }
-
-        .speed-readout {
-            position: absolute; top: 55%; left: 50%;
-            transform: translate(-50%, -50%); z-index: 10; text-align: center;
-        }
-        #speed-num { font-size: 6.8rem; font-weight: 950; font-family: 'Arial Black'; line-height: 1; color: #fff; text-shadow: 0 0 20px rgba(0,242,254,0.3); }
-        .unit-label { color: #444; font-weight: 900; letter-spacing: 5px; font-size: 0.8rem; }
-
-        .btn-start {
-            width: 100px; height: 100px; border-radius: 50%; border: none;
-            background: #fff; color: #000; font-weight: 950; cursor: pointer;
-            margin-top: 20px; transition: 0.4s; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-        }
-        .btn-start:hover { transform: scale(1.1); background: var(--neon); box-shadow: 0 0 30px var(--neon); }
-        .btn-start:disabled { opacity: 0.2; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S-SPEED ELITE V60 | SUPER-SONIC</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-<div class="master-panel">
-    <div class="top-results">
-        <div class="res-item"><span id="res-ping" class="val">--</span><span class="lbl">PING (KSA)</span></div>
-        <div class="res-item"><span id="res-load" class="val">--</span><span class="lbl">LOADED (KSA)</span></div>
-        <div class="res-item"><span id="res-dl" class="val">--</span><span class="lbl">DOWNLOAD (INTL)</span></div>
-        <div class="res-item"><span id="res-ul" class="val">--</span><span class="lbl">UPLOAD (INTL)</span></div>
-    </div>
-
-    <div class="controls">
-        <span style="font-size: 0.8rem; color: #666;">سيرفر البنق:</span>
-        <select id="ping-node" class="server-select">
-            <option value="auto">⚡ تلقائي (الأسرع)</option>
-            <option value="stc">STC - الاتصالات</option>
-            <option value="mobily">Mobily - موبايلي</option>
-            <option value="zain">Zain - زين</option>
-            <option value="salam">Salam - سلام</option>
-        </select>
-    </div>
-
-    <div class="gauge-module">
-        <svg class="gauge-svg" viewBox="0 0 400 300">
-            <defs>
-                <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" style="stop-color:#111; stop-opacity:1" />
-                    <stop offset="50%" style="stop-color:var(--neon); stop-opacity:0.2" />
-                    <stop offset="100%" style="stop-color:#111; stop-opacity:1" />
-                </linearGradient>
-            </defs>
-            <path d="M 50 240 A 150 150 0 0 1 350 240" fill="none" stroke="url(#arcGrad)" stroke-width="15" stroke-linecap="round"/>
-            <g fill="#333" font-size="14" font-weight="950" text-anchor="middle">
-                <text x="50" y="270">0</text><text x="200" y="90">300</text><text x="350" y="270">500</text>
-            </g>
-        </svg>
-        <div id="needle" class="needle"></div>
-        <div class="speed-readout">
-            <span id="speed-num">0</span>
-            <span class="unit-label" id="mode-text">MBPS DOWNLOAD</span>
+    <div class="cyber-bg"></div>
+    <div class="master-hub">
+        <div class="status-bar">
+            <div class="isp-info">
+                <span class="glitch-text" data-text="NETWORK STATUS">NETWORK STATUS</span>
+                <select id="server-radar" class="cyber-select">
+                    <option value="auto">⚡ رادار تلقائي (الأسرع)</option>
+                    <option value="stc">STC - الاتصالات السعودية</option>
+                    <option value="mobily">Mobily - موبايلي</option>
+                    <option value="zain">Zain - زين السعودية</option>
+                    <option value="salam">Salam - سلام</option>
+                    <option value="go">GO - عذيب</option>
+                    <option value="dawiyat">Dawiyat - ضوئيات</option>
+                    <option value="nournet">NourNet - نورنت</option>
+                    <option value="integrated">ITC - المتكاملة</option>
+                </select>
+            </div>
         </div>
+
+        <div class="gauge-world">
+            <div class="turbine-wrap">
+                <svg class="main-gauge" viewBox="0 0 200 200">
+                    <defs>
+                        <linearGradient id="glow-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style="stop-color:#00f2fe;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#7000ff;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <circle class="track" cx="100" cy="100" r="80"></circle>
+                    <circle id="progress" class="fill" cx="100" cy="100" r="80"></circle>
+                </svg>
+                <div id="needle" class="digital-needle"></div>
+            </div>
+            
+            <div class="speed-box">
+                <div id="main-speed">0</div>
+                <div class="unit">MBPS</div>
+                <div id="test-mode" class="mode-lbl">IDLE</div>
+            </div>
+        </div>
+
+        <div class="results-grid">
+            <div class="res-card" id="ping-box">
+                <span class="lbl">PING</span>
+                <span class="val" id="res-ping">--</span>
+                <div class="mini-graph"></div>
+            </div>
+            <div class="res-card" id="jitter-box">
+                <span class="lbl">LOADED</span>
+                <span class="val" id="res-load">--</span>
+                <div class="mini-graph"></div>
+            </div>
+            <div class="res-card" id="upload-box">
+                <span class="lbl">UPLOAD</span>
+                <span class="val" id="res-ul">--</span>
+                <div class="mini-graph"></div>
+            </div>
+        </div>
+
+        <button id="ignite-btn" class="ignite-btn" onclick="ignite()">IGNITE</button>
     </div>
-
-    <button id="main-btn" class="btn-start" onclick="startHybridTest()">بدء</button>
-</div>
-
-<script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
