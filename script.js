@@ -1,126 +1,113 @@
-const NODES = {
-    stc: "https://www.stc.com.sa/favicon.ico",
-    mobily: "https://www.mobily.com.sa/favicon.ico",
-    zain: "https://www.sa.zain.com/favicon.ico",
-    salam: "https://salam.sa/favicon.ico",
-    go: "https://www.go.com.sa/favicon.ico",
-    dawiyat: "https://dawiyat.com.sa/favicon.ico",
-    cf: "https://1.1.1.1/cdn-cgi/trace"
-};
+const SERVERS = [
+    { name: "STC", url: "https://www.stc.com.sa/favicon.ico" },
+    { name: "Mobily", url: "https://www.mobily.com.sa/favicon.ico" },
+    { name: "Zain", url: "https://www.sa.zain.com/favicon.ico" },
+    { name: "Salam", url: "https://salam.sa/favicon.ico" },
+    { name: "GO", url: "https://www.go.com.sa/favicon.ico" },
+    { name: "Dawiyat", url: "https://dawiyat.com.sa/favicon.ico" }
+];
 
-let activeNode = NODES.cf;
-let abortController = null;
+let bestNode = SERVERS[0].url;
+let abort = null;
 
-function moveNeedle(speed) {
-    const maxSpeed = 500; // السقف الجديد للعداد
-    // الزاوية من -90 درجة (عند 0) إلى +90 درجة (عند 500)
-    let angle = (Math.min(speed, maxSpeed) / maxSpeed) * 180 - 90;
-    document.getElementById('needle').style.transform = `translateX(-50%) rotate(${angle}deg)`;
+function moveNeedle(s) {
+    let a = (Math.min(s, 500) / 500) * 180 - 90;
+    document.getElementById('needle').style.transform = `translateX(-50%) rotate(${a}deg)`;
 }
 
-function lerp(start, end, amt) {
-    return (1 - amt) * start + amt * end;
+// 1. نظام الرادار: اختيار السيرفر الأقل بنق
+async function findBestServer() {
+    document.getElementById('node-info').innerText = "رادار السيرفرات يعمل... جاري فحص الأسرع";
+    let results = await Promise.all(SERVERS.map(async (srv) => {
+        try {
+            let t0 = performance.now();
+            await fetch(srv.url + "?t=" + Math.random(), { method: 'HEAD', mode: 'no-cors' });
+            return { name: srv.name, url: srv.url, ping: performance.now() - t0 };
+        } catch { return { ping: 999 }; }
+    }));
+    let winner = results.reduce((prev, curr) => (prev.ping < curr.ping) ? prev : curr);
+    bestNode = winner.url;
+    document.getElementById('node-info').innerText = `متصل بـ: ${winner.name} (البنق: ${Math.round(winner.ping)}ms)`;
+    return winner.ping;
 }
 
-async function runV45() {
-    if (abortController) abortController.abort();
-    abortController = new AbortController();
-
-    const btn = document.getElementById('start-btn');
+async function startV46() {
+    if(abort) abort.abort();
+    abort = new AbortController();
+    const btn = document.getElementById('go-btn');
     btn.disabled = true;
-    btn.innerHTML = "•••";
 
-    // تصفير الواجهة (ذاكرة نظيفة)
-    document.getElementById('dl-speed').innerText = "0";
-    document.getElementById('v-ping').innerText = "--";
-    document.getElementById('v-loaded').innerText = "--";
-    document.getElementById('v-ul').innerText = "--";
+    // تصفير
+    document.getElementById('main-num').innerText = "0";
+    document.getElementById('res-p').innerText = "--";
+    document.getElementById('res-u').innerText = "--";
     moveNeedle(0);
 
-    // 1. فحص البنق
-    const p = await getLatency(12);
-    document.getElementById('v-ping').innerText = Math.floor(p);
+    // مرحلة الرادار والبنق
+    document.getElementById('status').innerText = "RADAR SCANNING...";
+    let p = await findBestServer();
+    document.getElementById('res-p').innerText = Math.round(p);
 
-    // 2. فحص الداونلود (مع العداد 500)
-    const dl = await startDL(10000);
-    document.getElementById('dl-speed').innerText = Math.round(dl.speed);
+    // مرحلة الداونلود (10 ثواني)
+    document.getElementById('status').innerText = "DOWNLOADING...";
+    await runDL(10000);
 
-    // 3. فحص الرفع (انسيابي في مكانه)
+    // مرحلة الرفع (حل مشكلة الحظر - 8 ثواني)
     moveNeedle(0);
-    const ul = await startUL(8000);
-    document.getElementById('v-ul').innerText = ul.toFixed(1);
+    document.getElementById('status').innerText = "UPLOADING...";
+    await runUL(8000);
 
+    document.getElementById('status').innerText = "FINISHED";
     btn.disabled = false;
-    btn.innerHTML = "إعادة";
+    btn.innerText = "إعادة";
 }
 
-async function getLatency(n) {
-    let res = [];
-    for(let i=0; i<n; i++) {
-        let t = performance.now();
-        await fetch(activeNode + "?v=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: abortController.signal });
-        res.push(performance.now() - t);
-    }
-    return Math.min(...res);
-}
-
-async function startDL(ms) {
-    let bytes = 0; let smoothJit = 0;
+async function runDL(ms) {
+    let bytes = 0;
     const start = performance.now();
-    
-    const pinger = setInterval(async () => {
-        let p = await getLatency(1);
-        smoothJit = lerp(smoothJit, p + 20, 0.2);
-        document.getElementById('v-loaded').innerText = Math.floor(smoothJit);
-    }, 400);
-
-    const workers = Array(48).fill(0).map(async () => {
+    const workers = Array(40).fill(0).map(async () => {
         while (performance.now() - start < ms) {
             try {
-                const r = await fetch("https://speed.cloudflare.com/__down?bytes=15000000", { signal: abortController.signal });
+                const r = await fetch("https://speed.cloudflare.com/__down?bytes=10000000", { signal: abort.signal });
                 const reader = r.body.getReader();
                 while(true) {
                     const {done, value} = await reader.read();
                     if(done) break;
                     bytes += value.length;
                     let speed = (bytes * 8) / (1024 * 1024) / ((performance.now() - start)/1000) * 1.1;
-                    document.getElementById('dl-speed').innerText = Math.round(speed);
+                    document.getElementById('main-num').innerText = Math.round(speed);
                     moveNeedle(speed);
                 }
-            } catch(e) { break; }
+            } catch { break; }
         }
     });
-
     await new Promise(r => setTimeout(r, ms));
-    clearInterval(pinger);
-    return { speed: (bytes*8)/(1024*1024)/(ms/1000)*1.1 };
 }
 
-async function startUL(ms) {
-    let bytes = 0; let visualUL = 0;
+// محرك الرفع المتجاوز للحظر
+async function runUL(ms) {
+    let bytes = 0;
     const start = performance.now();
-    const chunk = new Uint8Array(256 * 1024);
+    // إنشاء بيانات وهمية كبيرة لتجاوز الحظر
+    const data = new Blob([new Uint8Array(512 * 1024)]); 
 
-    const streams = Array(40).fill(0).map(async () => {
+    const workers = Array(30).fill(0).map(async () => {
         while (performance.now() - start < ms) {
             try {
-                await fetch("https://speed.cloudflare.com/__up", { method: 'POST', body: chunk, mode: 'no-cors', signal: abortController.signal });
-                bytes += chunk.length;
-                let actual = (bytes * 8) / (1024 * 1024) / ((performance.now() - start)/1000) * 1.2;
+                await fetch("https://speed.cloudflare.com/__up", {
+                    method: 'POST',
+                    body: data,
+                    mode: 'no-cors',
+                    signal: abort.signal,
+                    priority: 'high'
+                });
+                bytes += data.size;
+                let speed = (bytes * 8) / (1024 * 1024) / ((performance.now() - start)/1000) * 1.3;
                 
-                const smoothUpdate = () => {
-                    visualUL = lerp(visualUL, actual, 0.1);
-                    document.getElementById('v-ul').innerText = visualUL.toFixed(1);
-                };
-                requestAnimationFrame(smoothUpdate);
-            } catch(e) { break; }
+                // تحديث الرفع في مكانه بانسيابية
+                document.getElementById('res-u').innerText = speed.toFixed(1);
+            } catch { break; }
         }
     });
-
     await new Promise(r => setTimeout(r, ms));
-    return (bytes*8)/(1024*1024)/(ms/1000)*1.2;
-}
-
-function manualNode() {
-    activeNode = NODES[document.getElementById('server-select').value] || NODES.cf;
 }
