@@ -2,45 +2,70 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>محاكي سبيد تست المطور V30</title>
+    <title>SpeedTest Pro V31 | المحلل الاحترافي</title>
     <style>
-        :root { --accent: #00f2fe; --bg: #050508; --panel: #0d0d12; }
-        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .test-box { width: 90%; max-width: 800px; background: var(--panel); padding: 40px; border-radius: 50px; border: 1px solid #1f1f2a; text-align: center; box-shadow: 0 40px 100px rgba(0,0,0,0.8); }
-        .server-info { margin-bottom: 25px; font-weight: 800; color: #555; font-size: 0.85rem; }
-        .server-select { background: #16161d; color: var(--accent); border: 1px solid #333; padding: 10px 20px; border-radius: 50px; outline: none; cursor: pointer; }
-        .main-speed { font-size: 11rem; font-weight: 950; color: var(--accent); line-height: 0.8; font-family: 'Arial Black', sans-serif; letter-spacing: -6px; margin: 20px 0; }
-        .unit { font-size: 1.5rem; color: #222; font-weight: 900; letter-spacing: 5px; }
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 40px; }
-        .card { background: #111116; padding: 25px 15px; border-radius: 30px; border: 1px solid #1a1a20; }
-        .card .val { font-size: 2.6rem; font-weight: 900; display: block; color: #fff; }
-        .card .lbl { font-size: 0.7rem; color: #444; font-weight: 900; text-transform: uppercase; }
-        .btn-go { width: 100%; margin-top: 40px; background: #fff; color: #000; border: none; padding: 25px; border-radius: 100px; font-size: 1.8rem; font-weight: 950; cursor: pointer; transition: 0.4s; }
-        .btn-go:hover { background: var(--accent); transform: scale(1.02); box-shadow: 0 0 30px rgba(0, 242, 254, 0.4); }
-        .btn-go:disabled { opacity: 0.1; }
+        :root { --glow: #00f2fe; --bg: #020205; --card: rgba(15, 15, 20, 0.9); }
+        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+        
+        .glass-panel { width: 90%; max-width: 850px; background: var(--card); padding: 50px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(20px); text-align: center; box-shadow: 0 50px 100px rgba(0,0,0,0.7); }
+        
+        .server-selector { margin-bottom: 30px; opacity: 0.7; transition: 0.3s; }
+        .server-selector:hover { opacity: 1; }
+        .server-select { background: transparent; color: var(--glow); border: 1px solid #333; padding: 8px 20px; border-radius: 100px; outline: none; cursor: pointer; font-size: 0.8rem; }
+
+        .hero-gauge { position: relative; margin: 20px 0; }
+        .speed-number { font-size: 10rem; font-weight: 900; color: var(--glow); line-height: 1; font-family: 'Arial Black', sans-serif; text-shadow: 0 0 50px rgba(0, 242, 254, 0.2); }
+        .speed-unit { font-size: 1.2rem; color: #444; font-weight: 900; letter-spacing: 8px; margin-top: 10px; }
+
+        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 50px; }
+        .stat-box { background: rgba(255,255,255,0.02); padding: 25px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.05); transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .stat-box.active { border-color: var(--glow); background: rgba(0, 242, 254, 0.05); transform: translateY(-5px); }
+        .stat-box .v { font-size: 2.5rem; font-weight: 800; display: block; }
+        .stat-box .l { font-size: 0.7rem; color: #666; font-weight: 900; text-transform: uppercase; margin-bottom: 5px; display: block; }
+
+        .btn-main { width: 100%; margin-top: 40px; background: #fff; color: #000; border: none; padding: 25px; border-radius: 100px; font-size: 1.5rem; font-weight: 900; cursor: pointer; transition: 0.4s; letter-spacing: 2px; }
+        .btn-main:hover { background: var(--glow); box-shadow: 0 0 40px rgba(0, 242, 254, 0.4); transform: scale(1.01); }
+        .btn-main:disabled { opacity: 0.1; cursor: wait; }
+
+        .pulse { display: inline-block; width: 8px; height: 8px; background: var(--glow); border-radius: 50%; margin-left: 8px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.3; transform: scale(1.5); } 100% { opacity: 1; transform: scale(1); } }
     </style>
 </head>
 <body>
-    <div class="test-box">
-        <div class="server-info">
-            سيرفر الفحص: 
-            <select id="server-list" class="server-select" onchange="switchServer()">
-                <option value="auto">تحديد آلي (الأقرب)</option>
-                <option value="stc">STC - الرياض</option>
-                <option value="mobily">Mobily - جدة</option>
-                <option value="zain">Zain - السعودية</option>
-                <option value="salam">Salam - المتكاملة</option>
-                <option value="go">GO - عذيب</option>
+    <div class="glass-panel">
+        <div class="server-selector">
+            <span class="pulse"></span>
+            <select id="isp-node" class="server-select" onchange="changeNode()">
+                <option value="auto">تحديد ذكي للأقرب (Smart Connect)</option>
+                <option value="stc">STC - Riyadh</option>
+                <option value="mobily">Mobily - Jeddah</option>
+                <option value="zain">Zain - Saudi</option>
+                <option value="salam">Salam - Integrated</option>
+                <option value="go">GO - Atheeb</option>
             </select>
         </div>
-        <div id="main-val" class="main-speed">0</div>
-        <div class="unit">Mbps DOWNLOAD</div>
-        <div class="grid">
-            <div class="card"><span class="lbl">البنق (الخامل)</span><span id="p-idle" class="val">--</span><small>ms</small></div>
-            <div class="card"><span class="lbl">البنق (المثقل)</span><span id="p-loaded" class="val">--</span><small>ms</small></div>
-            <div class="card"><span class="lbl">الرفع (Upload)</span><span id="p-upload" class="val">--</span><small>Mbps</small></div>
+
+        <div class="hero-gauge">
+            <div id="main-speed" class="speed-number">0</div>
+            <div class="speed-unit">Mbps DOWNLOAD</div>
         </div>
-        <button class="btn-go" onclick="igniteTest()">ابدأ فحص المحاكاة</button>
+
+        <div class="stats-row">
+            <div class="stat-box" id="box-ping">
+                <span class="l">البنق الخامل</span>
+                <span id="res-ping" class="v">--</span>
+            </div>
+            <div class="stat-box" id="box-loaded">
+                <span class="l">تحت الضغط</span>
+                <span id="res-loaded" class="v">--</span>
+            </div>
+            <div class="stat-box" id="box-ul">
+                <span class="l">سرعة الرفع</span>
+                <span id="res-ul" class="v">--</span>
+            </div>
+        </div>
+
+        <button class="btn-main" onclick="startV31()">بدء الفحص الذكي</button>
     </div>
     <script src="script.js"></script>
 </body>
