@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>S-SPEED V66 | GOLDEN CALIBRATION</title>
+    <title>S-SPEED V67 | الدقة العربية</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,27 +11,27 @@
     <div class="master-hub">
         <div class="server-control">
             <div class="select-wrapper">
-                <label>NODE SELECTOR</label>
+                <label>اختيار السيرفر (Node Selection)</label>
                 <select id="server-selector" class="modern-select">
-                    <option value="auto">⚡ تلقائي (الأسرع)</option>
-                    <option value="stc">STC - الاتصالات السعودية</option>
-                    <option value="mobily">Mobily - موبايلي</option>
-                    <option value="zain">Zain - زين</option>
-                    <option value="salam">Salam - سلام</option>
-                    <option value="go">GO - عذيب للاتصالات</option>
-                    <option value="dawiyat">Dawiyat - ضوئيات</option>
+                    <option value="auto">⚡ AUTO RADAR (أسرع بنق)</option>
+                    <option value="stc">STC</option>
+                    <option value="mobily">Mobily</option>
+                    <option value="zain">Zain</option>
+                    <option value="salam">Salam</option>
+                    <option value="go">GO</option>
+                    <option value="dawiyat">Dawiyat</option>
                 </select>
             </div>
         </div>
 
         <div class="gauge-world">
             <div class="gauge-ticks">
-                <span class="tick" style="--angle: -120deg; --offset: 0;">0</span>
-                <span class="tick" style="--angle: -72deg; --offset: 100;">100</span>
-                <span class="tick" style="--angle: -24deg; --offset: 200;">200</span>
-                <span class="tick" style="--angle: 24deg; --offset: 300;">300</span>
-                <span class="tick" style="--angle: 72deg; --offset: 400;">400</span>
-                <span class="tick" style="--angle: 120deg; --offset: 500;">500</span>
+                <span class="tick" style="--angle: -120deg;">0</span>
+                <span class="tick" style="--angle: -72deg;">100</span>
+                <span class="tick" style="--angle: -24deg;">200</span>
+                <span class="tick" style="--angle: 24deg;">300</span>
+                <span class="tick" style="--angle: 72deg;">400</span>
+                <span class="tick" style="--angle: 120deg;">500</span>
             </div>
             
             <div class="turbine-wrap">
@@ -43,30 +43,30 @@
             
             <div class="center-display">
                 <div id="main-speed">0</div>
-                <div id="unit-text" class="unit-lbl">DOWNLOAD</div>
-                <div class="unit-mbps">MBPS</div>
+                <div id="mode-text" class="status-lbl">جاهز</div>
+                <div class="mbps-unit">ميجابت/ث</div>
             </div>
         </div>
 
         <div class="results-matrix">
             <div class="res-card">
-                <span class="lbl">IDLE PING</span>
+                <span class="lbl">البنق الخامل</span>
                 <span id="res-ping" class="val">--</span>
-                <span class="ms">ms</span>
+                <span class="unit">ملي ثانية</span>
             </div>
             <div class="res-card active-pulse">
-                <span class="lbl">LOADED PING</span>
+                <span class="lbl">البنق المثقل</span>
                 <span id="res-load" class="val">--</span>
-                <span class="ms">ms</span>
+                <span class="unit">ملي ثانية</span>
             </div>
             <div class="res-card">
-                <span class="lbl">UPLOAD</span>
+                <span class="lbl">سرعة الرفع</span>
                 <span id="res-ul" class="val">--</span>
-                <span class="ms">Mbps</span>
+                <span class="unit">ميجابت/ث</span>
             </div>
         </div>
 
-        <button id="ignite-btn" class="ignite-btn" onclick="startV66()">IGNITE</button>
+        <button id="ignite-btn" class="ignite-btn" onclick="startV67()">ابدأ الفحص</button>
     </div>
     <script src="script.js"></script>
 </body>
