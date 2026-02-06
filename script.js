@@ -18,7 +18,7 @@ function updateGauge(val) {
     document.getElementById('main-speed').innerText = Math.round(val);
 }
 
-async function startV68() {
+async function startV69() {
     if(abort) abort.abort();
     abort = new AbortController();
     
@@ -30,20 +30,20 @@ async function startV68() {
     currentUrl = (selection === 'auto') ? SERVERS[await findFastest()] : SERVERS[selection];
 
     // 1. فحص البنق الخامل (5 ثوانٍ)
-    document.getElementById('mode-text').innerText = "فحص الاستجابة (5 ث)...";
+    document.getElementById('mode-text').innerText = "فحص الاستجابة...";
     const idle = await getPing(currentUrl, 5000); 
     document.getElementById('res-ping').innerText = idle;
 
-    // 2. تحميل + بنق مثقل (15 ثانية) - العداد يعمل هنا
-    document.getElementById('mode-text').innerText = "فحص التحميل (15 ث)...";
+    // 2. فحص التحميل + البنق المثقل (15 ثانية بالضبط)
+    document.getElementById('mode-text').innerText = "تحميل...";
     await runDownloadTest(15000);
 
-    // 3. رفع (15 ثانية) - العداد يعود للصفر والرفع في بطاقته
-    updateGauge(0);
-    document.getElementById('mode-text').innerText = "فحص الرفع (15 ث)...";
+    // 3. فحص الرفع (15 ثانية مباشرة بعد التحميل)
+    updateGauge(0); 
+    document.getElementById('mode-text').innerText = "رفع...";
     await runUploadTest(15000);
 
-    document.getElementById('mode-text').innerText = "اكتمل الفحص بنجاح";
+    document.getElementById('mode-text').innerText = "اكتمل";
     document.getElementById('ignite-btn').disabled = false;
 }
 
@@ -56,7 +56,6 @@ async function findFastest() {
     return results.sort((a,b) => a.p - b.p)[0].k;
 }
 
-// فحص البنق لمدة زمنية محددة
 async function getPing(url, duration) {
     let s = [];
     const start = performance.now();
@@ -66,14 +65,16 @@ async function getPing(url, duration) {
             await fetch(url + "?p=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: abort.signal });
             s.push(performance.now() - t0);
         } catch(e) {}
-        await new Promise(r => setTimeout(r, 100)); // نبضة كل 100 ملي ثانية
+        await new Promise(r => setTimeout(r, 150));
     }
     return s.length ? Math.round(Math.min(...s)) : "--";
 }
 
 async function runDownloadTest(ms) {
-    let bytes = 0; let smoothLoad = 0;
+    let bytes = 0;
+    let smoothLoad = 0;
     const start = performance.now();
+    const downloadAbort = new AbortController(); // وحدة تحكم خاصة بالتحميل فقط
 
     const pinger = setInterval(async () => {
         let t0 = performance.now();
@@ -86,20 +87,23 @@ async function runDownloadTest(ms) {
     }, 450);
 
     const workers = Array(40).fill(0).map(async () => {
-        while (performance.now() - start < ms) {
+        while (performance.now() - start < ms && !downloadAbort.signal.aborted) {
             try {
-                const res = await fetch("https://speed.cloudflare.com/__down?bytes=15000000", { signal: abort.signal });
+                const res = await fetch("https://speed.cloudflare.com/__down?bytes=15000000", { signal: downloadAbort.signal });
                 const reader = res.body.getReader();
                 while(true) {
                     const {done, value} = await reader.read();
-                    if(done) break;
+                    if(done || downloadAbort.signal.aborted) break;
                     bytes += value.length;
                     updateGauge((bytes * 8) / (1024 * 1024) / ((performance.now() - start)/1000) * 1.1);
                 }
             } catch { break; }
         }
     });
+
+    // انتظار الوقت المحدد ثم إيقاف كل شيء يخص التحميل فوراً
     await new Promise(r => setTimeout(r, ms));
+    downloadAbort.abort(); // قطع جميع اتصالات التحميل فوراً
     clearInterval(pinger);
 }
 
