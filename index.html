@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>S-SPEED V65 | MODERN PRECISION</title>
+    <title>S-SPEED V66 | GOLDEN CALIBRATION</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,26 +11,27 @@
     <div class="master-hub">
         <div class="server-control">
             <div class="select-wrapper">
-                <label for="server-selector">NODE SELECTOR</label>
+                <label>NODE SELECTOR</label>
                 <select id="server-selector" class="modern-select">
-                    <option value="auto">⚡ AUTO RADAR (BEST PING)</option>
-                    <option value="stc">STC - SAUDI TELECOM</option>
-                    <option value="mobily">MOBILY - ETISALAT</option>
-                    <option value="zain">ZAIN - KSA</option>
-                    <option value="salam">SALAM - INTEGRATED</option>
-                    <option value="dawiyat">DAWIYAT - FIBER</option>
+                    <option value="auto">⚡ تلقائي (الأسرع)</option>
+                    <option value="stc">STC - الاتصالات السعودية</option>
+                    <option value="mobily">Mobily - موبايلي</option>
+                    <option value="zain">Zain - زين</option>
+                    <option value="salam">Salam - سلام</option>
+                    <option value="go">GO - عذيب للاتصالات</option>
+                    <option value="dawiyat">Dawiyat - ضوئيات</option>
                 </select>
             </div>
         </div>
 
-        <div class="gauge-container">
+        <div class="gauge-world">
             <div class="gauge-ticks">
-                <span style="--i:0;">0</span>
-                <span style="--i:1;">100</span>
-                <span style="--i:2;">200</span>
-                <span style="--i:3;">300</span>
-                <span style="--i:4;">400</span>
-                <span style="--i:5;">500</span>
+                <span class="tick" style="--angle: -120deg; --offset: 0;">0</span>
+                <span class="tick" style="--angle: -72deg; --offset: 100;">100</span>
+                <span class="tick" style="--angle: -24deg; --offset: 200;">200</span>
+                <span class="tick" style="--angle: 24deg; --offset: 300;">300</span>
+                <span class="tick" style="--angle: 72deg; --offset: 400;">400</span>
+                <span class="tick" style="--angle: 120deg; --offset: 500;">500</span>
             </div>
             
             <div class="turbine-wrap">
@@ -40,9 +41,10 @@
                 <div id="needle" class="digital-needle"></div>
             </div>
             
-            <div class="speed-readout">
+            <div class="center-display">
                 <div id="main-speed">0</div>
-                <div class="unit" id="unit-text">DOWNLOAD MBPS</div>
+                <div id="unit-text" class="unit-lbl">DOWNLOAD</div>
+                <div class="unit-mbps">MBPS</div>
             </div>
         </div>
 
@@ -50,21 +52,21 @@
             <div class="res-card">
                 <span class="lbl">IDLE PING</span>
                 <span id="res-ping" class="val">--</span>
-                <span class="unit-min">ms</span>
+                <span class="ms">ms</span>
             </div>
             <div class="res-card active-pulse">
                 <span class="lbl">LOADED PING</span>
                 <span id="res-load" class="val">--</span>
-                <span class="unit-min">ms</span>
+                <span class="ms">ms</span>
             </div>
             <div class="res-card">
                 <span class="lbl">UPLOAD</span>
                 <span id="res-ul" class="val">--</span>
-                <span class="unit-min">Mbps</span>
+                <span class="ms">Mbps</span>
             </div>
         </div>
 
-        <button id="ignite-btn" class="ignite-btn" onclick="startV65()">IGNITE</button>
+        <button id="ignite-btn" class="ignite-btn" onclick="startV66()">IGNITE</button>
     </div>
     <script src="script.js"></script>
 </body>
