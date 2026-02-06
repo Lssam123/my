@@ -10,7 +10,6 @@ const SERVERS = {
 let abort = null;
 let currentUrl = "";
 
-// وظيفة تحديث الإبرة والرقم في العداد
 function updateGauge(val) {
     const needle = document.getElementById('needle');
     const max = 500;
@@ -19,37 +18,33 @@ function updateGauge(val) {
     document.getElementById('main-speed').innerText = Math.round(val);
 }
 
-async function startV67() {
+async function startV68() {
     if(abort) abort.abort();
     abort = new AbortController();
     
-    const btn = document.getElementById('ignite-btn');
-    btn.disabled = true;
-    
-    // تصغير العداد وتصفير النتائج
+    document.getElementById('ignite-btn').disabled = true;
     updateGauge(0);
     ["res-ping", "res-load", "res-ul"].forEach(id => document.getElementById(id).innerText = "--");
 
-    // تحديد أسرع سيرفر
     const selection = document.getElementById('server-selector').value;
     currentUrl = (selection === 'auto') ? SERVERS[await findFastest()] : SERVERS[selection];
 
-    // 1. فحص البنق (الاستجابة)
-    document.getElementById('mode-text').innerText = "فحص الاستجابة...";
-    const idle = await getPing(currentUrl, 10);
+    // 1. فحص البنق الخامل (5 ثوانٍ)
+    document.getElementById('mode-text').innerText = "فحص الاستجابة (5 ث)...";
+    const idle = await getPing(currentUrl, 5000); 
     document.getElementById('res-ping').innerText = idle;
 
-    // 2. فحص التحميل + البنق المثقل (15 ثانية) - العداد يعمل هنا
-    document.getElementById('mode-text').innerText = "جارِ التحميل...";
+    // 2. تحميل + بنق مثقل (15 ثانية) - العداد يعمل هنا
+    document.getElementById('mode-text').innerText = "فحص التحميل (15 ث)...";
     await runDownloadTest(15000);
 
-    // 3. فحص الرفع (15 ثانية) - العداد يعود للصفر والرفع يظهر في مكانه فقط
-    updateGauge(0); // تصفير العداد قبل بدء الرفع
-    document.getElementById('mode-text').innerText = "جارِ الرفع...";
+    // 3. رفع (15 ثانية) - العداد يعود للصفر والرفع في بطاقته
+    updateGauge(0);
+    document.getElementById('mode-text').innerText = "فحص الرفع (15 ث)...";
     await runUploadTest(15000);
 
-    document.getElementById('mode-text').innerText = "اكتمل الفحص";
-    btn.disabled = false;
+    document.getElementById('mode-text').innerText = "اكتمل الفحص بنجاح";
+    document.getElementById('ignite-btn').disabled = false;
 }
 
 async function findFastest() {
@@ -61,22 +56,25 @@ async function findFastest() {
     return results.sort((a,b) => a.p - b.p)[0].k;
 }
 
-async function getPing(url, count) {
+// فحص البنق لمدة زمنية محددة
+async function getPing(url, duration) {
     let s = [];
-    for(let i=0; i<count; i++) {
+    const start = performance.now();
+    while (performance.now() - start < duration) {
         let t0 = performance.now();
-        await fetch(url + "?p=" + Math.random(), { method: 'HEAD', mode: 'no-cors' });
-        s.push(performance.now() - t0);
+        try {
+            await fetch(url + "?p=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: abort.signal });
+            s.push(performance.now() - t0);
+        } catch(e) {}
+        await new Promise(r => setTimeout(r, 100)); // نبضة كل 100 ملي ثانية
     }
-    return Math.round(Math.min(...s));
+    return s.length ? Math.round(Math.min(...s)) : "--";
 }
 
-// فحص التحميل: يقوم بتحديث العداد (الإبرة والرقم)
 async function runDownloadTest(ms) {
     let bytes = 0; let smoothLoad = 0;
     const start = performance.now();
 
-    // البنق المثقل المتزامن
     const pinger = setInterval(async () => {
         let t0 = performance.now();
         try {
@@ -96,18 +94,15 @@ async function runDownloadTest(ms) {
                     const {done, value} = await reader.read();
                     if(done) break;
                     bytes += value.length;
-                    // تحديث العداد هنا فقط
                     updateGauge((bytes * 8) / (1024 * 1024) / ((performance.now() - start)/1000) * 1.1);
                 }
             } catch { break; }
         }
     });
-
     await new Promise(r => setTimeout(r, ms));
     clearInterval(pinger);
 }
 
-// فحص الرفع: يعرض النتيجة في البطاقة المخصصة فقط ولا يحرك العداد
 async function runUploadTest(ms) {
     let bytesUploaded = 0;
     const startTime = performance.now();
@@ -123,7 +118,6 @@ async function runUploadTest(ms) {
                         bytesUploaded += data.length;
                         let elapsed = (performance.now() - startTime) / 1000;
                         let speed = (bytesUploaded * 8) / (1024 * 1024) / elapsed * 1.35;
-                        // تحديث البطاقة السفلية فقط
                         document.getElementById('res-ul').innerText = speed.toFixed(1);
                         resolve();
                     };
