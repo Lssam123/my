@@ -2,12 +2,11 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>S-SPEED V68 | الدقة الزمنية</title>
+    <title>S-SPEED V69 | التدفق السريع</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="cyber-bg"></div>
-    
     <div class="master-hub">
         <div class="server-control">
             <div class="select-wrapper">
@@ -33,14 +32,12 @@
                 <span class="tick" style="--angle: 72deg;">400</span>
                 <span class="tick" style="--angle: 120deg;">500</span>
             </div>
-            
             <div class="turbine-wrap">
                 <svg class="main-gauge" viewBox="0 0 200 200">
                     <circle class="track" cx="100" cy="100" r="85"></circle>
                 </svg>
                 <div id="needle" class="digital-needle"></div>
             </div>
-            
             <div class="center-display">
                 <div id="main-speed">0</div>
                 <div id="mode-text" class="status-lbl">جاهز</div>
@@ -50,23 +47,20 @@
 
         <div class="results-matrix">
             <div class="res-card">
-                <span class="lbl">البنق الخامل</span>
+                <span class="lbl">البنق الخامل (5 ث)</span>
                 <span id="res-ping" class="val">--</span>
-                <span class="unit">ملي ثانية</span>
             </div>
             <div class="res-card active-pulse">
-                <span class="lbl">البنق المثقل</span>
+                <span class="lbl">البنق المثقل (15 ث)</span>
                 <span id="res-load" class="val">--</span>
-                <span class="unit">ملي ثانية</span>
             </div>
             <div class="res-card">
-                <span class="lbl">سرعة الرفع</span>
+                <span class="lbl">سرعة الرفع (15 ث)</span>
                 <span id="res-ul" class="val">--</span>
-                <span class="unit">ميجابت/ث</span>
             </div>
         </div>
 
-        <button id="ignite-btn" class="ignite-btn" onclick="startV68()">ابدأ الفحص</button>
+        <button id="ignite-btn" class="ignite-btn" onclick="startV69()">ابدأ الفحص</button>
     </div>
     <script src="script.js"></script>
 </body>
