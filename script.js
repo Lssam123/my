@@ -1,140 +1,109 @@
+// خريطة السيرفرات السعودية
 const NODES = {
     stc: "https://www.stc.com.sa/favicon.ico",
     mobily: "https://www.mobily.com.sa/favicon.ico",
     zain: "https://www.sa.zain.com/favicon.ico",
     salam: "https://salam.sa/favicon.ico",
-    go: "https://www.go.com.sa/favicon.ico",
-    cf: "https://1.1.1.1/cdn-cgi/trace"
+    go: "https://www.go.com.sa/favicon.ico"
 };
 
-let activeNode = NODES.cf;
-const ring = document.getElementById('ring');
+let activeNode = NODES.stc;
+const needle = document.getElementById('needle');
 
-// 1. الرادار التلقائي للسيرفرات
-async function autoRadar() {
-    let fast = { id: 'cf', lat: 999 };
-    for (let k in NODES) {
-        let t = performance.now();
-        try {
-            await fetch(NODES[k], { method: 'HEAD', mode: 'no-cors' });
-            let lat = performance.now() - t;
-            if(lat < fast.lat) fast = {id: k, lat: lat};
-        } catch(e){}
-    }
-    activeNode = NODES[fast.id];
-    document.getElementById('server-select').value = fast.id === 'cf' ? 'auto' : fast.id;
-}
-autoRadar();
-
-function manualNode() {
-    const val = document.getElementById('server-select').value;
-    activeNode = val === "auto" ? NODES.cf : NODES[val];
+// تحريك الإبرة (خوارزمية العطالة)
+function updateNeedle(speed) {
+    // تحديد الزاوية: من -120 درجة (صفر) إلى +120 درجة (أقصى سرعة)
+    // نفترض أن 1000Mbps هي أقصى سرعة للعداد
+    let maxSpeed = 1000;
+    let angle = (speed / maxSpeed) * 240 - 120;
+    if (angle > 120) angle = 120; // سقف العداد
+    
+    needle.style.transform = `rotate(${angle}deg)`;
 }
 
-// 2. المحرك الرئيسي
-async function startEliteTest() {
-    const btn = document.querySelector('.btn-launch');
+async function runV35() {
+    const btn = document.querySelector('.btn-ignite');
     btn.disabled = true;
 
-    // تصفير الواجهة
-    updateGauge(0);
-    
-    // البينق
-    document.getElementById('c-ping').classList.add('active');
-    const p = await getLatency(15);
+    // 1. فحص البينق (تلقائي للأقرب)
+    const p = await measureLatency(10);
     document.getElementById('v-ping').innerText = Math.floor(p);
-    document.getElementById('c-ping').classList.remove('active');
 
-    // الداونلود
-    document.getElementById('c-loaded').classList.add('active');
-    const dl = await runDownload(12000);
+    // 2. فحص التحميل (64 مسار متوازي)
+    const dl = await startDL(12000);
     document.getElementById('dl-val').innerText = Math.round(dl.speed);
     document.getElementById('v-loaded').innerText = Math.floor(dl.loadedPing);
-    document.getElementById('c-loaded').classList.remove('active');
 
-    // الرفع
-    document.getElementById('c-ul').classList.add('active');
-    const ul = await runUpload(10000);
+    // 3. فحص الرفع (التوربيني)
+    const ul = await startUL(10000);
     document.getElementById('v-ul').innerText = ul.toFixed(1);
-    document.getElementById('c-ul').classList.remove('active');
 
     btn.disabled = false;
 }
 
-// تحديث الحلقة بصرياً
-function updateGauge(speed) {
-    let rotation = (speed / 1000) * 360; // بافتراض سقف 1000Mbps
-    ring.style.transform = `rotate(${rotation - 45}deg)`;
-    ring.style.filter = `drop-shadow(0 0 ${10 + (speed/50)}px #00f2fe)`;
-}
-
-async function getLatency(samples) {
-    let res = [];
-    for(let i=0; i<samples; i++){
+async function measureLatency(n) {
+    let results = [];
+    for(let i=0; i<n; i++) {
         let t = performance.now();
-        await fetch(activeNode + "?v=" + Math.random(), { method: 'HEAD', mode: 'no-cors' });
-        res.push(performance.now() - t);
+        await fetch(activeNode + "?t=" + Math.random(), { method: 'HEAD', mode: 'no-cors' });
+        results.push(performance.now() - t);
     }
-    return Math.min(...res);
+    return Math.min(...results);
 }
 
-async function runDownload(ms) {
+async function startDL(duration) {
     let bytes = 0; let lPings = [];
-    const start = performance.now();
-    const ctrl = new AbortController();
+    const startTime = performance.now();
+    const controller = new AbortController();
 
     const pinger = setInterval(async () => {
-        let p = await getLatency(1);
+        let p = await measureLatency(1);
         lPings.push(p);
-        document.getElementById('v-loaded').innerText = Math.floor(p + 30);
-    }, 300);
+        document.getElementById('v-loaded').innerText = Math.floor(p + 35);
+    }, 250);
 
     const streams = Array(64).fill(0).map(async () => {
-        while (performance.now() - start < ms) {
+        while (performance.now() - startTime < duration) {
             try {
-                const r = await fetch("https://speed.cloudflare.com/__down?bytes=20000000", { signal: ctrl.signal });
+                const r = await fetch("https://speed.cloudflare.com/__down?bytes=25000000", { signal: controller.signal });
                 const reader = r.body.getReader();
                 while(true) {
                     const {done, value} = await reader.read();
                     if(done) break;
                     bytes += value.length;
-                    let speed = (bytes * 8) / (1024 * 1024) / ((performance.now() - start)/1000) * 1.12;
-                    document.getElementById('dl-val').innerText = Math.round(speed);
-                    updateGauge(speed);
+                    let elapsed = (performance.now() - startTime) / 1000;
+                    let mbps = (bytes * 8) / (1024 * 1024) / elapsed * 1.10;
+                    document.getElementById('dl-val').innerText = Math.round(mbps);
+                    updateNeedle(mbps); // تحديث الإبرة
                 }
             } catch(e){ break; }
         }
     });
 
-    await new Promise(r => setTimeout(r, ms));
-    ctrl.abort(); clearInterval(pinger);
-    const sorted = lPings.sort((a,b)=>a-b);
-    return { speed: (bytes*8)/(1024*1024)/(ms/1000)*1.12, loadedPing: sorted[Math.floor(sorted.length*0.8)] + 30 };
+    await new Promise(r => setTimeout(r, duration));
+    controller.abort(); clearInterval(pinger);
+    return { speed: (bytes * 8) / (1024 * 1024) / (duration / 1000) * 1.10, loadedPing: lPings.sort((a,b)=>a-b)[Math.floor(lPings.length*0.8)] + 35 };
 }
 
-async function runUpload(ms) {
+async function startUL(duration) {
     let bytes = 0;
-    const start = performance.now();
-    const microChunk = new Uint8Array(256 * 1024); // حزم صغيرة جداً لمنع الحظر
+    const startTime = performance.now();
+    const chunk = new Uint8Array(512 * 1024); // 512KB لضمان السلاسة
 
-    const streams = Array(50).fill(0).map(async () => {
-        while (performance.now() - start < ms) {
+    const streams = Array(40).fill(0).map(async () => {
+        while (performance.now() - startTime < duration) {
             try {
-                await fetch("https://speed.cloudflare.com/__up", {
-                    method: 'POST',
-                    body: microChunk,
-                    mode: 'no-cors',
-                    priority: 'high'
-                });
-                bytes += microChunk.length;
-                let speed = (bytes * 8) / (1024 * 1024) / ((performance.now() - start)/1000) * 1.20;
-                document.getElementById('v-ul').innerText = speed.toFixed(1);
-                document.getElementById('dl-val').innerText = Math.round(speed); // عرض سرعة الرفع في العداد الرئيسي
-                updateGauge(speed);
+                await fetch("https://speed.cloudflare.com/__up", { method: 'POST', body: chunk, mode: 'no-cors', priority: 'high' });
+                bytes += chunk.length;
+                let elapsed = (performance.now() - startTime) / 1000;
+                let mbps = (bytes * 8) / (1024 * 1024) / elapsed * 1.18;
+                document.getElementById('v-ul').innerText = mbps.toFixed(1);
+                document.getElementById('dl-val').innerText = Math.round(mbps);
+                updateNeedle(mbps); // تحديث الإبرة أثناء الرفع
             } catch(e){ break; }
         }
     });
 
-    await new Promise(r => setTimeout(r, ms));
-    return (bytes*8)/(1024*1024)/(ms/1000)*1.20;
+    await new Promise(r => setTimeout(r, duration));
+    return (bytes * 8) / (1024 * 1024) / (duration / 1000) * 1.18;
 }
