@@ -3,20 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S-Speed Elite V37 | Cockpit Edition</title>
+    <title>S-Speed Elite V38 | Precision Edition</title>
     <style>
         :root {
             --neon: #00f2fe;
             --purple: #7000ff;
             --bg: #0b0c10;
-            --card-bg: #1f2833;
-            --text-main: #66fcf1;
+            --glass: rgba(31, 40, 51, 0.4);
         }
 
         body {
             background-color: var(--bg);
             color: white;
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', system-ui, sans-serif;
             margin: 0;
             display: flex;
             justify-content: center;
@@ -24,162 +23,183 @@
             min-height: 100vh;
         }
 
-        .main-container {
-            width: 900px;
+        .main-wrapper {
+            width: 95%;
+            max-width: 950px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border-radius: 50px;
             padding: 40px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 40px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.6);
         }
 
-        /* الجزء العلوي: اختيار السيرفر والزر */
-        .header-panel {
+        /* التحكم العلوي */
+        .top-nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: #15151b;
-            padding: 20px 40px;
-            border-radius: 25px;
-            margin-bottom: 30px;
-            border: 1px solid #333;
+            margin-bottom: 40px;
+            background: rgba(0,0,0,0.2);
+            padding: 15px 30px;
+            border-radius: 20px;
         }
 
-        .server-info { display: flex; flex-direction: column; gap: 5px; }
-        .server-info label { font-size: 0.7rem; color: #555; font-weight: bold; }
-        
-        .server-select {
-            background: transparent;
+        .server-group select {
+            background: #1f2833;
             color: var(--neon);
-            border: 1px solid #444;
-            padding: 8px 15px;
-            border-radius: 10px;
+            border: 1px solid #45a29e;
+            padding: 8px 20px;
+            border-radius: 12px;
             outline: none;
             cursor: pointer;
+            font-weight: bold;
         }
 
-        .btn-start {
-            background: white;
-            color: black;
+        .btn-launch {
+            background: var(--neon);
+            color: #0b0c10;
             border: none;
-            padding: 12px 40px;
+            padding: 12px 45px;
             border-radius: 50px;
             font-weight: 900;
             cursor: pointer;
             transition: 0.3s;
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.3);
         }
-        .btn-start:hover { background: var(--neon); box-shadow: 0 0 20px var(--neon); }
+        .btn-launch:hover { transform: scale(1.05); box-shadow: 0 0 30px var(--neon); }
 
-        /* وحدة العداد المركزية - منفصلة تماماً */
-        .gauge-module {
-            background: #15151b;
-            border-radius: 30px;
-            padding: 60px 20px;
-            border: 1px solid #333;
-            margin-bottom: 30px;
+        /* منطقة العداد والإبرة */
+        .gauge-section {
             position: relative;
+            height: 380px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
         }
 
-        .gauge-svg { width: 450px; height: 250px; }
+        .gauge-container {
+            position: relative;
+            width: 400px;
+            height: 250px;
+        }
 
-        .gauge-bg { fill: none; stroke: #222; stroke-width: 15; stroke-linecap: round; }
-        .gauge-fill { 
-            fill: none; stroke: var(--neon); stroke-width: 15; stroke-linecap: round;
-            stroke-dasharray: 628; stroke-dashoffset: 628; 
-            transition: stroke-dashoffset 0.5s cubic-bezier(0.1, 0.5, 0.5, 1);
+        /* أرقام التدريج حول العداد */
+        .tick {
+            position: absolute;
+            font-size: 0.8rem;
+            color: #444;
+            font-weight: 900;
+            transform-origin: center;
+        }
+
+        /* الإبرة */
+        .needle {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            width: 4px;
+            height: 160px;
+            background: linear-gradient(to top, transparent, var(--neon));
+            transform-origin: bottom center;
+            transform: translateX(-50%) rotate(-100deg); /* بداية من الصفر */
+            transition: transform 0.5s cubic-bezier(0.1, 0.5, 0.5, 1);
             filter: drop-shadow(0 0 8px var(--neon));
+            z-index: 5;
+        }
+        .needle-pivot {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            width: 16px;
+            height: 16px;
+            background: var(--neon);
+            border-radius: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 15px var(--neon);
+            z-index: 6;
         }
 
-        /* أرقام التدريج داخل العداد */
-        .gauge-ticks { font-size: 12px; fill: #444; font-weight: bold; }
+        .speed-readout {
+            margin-top: -20px;
+            text-align: center;
+        }
+        .speed-num { font-size: 8rem; font-weight: 900; color: #fff; line-height: 0.8; }
+        .speed-label { font-size: 1.2rem; color: #45a29e; letter-spacing: 5px; font-weight: bold; }
 
-        .speed-display { text-align: center; margin-top: -60px; }
-        .speed-num { font-size: 6rem; font-weight: 900; color: white; line-height: 1; }
-        .speed-unit { font-size: 1.2rem; color: var(--neon); font-weight: bold; letter-spacing: 5px; }
-
-        /* شبكة البطاقات السفلية - منظمة ومنفصلة */
-        .stats-grid {
+        /* البطاقات السفلية */
+        .stats-footer {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
+            gap: 25px;
+            margin-top: 50px;
         }
 
-        .stat-card {
-            background: #15151b;
-            padding: 30px;
+        .card {
+            background: rgba(0,0,0,0.3);
+            padding: 25px;
             border-radius: 25px;
-            border: 1px solid #333;
-            text-align: right;
-            position: relative;
+            border: 1px solid rgba(255,255,255,0.03);
+            text-align: center;
+            transition: 0.3s;
         }
-
-        .stat-card::after {
-            content: ''; position: absolute; bottom: 0; left: 0; width: 0%; height: 4px;
-            background: var(--neon); border-radius: 0 0 0 25px; transition: 0.5s;
-        }
-        .stat-card.active::after { width: 100%; }
-
-        .card-title { font-size: 0.8rem; color: #555; display: block; margin-bottom: 10px; font-weight: 900; }
-        .card-val { font-size: 2.5rem; font-weight: 900; color: var(--neon); display: block; }
-        .card-unit { font-size: 0.9rem; color: white; }
+        .card.active { border-color: var(--neon); background: rgba(0, 242, 254, 0.05); }
+        .card .title { font-size: 0.7rem; color: #555; display: block; margin-bottom: 10px; font-weight: bold; }
+        .card .value { font-size: 2.2rem; font-weight: 900; color: var(--neon); }
 
     </style>
 </head>
 <body>
 
-<div class="main-container">
-    <div class="header-panel">
-        <div class="server-info">
-            <label>سيرفر الفحص</label>
-            <select id="server-select" class="server-select" onchange="manualNode()">
-                <option value="auto">تحديد تلقائي ذكي</option>
-                <option value="stc">STC - السعودية</option>
-                <option value="mobily">Mobily - موبايلي</option>
+<div class="main-wrapper">
+    <div class="top-nav">
+        <div class="server-group">
+            <select id="server-select" onchange="manualNode()">
+                <option value="auto">⚡ ذكاء اصطناعي (الأسرع)</option>
+                <option value="stc">STC - الرياض</option>
+                <option value="mobily">Mobily - جدة</option>
                 <option value="zain">Zain - السعودية</option>
-                <option value="salam">Salam - سلام</option>
-                <option value="go">GO - عذيب</option>
+                <option value="salam">Salam - المتكاملة</option>
             </select>
         </div>
-        <button class="btn-start" onclick="runV37()">إبدأ الفحص</button>
+        <button class="btn-launch" onclick="startV38()">إطلاق الفحص</button>
     </div>
 
-    <div class="gauge-module">
-        <svg class="gauge-svg" viewBox="0 0 400 200">
-            <path class="gauge-bg" d="M 50 180 A 150 150 0 0 1 350 180" />
-            <path id="gauge-progress" class="gauge-fill" d="M 50 180 A 150 150 0 0 1 350 180" />
-            
-            <text x="40" y="195" class="gauge-ticks">0</text>
-            <text x="35" y="140" class="gauge-ticks">100</text>
-            <text x="70" y="80" class="gauge-ticks">250</text>
-            <text x="185" y="45" class="gauge-ticks">500</text>
-            <text x="300" y="80" class="gauge-ticks">750</text>
-            <text x="345" y="140" class="gauge-ticks">900</text>
-            <text x="340" y="195" class="gauge-ticks">1000+</text>
-        </svg>
+    <div class="gauge-section">
+        <div class="gauge-container">
+            <svg viewBox="0 0 400 200" style="width:100%; height:100%;">
+                <path d="M 50 180 A 150 150 0 0 1 350 180" fill="none" stroke="#15151b" stroke-width="12" stroke-linecap="round"/>
+                <text x="45" y="195" fill="#444" font-size="12" font-weight="900">0</text>
+                <text x="35" y="110" fill="#444" font-size="12" font-weight="900">100</text>
+                <text x="100" y="55" fill="#444" font-size="12" font-weight="900">250</text>
+                <text x="185" y="35" fill="#444" font-size="12" font-weight="900">500</text>
+                <text x="280" y="55" fill="#444" font-size="12" font-weight="900">750</text>
+                <text x="340" y="110" fill="#444" font-size="12" font-weight="900">900</text>
+                <text x="330" y="195" fill="#444" font-size="12" font-weight="900">1000+</text>
+            </svg>
+            <div id="needle" class="needle"></div>
+            <div class="needle-pivot"></div>
+        </div>
 
-        <div class="speed-display">
-            <div id="dl-val" class="speed-num">0</div>
-            <div class="speed-unit">Mbps</div>
+        <div class="speed-readout">
+            <div id="main-val" class="speed-num">0</div>
+            <div class="speed-label">MBPS</div>
         </div>
     </div>
 
-    <div class="stats-grid">
-        <div class="stat-card" id="c-ping">
-            <span class="card-title">البنق الخامل</span>
-            <span id="v-ping" class="card-val">--</span>
-            <span class="card-unit">ms</span>
+    <div class="stats-footer">
+        <div class="card" id="card-ping">
+            <span class="title">بنق نقي (Idle)</span>
+            <span id="v-ping" class="value">--</span><small>ms</small>
         </div>
-        <div class="stat-card" id="c-loaded">
-            <span class="card-title">البنق المثقل</span>
-            <span id="v-loaded" class="card-val">--</span>
-            <span class="card-unit">ms</span>
+        <div class="card" id="card-loaded">
+            <span class="title">بنق مثقل (Loaded)</span>
+            <span id="v-loaded" class="val-loaded value">--</span><small>ms</small>
         </div>
-        <div class="stat-card" id="c-ul">
-            <span class="card-title">سرعة الرفع</span>
-            <span id="v-ul" class="card-val">--</span>
-            <span class="card-unit">Mbps</span>
+        <div class="card" id="card-ul">
+            <span class="title">سرعة الرفع</span>
+            <span id="v-ul" class="value">--</span><small>Mbps</small>
         </div>
     </div>
 </div>
