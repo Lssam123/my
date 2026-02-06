@@ -5,7 +5,7 @@
 body {
     background: var(--bg); margin: 0; overflow: hidden;
     display: flex; justify-content: center; align-items: center;
-    height: 100vh; font-family: 'Segoe UI', sans-serif; color: white;
+    height: 100vh; font-family: 'Orbitron', sans-serif; color: white;
 }
 
 .cyber-bg {
@@ -15,59 +15,70 @@ body {
 }
 
 .master-hub {
-    width: 850px; padding: 40px; background: rgba(255,255,255,0.01);
-    backdrop-filter: blur(60px); border-radius: 60px; border: 1px solid rgba(255,255,255,0.08);
-    text-align: center; box-shadow: 0 0 100px rgba(0, 0, 0, 0.5);
+    width: 800px; padding: 40px; background: rgba(255,255,255,0.01);
+    backdrop-filter: blur(50px); border-radius: 60px; border: 1px solid rgba(255,255,255,0.1);
+    text-align: center;
 }
 
-/* زر اختيار السيرفر العصري */
-.server-control { margin-bottom: 40px; }
-.select-wrapper { display: inline-block; position: relative; }
-.select-wrapper label {
-    display: block; font-size: 0.6rem; color: var(--neon);
-    letter-spacing: 3px; margin-bottom: 8px; font-weight: 900;
-}
+/* زر اختيار السيرفر */
 .modern-select {
-    background: rgba(255,255,255,0.03); color: white; border: 1px solid rgba(255,255,255,0.1);
-    padding: 12px 30px; border-radius: 15px; font-weight: bold; cursor: pointer;
-    outline: none; transition: 0.3s; appearance: none;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    background: #000; color: var(--neon); border: 1px solid #333;
+    padding: 10px 25px; border-radius: 12px; font-weight: bold; cursor: pointer;
 }
-.modern-select:hover { border-color: var(--neon); background: rgba(0, 242, 254, 0.05); }
 
-/* العداد */
-.gauge-container { position: relative; width: 420px; height: 380px; margin: 0 auto; }
-.gauge-ticks span { position: absolute; font-size: 0.85rem; font-weight: 900; color: #333; transform: translate(-50%, -50%); }
-.gauge-ticks span:nth-child(1) { top: 88%; left: 25%; }
-.gauge-ticks span:nth-child(2) { top: 60%; left: 12%; }
-.gauge-ticks span:nth-child(3) { top: 25%; left: 25%; }
-.gauge-ticks span:nth-child(4) { top: 15%; left: 50%; }
-.gauge-ticks span:nth-child(5) { top: 25%; left: 75%; }
-.gauge-ticks span:nth-child(6) { top: 60%; left: 88%; }
+/* العداد - إصدار المعايرة */
+.gauge-world {
+    position: relative; width: 450px; height: 450px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: center;
+}
 
-.main-gauge { transform: rotate(135deg); width: 100%; height: 100%; }
+.gauge-ticks {
+    position: absolute; width: 100%; height: 100%;
+}
+
+.tick {
+    position: absolute; top: 50%; left: 50%;
+    transform: rotate(var(--angle)) translate(0, -160px) rotate(calc(var(--angle) * -1));
+    font-size: 0.9rem; font-weight: 900; color: #444;
+}
+
+.main-gauge { width: 400px; height: 400px; transform: rotate(135deg); }
 .track { fill: none; stroke: rgba(255,255,255,0.03); stroke-width: 6; }
 
 .digital-needle {
-    position: absolute; top: 50%; left: 50%; width: 3px; height: 160px;
+    position: absolute; top: 50%; left: 50%;
+    width: 4px; height: 160px;
     background: linear-gradient(to top, var(--neon), transparent);
-    transform: translate(-50%, -100%) rotate(-120deg); transform-origin: bottom center;
-    filter: drop-shadow(0 0 15px var(--neon)); transition: 0.5s cubic-bezier(0.1, 0.8, 0.1, 1);
+    transform-origin: bottom center;
+    /* يبدأ من -120 درجة وهي نقطة الصفر بالضبط */
+    transform: translate(-50%, -100%) rotate(-120deg);
+    filter: drop-shadow(0 0 10px var(--neon));
+    transition: 0.4s cubic-bezier(0.1, 0.8, 0.1, 1);
+    z-index: 5;
 }
 
-.speed-readout { position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); }
-#main-speed { font-size: 8rem; font-weight: 950; color: #fff; line-height: 1; text-shadow: 0 0 40px rgba(0,242,254,0.2); }
-.unit { font-size: 0.7rem; color: #444; font-weight: 900; letter-spacing: 4px; margin-top: 5px; }
+/* الصندوق المركزي - تم سحبه للأعلى ليكون داخل العداد */
+.center-display {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -40%);
+    text-align: center; width: 100%;
+}
 
-/* النتائج */
-.results-matrix { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 40px; }
-.res-card { background: rgba(0,0,0,0.4); padding: 25px; border-radius: 25px; border: 1px solid rgba(255,255,255,0.05); }
-.res-card .val { font-size: 2.5rem; font-weight: 900; color: var(--neon); display: block; }
-.res-card .lbl { font-size: 0.6rem; color: #555; font-weight: 900; display: block; }
+#main-speed {
+    font-size: 8.5rem; font-weight: 950; line-height: 0.8;
+    background: linear-gradient(to bottom, #fff, var(--neon));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+.unit-lbl { font-size: 0.7rem; color: #444; letter-spacing: 5px; margin-top: 20px; font-weight: 900; }
+.unit-mbps { font-size: 0.9rem; color: var(--neon); font-weight: 900; }
+
+.results-matrix { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; }
+.res-card { background: rgba(0,0,0,0.5); padding: 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); }
+.res-card .val { font-size: 2.2rem; font-weight: 900; color: var(--neon); display: block; }
+.res-card .lbl { font-size: 0.6rem; color: #666; display: block; margin-bottom: 5px; }
 
 .ignite-btn {
-    width: 110px; height: 110px; border-radius: 50%; border: 2px solid var(--neon);
-    background: transparent; color: white; font-weight: 950; cursor: pointer; margin-top: 30px;
-    transition: 0.4s; letter-spacing: 2px;
+    width: 100px; height: 100px; border-radius: 50%; border: 2px solid var(--neon);
+    background: transparent; color: white; font-weight: 900; cursor: pointer; margin-top: 30px;
 }
-.ignite-btn:hover { background: var(--neon); color: #000; box-shadow: 0 0 40px var(--neon); transform: scale(1.05); }
