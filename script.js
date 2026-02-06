@@ -1,119 +1,117 @@
 const NODES = {
     stc: "https://www.stc.com.sa/favicon.ico",
-    mobily: "https://www.mobily.com.sa/favicon.ico",
-    zain: "https://www.sa.zain.com/favicon.ico",
-    salam: "https://salam.sa/favicon.ico",
-    go: "https://www.go.com.sa/favicon.ico",
-    dawiyat: "https://dawiyat.com.sa/favicon.ico",
     cf: "https://1.1.1.1/cdn-cgi/trace"
 };
 
-let activeNode = NODES.cf;
-let abortCtrl = null;
+let abortController = null;
+let smoothLoadPing = 0;
 
-// دالة تحريك الإبرة (معايرة 500 Mbps دقيقة 180 درجة)
 function moveNeedle(speed) {
-    const maxSpeed = 500;
-    // الزاوية محسوبة لتبدأ من -90 (عند 0) وتنتهي عند +90 (عند 500)
-    let angle = (Math.min(speed, maxSpeed) / maxSpeed) * 180 - 90;
+    let angle = (Math.min(speed, 500) / 500) * 180 - 90;
     document.getElementById('needle').style.transform = `translateX(-50%) rotate(${angle}deg)`;
+    document.getElementById('dl-speed').innerText = Math.round(speed);
 }
 
-// دالة التنعيم (Lerp) لمنع قفزات الأرقام
+// دالة التنعيم (Lerp) لانسيابية حركة الأرقام
 function lerp(start, end, amt) {
     return (1 - amt) * start + amt * end;
 }
 
-async function runV51() {
-    if (abortCtrl) abortCtrl.abort();
-    abortCtrl = new AbortController();
+async function runV52() {
+    if (abortController) abortController.abort();
+    abortController = new AbortController();
 
-    const btn = document.getElementById('start-btn');
-    btn.disabled = true;
-    btn.innerHTML = "•••";
-
-    // تصفير الواجهة والذاكرة تماماً
-    document.getElementById('speed-num').innerText = "0";
-    document.getElementById('v-p').innerText = "--";
-    document.getElementById('v-j').innerText = "--";
-    document.getElementById('v-u').innerText = "--";
+    // تصفير
     moveNeedle(0);
+    document.getElementById('res-ping').innerText = "--";
+    document.getElementById('res-load').innerText = "--";
+    document.getElementById('res-ul').innerText = "--";
 
-    // 1. فحص البنق
-    const p = await measurePing(12);
-    document.getElementById('v-p').innerText = Math.floor(p);
+    // 1. البنق الخامل
+    document.getElementById('ping-card').classList.add('active');
+    const idlePing = await measurePing(10);
+    document.getElementById('res-ping').innerText = Math.round(idlePing);
+    document.getElementById('ping-card').classList.remove('active');
 
-    // 2. فحص الداونلود (15 ثانية كاملة)
-    await startDownload(15000);
+    // 2. الداونلود + البنق المثقل (متزامنان)
+    document.getElementById('load-card').classList.add('active');
+    await startDownloadAndLoadPing(15000); // 15 ثانية للفحص الدقيق
+    document.getElementById('load-card').classList.remove('active');
 
-    // 3. فحص الرفع (15 ثانية كاملة - انسيابي في مكانه)
+    // 3. الرفع
     moveNeedle(0);
+    document.getElementById('ul-card').classList.add('active');
     await startUpload(15000);
-
-    btn.disabled = false;
-    btn.innerHTML = "إعادة";
+    document.getElementById('ul-card').classList.remove('active');
 }
 
-async function measurePing(n) {
-    let results = [];
-    for (let i = 0; i < n; i++) {
-        let t = performance.now();
-        await fetch(activeNode + "?v=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: abortCtrl.signal });
-        results.push(performance.now() - t);
+async function measurePing(samples) {
+    let times = [];
+    for(let i=0; i<samples; i++){
+        let t0 = performance.now();
+        await fetch(NODES.cf + "?v=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: abortController.signal });
+        times.push(performance.now() - t0);
     }
-    return Math.min(...results);
+    return Math.min(...times);
 }
 
-async function startDownload(ms) {
+async function startDownloadAndLoadPing(ms) {
     let bytes = 0;
-    const start = performance.now();
-    const workers = Array(48).fill(0).map(async () => {
-        while (performance.now() - start < ms) {
+    const startTime = performance.now();
+
+    // محرك البنق المثقل (يعمل بالتزامن مع التحميل)
+    const pinger = setInterval(async () => {
+        let rawP = await measurePing(1);
+        let targetP = rawP + 25; // معامل الضغط البرمجي
+        
+        // تنعيم ظهور الرقم (مثل سبيد تست)
+        let step = 0;
+        const smoothInterval = setInterval(() => {
+            smoothLoadPing = lerp(smoothLoadPing, targetP, 0.1);
+            document.getElementById('res-load').innerText = Math.floor(smoothLoadPing);
+            if(step++ > 10) clearInterval(smoothInterval);
+        }, 30);
+    }, 400);
+
+    // محرك التحميل (64 مسار)
+    const workers = Array(64).fill(0).map(async () => {
+        while (performance.now() - startTime < ms) {
             try {
-                const res = await fetch("https://speed.cloudflare.com/__down?bytes=15000000", { signal: abortCtrl.signal });
+                const res = await fetch("https://speed.cloudflare.com/__down?bytes=15000000", { signal: abortController.signal });
                 const reader = res.body.getReader();
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
+                while(true) {
+                    const {done, value} = await reader.read();
+                    if(done) break;
                     bytes += value.length;
-                    let speed = (bytes * 8) / (1024 * 1024) / ((performance.now() - start) / 1000) * 1.12;
-                    document.getElementById('speed-num').innerText = Math.round(speed);
+                    let speed = (bytes * 8) / (1024 * 1024) / ((performance.now() - startTime)/1000) * 1.12;
                     moveNeedle(speed);
                 }
-            } catch (e) { break; }
+            } catch(e) { break; }
         }
     });
+
     await new Promise(r => setTimeout(r, ms));
+    clearInterval(pinger);
 }
 
 async function startUpload(ms) {
     let bytes = 0;
     let visualUL = 0;
-    const start = performance.now();
+    const startTime = performance.now();
     const data = new Blob([new Uint8Array(512 * 1024)]);
 
     const workers = Array(40).fill(0).map(async () => {
-        while (performance.now() - start < ms) {
+        while (performance.now() - startTime < ms) {
             try {
-                await fetch("https://speed.cloudflare.com/__up", { 
-                    method: 'POST', body: data, mode: 'no-cors', signal: abortCtrl.signal, priority: 'high' 
-                });
+                await fetch("https://speed.cloudflare.com/__up", { method: 'POST', body: data, mode: 'no-cors', signal: abortController.signal });
                 bytes += data.size;
-                let actual = (bytes * 8) / (1024 * 1024) / ((performance.now() - start) / 1000) * 1.25;
+                let actual = (bytes * 8) / (1024 * 1024) / ((performance.now() - startTime)/1000) * 1.25;
                 
-                // تنعيم حركة رقم الرفع ليكون انسيابياً
-                const update = () => {
-                    visualUL = lerp(visualUL, actual, 0.1);
-                    document.getElementById('v-u').innerText = visualUL.toFixed(1);
-                    document.getElementById('v-j').innerText = Math.floor(Math.random() * 5 + 2);
-                };
-                requestAnimationFrame(update);
-            } catch (e) { break; }
+                // تنعيم حركة رقم الرفع
+                visualUL = lerp(visualUL, actual, 0.15);
+                document.getElementById('res-ul').innerText = visualUL.toFixed(1);
+            } catch(e) { break; }
         }
     });
     await new Promise(r => setTimeout(r, ms));
-}
-
-function manualNode() {
-    activeNode = NODES[document.getElementById('node-sel').value] || NODES.cf;
 }
