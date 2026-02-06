@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S-Speed Elite V40 | Engineering Precision</title>
+    <title>S-Speed Pro V41 | الانسيابية القصوى</title>
     <style>
         :root {
             --neon: #00f2fe;
-            --bg: #030008;
+            --bg: #020205;
             --glass: rgba(255, 255, 255, 0.02);
             --border: rgba(255, 255, 255, 0.08);
         }
@@ -24,7 +24,7 @@
             overflow: hidden;
         }
 
-        .master-container {
+        .master-panel {
             width: 850px;
             background: var(--glass);
             backdrop-filter: blur(50px);
@@ -32,103 +32,78 @@
             padding: 40px;
             border: 1px solid var(--border);
             text-align: center;
-            box-shadow: 0 40px 120px rgba(0,0,0,0.8);
         }
 
-        /* اختيار السيرفر */
-        .server-wrap { margin-bottom: 10px; }
-        .server-select {
-            background: #111;
-            color: var(--neon);
-            border: 1px solid #222;
-            padding: 8px 20px;
-            border-radius: 100px;
-            font-size: 0.85rem;
-            cursor: pointer;
-        }
-
-        /* حاوية العداد الدائري */
-        .gauge-module {
+        /* العداد المخصص للداونلود فقط */
+        .gauge-section {
             position: relative;
             width: 450px;
-            height: 350px;
+            height: 320px;
             margin: 0 auto;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .gauge-svg {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-        }
-
-        /* الإبرة الفيزيائية */
         .needle {
             position: absolute;
-            bottom: 38%; /* متممركزة مع القوس */
+            bottom: 35%;
             width: 3px;
-            height: 130px;
+            height: 135px;
             background: linear-gradient(to top, transparent, var(--neon));
             transform-origin: bottom center;
             transform: rotate(-120deg);
-            transition: transform 0.6s cubic-bezier(0.1, 0.5, 0.5, 1);
+            transition: transform 0.8s cubic-bezier(0.2, 0, 0.2, 1);
             filter: drop-shadow(0 0 10px var(--neon));
             z-index: 5;
         }
 
-        /* رقم السرعة الصغير المنسق */
-        .speed-readout {
+        .download-readout {
             z-index: 10;
-            margin-top: 80px; /* دفع الأرقام لأسفل قليلاً لعدم التداخل مع قمة القوس */
+            margin-top: 80px;
         }
 
-        .speed-val {
-            font-size: 5.5rem; /* تصغير الرقم بناءً على طلبك */
+        .dl-num {
+            font-size: 5.5rem;
             font-weight: 900;
             line-height: 1;
             font-family: 'Arial Black', sans-serif;
             color: #fff;
-            text-shadow: 0 0 20px rgba(0, 242, 254, 0.3);
         }
 
-        .speed-unit {
-            font-size: 0.9rem;
-            color: #444;
+        .dl-label {
+            font-size: 0.8rem;
+            color: var(--neon);
             letter-spacing: 5px;
             font-weight: 900;
-            margin-top: 5px;
         }
 
-        /* زر بدء دائري تحت العداد */
+        /* زر البدء الدائري */
         .btn-start {
-            width: 90px;
-            height: 90px;
+            width: 85px;
+            height: 85px;
             border-radius: 50%;
             background: white;
             color: black;
             border: none;
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 900;
             cursor: pointer;
             transition: 0.4s;
-            margin-top: 20px;
-            box-shadow: 0 0 20px rgba(255,255,255,0.1);
+            margin: 20px 0;
         }
 
         .btn-start:hover {
             background: var(--neon);
             transform: scale(1.1);
-            box-shadow: 0 0 40px var(--neon);
         }
 
-        /* شبكة الإحصائيات المنظمة */
+        /* الإحصائيات الجانبية (البنق والرفع) */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 20px;
-            margin-top: 40px;
+            margin-top: 20px;
         }
 
         .stat-card {
@@ -136,63 +111,81 @@
             padding: 20px;
             border-radius: 30px;
             border: 1px solid var(--border);
+            transition: 0.5s;
         }
 
-        .stat-card .lbl { font-size: 0.65rem; color: #555; display: block; margin-bottom: 5px; font-weight: 900; }
-        .stat-card .val { font-size: 1.8rem; font-weight: 900; color: #fff; }
+        .stat-card.active {
+            border-color: var(--neon);
+            background: rgba(0, 242, 254, 0.05);
+        }
 
+        .stat-card .val { 
+            font-size: 2rem; 
+            font-weight: 900; 
+            color: #fff; 
+            display: block;
+            transition: color 0.3s;
+        }
+
+        .stat-card .lbl { 
+            font-size: 0.65rem; 
+            color: #444; 
+            font-weight: 900; 
+            text-transform: uppercase;
+        }
+
+        .server-select {
+            background: #111;
+            color: var(--neon);
+            border: 1px solid #222;
+            padding: 8px 15px;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
 
-<div class="master-container">
-    <div class="server-wrap">
-        <select id="server-select" class="server-select" onchange="manualNode()">
-            <option value="auto">⚡ اختيار تلقائي ذكي</option>
-            <option value="stc">STC</option>
-            <option value="mobily">Mobily</option>
-            <option value="zain">Zain</option>
-            <option value="salam">Salam</option>
-            <option value="go">GO (Atheeb)</option>
-        </select>
-    </div>
+<div class="master-panel">
+    <select id="server-select" class="server-select" onchange="manualNode()">
+        <option value="auto">⚡ تحديد تلقائي للسيرفر</option>
+        <option value="stc">STC - السعودية</option>
+        <option value="mobily">Mobily - موبايلي</option>
+        <option value="zain">Zain - زين</option>
+        <option value="go">GO - عذيب</option>
+    </select>
 
-    <div class="gauge-module">
-        <svg class="gauge-svg" viewBox="0 0 400 400">
+    <div class="gauge-section">
+        <svg viewBox="0 0 400 400" style="position:absolute; width:100%; height:100%;">
             <path d="M 100 300 A 140 140 0 1 1 300 300" fill="none" stroke="#111" stroke-width="12" stroke-linecap="round"/>
-            
-            <g class="ticks" fill="#444" font-size="11" font-weight="900" text-anchor="middle">
-                <text x="85" y="310">0</text>
-                <text x="65" y="210">100</text>
-                <text x="120" y="115">250</text>
-                <text x="200" y="90">500</text>
-                <text x="285" y="115">750</text>
-                <text x="340" y="210">900</text>
+            <g fill="#333" font-size="11" font-weight="900" text-anchor="middle">
+                <text x="85" y="310">0</text><text x="65" y="210">100</text>
+                <text x="120" y="115">250</text><text x="200" y="90">500</text>
+                <text x="285" y="115">750</text><text x="340" y="210">900</text>
                 <text x="320" y="310">1000+</text>
             </g>
         </svg>
-
         <div id="needle" class="needle"></div>
-
-        <div class="speed-readout">
-            <div id="main-speed" class="speed-val">0</div>
-            <div class="speed-unit">MBPS</div>
+        <div class="download-readout">
+            <div id="dl-val" class="dl-num">0</div>
+            <div class="dl-label">DOWNLOAD</div>
         </div>
     </div>
 
-    <button id="start-btn" class="btn-start" onclick="runV40()">بدء</button>
+    <button id="start-btn" class="btn-start" onclick="runV41()">بدء</button>
 
     <div class="stats-grid">
-        <div class="stat-card">
-            <span class="lbl">PING (ms)</span>
+        <div class="stat-card" id="card-ping">
+            <span class="lbl">البنق الخامل</span>
             <span id="v-ping" class="val">--</span>
         </div>
-        <div class="stat-card">
-            <span class="lbl">LOADED (ms)</span>
+        <div class="stat-card" id="card-loaded">
+            <span class="lbl">البنق المثقل</span>
             <span id="v-loaded" class="val">--</span>
         </div>
-        <div class="stat-card">
-            <span class="lbl">UPLOAD (Mbps)</span>
+        <div class="stat-card" id="card-ul">
+            <span class="lbl">سرعة الرفع</span>
             <span id="v-ul" class="val">--</span>
         </div>
     </div>
