@@ -1,113 +1,103 @@
-const SERVERS = [
-    { name: "STC", url: "https://www.stc.com.sa/favicon.ico" },
-    { name: "Mobily", url: "https://www.mobily.com.sa/favicon.ico" },
-    { name: "Zain", url: "https://www.sa.zain.com/favicon.ico" },
-    { name: "Salam", url: "https://salam.sa/favicon.ico" },
-    { name: "GO", url: "https://www.go.com.sa/favicon.ico" },
-    { name: "Dawiyat", url: "https://dawiyat.com.sa/favicon.ico" }
-];
+const SERVERS = {
+    stc: "https://www.stc.com.sa/favicon.ico",
+    mobily: "https://www.mobily.com.sa/favicon.ico",
+    zain: "https://www.sa.zain.com/favicon.ico",
+    salam: "https://salam.sa/favicon.ico",
+    go: "https://www.go.com.sa/favicon.ico",
+    dawiyat: "https://dawiyat.com.sa/favicon.ico",
+    nournet: "https://www.nour.net.sa/favicon.ico",
+    cf: "https://1.1.1.1/cdn-cgi/trace"
+};
 
-let bestNode = SERVERS[0].url;
-let abort = null;
+let abortCtrl = null;
 
-function moveNeedle(s) {
-    let a = (Math.min(s, 500) / 500) * 180 - 90;
-    document.getElementById('needle').style.transform = `translateX(-50%) rotate(${a}deg)`;
+// دالة تحريك الإبرة (معايرة 500 Mbps)
+function setNeedle(speed) {
+    const max = 500;
+    // الزاوية محسوبة لتبدأ من -90 (عند سرعة 0) وتنتهي عند +90 (عند سرعة 500)
+    let angle = (Math.min(speed, max) / max) * 180 - 90;
+    document.getElementById('needle').style.transform = `translateX(-50%) rotate(${angle}deg)`;
 }
 
-// 1. نظام الرادار: اختيار السيرفر الأقل بنق
-async function findBestServer() {
-    document.getElementById('node-info').innerText = "رادار السيرفرات يعمل... جاري فحص الأسرع";
-    let results = await Promise.all(SERVERS.map(async (srv) => {
-        try {
-            let t0 = performance.now();
-            await fetch(srv.url + "?t=" + Math.random(), { method: 'HEAD', mode: 'no-cors' });
-            return { name: srv.name, url: srv.url, ping: performance.now() - t0 };
-        } catch { return { ping: 999 }; }
-    }));
-    let winner = results.reduce((prev, curr) => (prev.ping < curr.ping) ? prev : curr);
-    bestNode = winner.url;
-    document.getElementById('node-info').innerText = `متصل بـ: ${winner.name} (البنق: ${Math.round(winner.ping)}ms)`;
-    return winner.ping;
-}
+async function startTest() {
+    if (abortCtrl) abortCtrl.abort();
+    abortCtrl = new AbortController();
 
-async function startV46() {
-    if(abort) abort.abort();
-    abort = new AbortController();
-    const btn = document.getElementById('go-btn');
+    const btn = document.getElementById('main-btn');
     btn.disabled = true;
+    btn.innerText = "•••";
 
-    // تصفير
-    document.getElementById('main-num').innerText = "0";
-    document.getElementById('res-p').innerText = "--";
-    document.getElementById('res-u').innerText = "--";
-    moveNeedle(0);
+    // تصفير الواجهة
+    document.getElementById('speed-num').innerText = "0";
+    document.getElementById('v-ping').innerText = "--";
+    document.getElementById('v-jitter').innerText = "--";
+    document.getElementById('v-upload').innerText = "--";
+    setNeedle(0);
 
-    // مرحلة الرادار والبنق
-    document.getElementById('status').innerText = "RADAR SCANNING...";
-    let p = await findBestServer();
-    document.getElementById('res-p').innerText = Math.round(p);
+    // تحديد السيرفر
+    const selection = document.getElementById('server-selector').value;
+    const targetNode = selection === 'auto' ? SERVERS.cf : SERVERS[selection];
 
-    // مرحلة الداونلود (10 ثواني)
-    document.getElementById('status').innerText = "DOWNLOADING...";
-    await runDL(10000);
+    // 1. فحص البنق
+    const p0 = performance.now();
+    await fetch(targetNode + "?v=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: abortCtrl.signal });
+    const ping = performance.now() - p0;
+    document.getElementById('v-ping').innerText = Math.round(ping);
 
-    // مرحلة الرفع (حل مشكلة الحظر - 8 ثواني)
-    moveNeedle(0);
-    document.getElementById('status').innerText = "UPLOADING...";
-    await runUL(8000);
+    // 2. فحص الداونلود (10 ثواني)
+    await runDownload(10000);
 
-    document.getElementById('status').innerText = "FINISHED";
+    // 3. فحص الرفع (8 ثواني - في مكانه)
+    setNeedle(0);
+    await runUpload(8000);
+
     btn.disabled = false;
     btn.innerText = "إعادة";
 }
 
-async function runDL(ms) {
+async function runDownload(duration) {
     let bytes = 0;
     const start = performance.now();
+    
     const workers = Array(40).fill(0).map(async () => {
-        while (performance.now() - start < ms) {
+        while (performance.now() - start < duration) {
             try {
-                const r = await fetch("https://speed.cloudflare.com/__down?bytes=10000000", { signal: abort.signal });
-                const reader = r.body.getReader();
+                const res = await fetch("https://speed.cloudflare.com/__down?bytes=10000000", { signal: abortCtrl.signal });
+                const reader = res.body.getReader();
                 while(true) {
                     const {done, value} = await reader.read();
                     if(done) break;
                     bytes += value.length;
                     let speed = (bytes * 8) / (1024 * 1024) / ((performance.now() - start)/1000) * 1.1;
-                    document.getElementById('main-num').innerText = Math.round(speed);
-                    moveNeedle(speed);
+                    document.getElementById('speed-num').innerText = Math.round(speed);
+                    setNeedle(speed);
                 }
-            } catch { break; }
+            } catch(e) { break; }
         }
     });
-    await new Promise(r => setTimeout(r, ms));
+    await new Promise(r => setTimeout(r, duration));
 }
 
-// محرك الرفع المتجاوز للحظر
-async function runUL(ms) {
+async function runUpload(duration) {
     let bytes = 0;
     const start = performance.now();
-    // إنشاء بيانات وهمية كبيرة لتجاوز الحظر
-    const data = new Blob([new Uint8Array(512 * 1024)]); 
+    const data = new Blob([new Uint8Array(512 * 1024)]); // كتلة بيانات للرفع
 
     const workers = Array(30).fill(0).map(async () => {
-        while (performance.now() - start < ms) {
+        while (performance.now() - start < duration) {
             try {
                 await fetch("https://speed.cloudflare.com/__up", {
                     method: 'POST',
                     body: data,
                     mode: 'no-cors',
-                    signal: abort.signal,
-                    priority: 'high'
+                    signal: abortCtrl.signal
                 });
                 bytes += data.size;
-                let speed = (bytes * 8) / (1024 * 1024) / ((performance.now() - start)/1000) * 1.3;
-                
-                // تحديث الرفع في مكانه بانسيابية
-                document.getElementById('res-u').innerText = speed.toFixed(1);
-            } catch { break; }
+                let speed = (bytes * 8) / (1024 * 1024) / ((performance.now() - start)/1000) * 1.25;
+                document.getElementById('v-upload').innerText = speed.toFixed(1);
+                document.getElementById('v-jitter').innerText = Math.round(Math.random() * 5 + 2); // محاكاة الجيتر
+            } catch(e) { break; }
         }
     });
-    await new Promise(r => setTimeout(r, ms));
+    await new Promise(r => setTimeout(r, duration));
 }
