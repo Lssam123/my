@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>S-Speed Elite V54 | Perfect Alignment</title>
+    <title>S-Speed Elite V55 | Precision & Flow</title>
     <style>
         :root {
             --neon: #00f2fe;
@@ -23,83 +23,50 @@
             border-radius: 60px; padding: 40px; border: 1px solid var(--border); text-align: center;
         }
 
-        .server-select {
-            background: #111; color: var(--neon); border: 1px solid #333;
-            padding: 10px 25px; border-radius: 100px; font-weight: bold; cursor: pointer; margin-bottom: 20px;
+        .server-status {
+            color: var(--neon); font-size: 0.85rem; font-weight: bold; margin-bottom: 15px; height: 20px;
         }
 
-        /* حاوية العداد الكبرى */
         .gauge-module {
             position: relative;
-            width: 480px;
-            height: 350px; /* مساحة كافية للعداد والأرقام */
+            width: 480px; height: 350px;
             margin: 0 auto;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            display: flex; justify-content: center; align-items: center;
         }
 
-        /* SVG العداد */
-        .gauge-svg {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 1;
-        }
+        .gauge-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
 
-        /* الإبرة المصححة */
         .needle {
-            position: absolute;
-            bottom: 60px; /* نقطة ارتكاز الإبرة بناءً على رسم القوس */
-            left: 50%;
-            width: 4px;
-            height: 150px;
+            position: absolute; bottom: 60px; left: 50%; width: 4px; height: 150px;
             background: linear-gradient(to top, transparent, var(--neon));
-            transform-origin: bottom center;
-            transform: translateX(-50%) rotate(-90deg);
+            transform-origin: bottom center; transform: translateX(-50%) rotate(-90deg);
             transition: transform 0.6s cubic-bezier(0.1, 0.5, 0.5, 1);
-            filter: drop-shadow(0 0 10px var(--neon));
-            z-index: 5;
+            filter: drop-shadow(0 0 10px var(--neon)); z-index: 5;
         }
 
-        /* الرقم المركزي - الآن في وسط العداد تماماً */
         .speed-readout {
-            position: absolute;
-            top: 55%; /* وضع الرقم في مركز القوس */
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 10;
-            text-align: center;
+            position: absolute; top: 55%; left: 50%;
+            transform: translate(-50%, -50%); z-index: 10; text-align: center;
         }
 
         #speed-num {
-            font-size: 6.5rem;
-            font-weight: 950;
-            font-family: 'Arial Black', sans-serif;
-            line-height: 1;
-            display: block;
-            color: #fff;
-            text-shadow: 0 0 30px rgba(0, 242, 254, 0.2);
+            font-size: 6.5rem; font-weight: 950; font-family: 'Arial Black', sans-serif;
+            line-height: 1; display: block; color: #fff;
         }
 
-        .unit-label {
-            color: #444;
-            font-weight: 900;
-            letter-spacing: 5px;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-        }
+        .unit-label { color: #444; font-weight: 900; letter-spacing: 5px; font-size: 0.8rem; }
 
-        /* الأزرار والبطاقات */
         .btn-start {
             width: 90px; height: 90px; border-radius: 50%; border: none;
             background: #fff; color: #000; font-weight: 950; cursor: pointer;
             margin-top: 30px; transition: 0.4s;
         }
         .btn-start:hover { transform: scale(1.1); background: var(--neon); }
+        .btn-start:disabled { opacity: 0.3; cursor: not-allowed; }
 
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 40px; }
-        .card { background: rgba(255,255,255,0.01); padding: 25px; border-radius: 30px; border: 1px solid var(--border); }
+        .card { background: rgba(255,255,255,0.01); padding: 25px; border-radius: 30px; border: 1px solid var(--border); transition: 0.3s; }
+        .card.active { border-color: var(--neon); box-shadow: 0 0 15px rgba(0, 242, 254, 0.1); }
         .card .v { font-size: 2.2rem; font-weight: 900; color: #fff; display: block; }
         .card .l { font-size: 0.7rem; color: #555; font-weight: 900; }
     </style>
@@ -107,15 +74,7 @@
 <body>
 
 <div class="master-panel">
-    <select id="isp-node" class="server-select">
-        <option value="auto">⚡ تحديد تلقائي للسيرفر الأسرع</option>
-        <option value="stc">STC - الاتصالات السعودية</option>
-        <option value="mobily">Mobily - موبايلي</option>
-        <option value="zain">Zain - زين السعودية</option>
-        <option value="salam">Salam - سلام</option>
-        <option value="go">GO - عذيب</option>
-        <option value="dawiyat">Dawiyat - ضوئيات</option>
-    </select>
+    <div id="status-text" class="server-status">جاهز للاختبار</div>
 
     <div class="gauge-module">
         <svg class="gauge-svg" viewBox="0 0 400 300">
@@ -129,21 +88,19 @@
                 <text x="350" y="270">500</text>
             </g>
         </svg>
-        
         <div id="needle" class="needle"></div>
-        
         <div class="speed-readout">
             <span id="speed-num">0</span>
             <span class="unit-label">MBPS DOWNLOAD</span>
         </div>
     </div>
 
-    <button id="main-btn" class="btn-start" onclick="runV54()">بدء</button>
+    <button id="main-btn" class="btn-start" onclick="initTest()">بدء</button>
 
     <div class="stats-grid">
-        <div class="card"><span class="l">IDLE PING (ms)</span><span id="v-ping" class="v">--</span></div>
-        <div class="card"><span class="l">LOADED PING (ms)</span><span id="v-load" class="v">--</span></div>
-        <div class="card"><span class="l">UPLOAD (Mbps)</span><span id="v-ul" class="v">--</span></div>
+        <div class="card" id="card-ping"><span class="l">PING (ms)</span><span id="v-ping" class="v">--</span></div>
+        <div class="card" id="card-load"><span class="l">LOADED PING</span><span id="v-load" class="v">--</span></div>
+        <div class="card" id="card-ul"><span class="l">UPLOAD (Mbps)</span><span id="v-ul" class="v">--</span></div>
     </div>
 </div>
 
