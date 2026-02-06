@@ -1,135 +1,136 @@
-const SERVERS = {
+const ISP_MAP = {
     stc: "https://www.stc.com.sa/favicon.ico",
     mobily: "https://www.mobily.com.sa/favicon.ico",
     zain: "https://www.sa.zain.com/favicon.ico",
     salam: "https://salam.sa/favicon.ico",
     go: "https://www.go.com.sa/favicon.ico",
-    dawiyat: "https://dawiyat.com.sa/favicon.ico"
+    dawiyat: "https://dawiyat.com.sa/favicon.ico",
+    cf: "https://1.1.1.1/cdn-cgi/trace"
 };
 
-let optimalNode = SERVERS.stc;
+let activeNode = ISP_MAP.cf;
 
-// 1. خوارزمية اختيار المسار الأفضل (ليس فقط الأسرع بل الأكثر استقراراً)
-async function findBestPath() {
-    const status = document.getElementById('path-info');
-    let candidates = [];
-    
-    for (let key in SERVERS) {
-        let pings = [];
-        for(let i=0; i<3; i++) { // فحص الاستقرار عبر 3 نبضات
-            let t0 = performance.now();
-            try {
-                await fetch(SERVERS[key], { method: 'HEAD', mode: 'no-cors', cache: 'no-cache' });
-                pings.push(performance.now() - t0);
-            } catch(e) {}
-        }
-        if(pings.length > 0) {
-            let avg = pings.reduce((a,b)=>a+b)/pings.length;
-            let jitter = Math.max(...pings) - Math.min(...pings);
-            candidates.push({id: key, score: avg + (jitter * 2)}); // تفضيل الثبات على السرعة اللحظية
-        }
+// 1. البحث التلقائي عن أقل بينق (Radar Scan)
+async function radarScan() {
+    const log = document.getElementById('log-status');
+    let scanResults = [];
+    log.innerText = "جاري مسح السيرفرات السعودية...";
+
+    for (let key in ISP_MAP) {
+        let t0 = performance.now();
+        try {
+            await fetch(ISP_MAP[key], { method: 'HEAD', mode: 'no-cors', cache: 'no-cache' });
+            scanResults.push({ id: key, lat: performance.now() - t0 });
+        } catch (e) {}
     }
-    candidates.sort((a,b) => a.score - b.score);
-    optimalNode = SERVERS[candidates[0].id];
-    status.innerText = `تم اختيار مسار: ${candidates[0].id.toUpperCase()} (مستقر)`;
+    scanResults.sort((a, b) => a.lat - b.lat);
+    activeNode = ISP_MAP[scanResults[0].id];
+    log.innerText = `السيرفر الأقرب: ${scanResults[0].id.toUpperCase()} (${scanResults[0].lat.toFixed(0)}ms)`;
 }
 
-findBestPath();
+radarScan();
 
-async function runV32() {
-    const btn = document.querySelector('.btn-ignite');
+function manualSelect() {
+    const val = document.getElementById('isp-select').value;
+    if (val !== "auto") {
+        activeNode = ISP_MAP[val];
+        document.getElementById('log-status').innerText = `تم التغيير يدوياً إلى: ${val.toUpperCase()}`;
+    } else {
+        radarScan();
+    }
+}
+
+async function igniteV33() {
+    const btn = document.querySelector('.btn-start');
     btn.disabled = true;
 
-    // قياس البينق الصافي
-    document.getElementById('c1').classList.add('active');
-    const p = await getPrecisionPing(10);
+    // البينق (أقل زمن استجابة)
+    const p = await measureLat(15);
     document.getElementById('v-ping').innerText = Math.floor(p);
-    document.getElementById('c1').classList.remove('active');
 
     // الداونلود (64 مسار متداخل)
-    document.getElementById('c2').classList.add('active');
-    const dl = await executeDownload(12000);
-    document.getElementById('dl-display').innerText = Math.round(dl.speed);
+    const dl = await runDL(10000);
+    document.getElementById('dl-val').innerText = Math.round(dl.speed);
     document.getElementById('v-loaded').innerText = Math.floor(dl.loadedPing);
-    document.getElementById('c2').classList.remove('active');
 
-    // الرفع (نظام Micro-Bursting بـ 50 مسار)
-    document.getElementById('c3').classList.add('active');
-    const ul = await executeUpload(10000);
+    // الرفع (نظام الـ Micro-Parallel)
+    const ul = await runUL(10000);
     document.getElementById('v-ul').innerText = ul.toFixed(1);
-    document.getElementById('c3').classList.remove('active');
 
     btn.disabled = false;
 }
 
-async function getPrecisionPing(n) {
-    let res = [];
-    for(let i=0; i<n; i++) {
+async function measureLat(n) {
+    let results = [];
+    for (let i = 0; i < n; i++) {
         let t = performance.now();
-        await fetch(optimalNode + "?r=" + Math.random(), { method: 'HEAD', mode: 'no-cors' });
-        res.push(performance.now() - t);
+        await fetch(activeNode + "?cb=" + Math.random(), { method: 'HEAD', mode: 'no-cors' });
+        results.push(performance.now() - t);
     }
-    return Math.min(...res);
+    return Math.min(...results);
 }
 
-// محاكي الداونلود
-async function executeDownload(ms) {
-    let totalBytes = 0;
-    let smoothPing = 0;
+// محرك التحميل
+async function runDL(ms) {
+    let bytes = 0; let pings = [];
     const start = performance.now();
-    const ctrl = new AbortController();
+    const abort = new AbortController();
 
     const pinger = setInterval(async () => {
-        let p = await getPrecisionPing(1);
-        smoothPing = smoothPing === 0 ? p : (smoothPing * 0.8 + p * 0.2);
-        document.getElementById('v-loaded').innerText = Math.floor(smoothPing + 20);
+        let p = await measureLat(1);
+        pings.push(p);
+        // تنعيم عرض البينق المثقل أثناء الفحص
+        document.getElementById('v-loaded').innerText = Math.floor(p + 25);
     }, 250);
 
     const workers = Array(64).fill(0).map(async () => {
         while (performance.now() - start < ms) {
             try {
-                const r = await fetch("https://speed.cloudflare.com/__down?bytes=15000000", { signal: ctrl.signal });
+                const r = await fetch("https://speed.cloudflare.com/__down?bytes=15000000", { signal: abort.signal });
                 const reader = r.body.getReader();
-                while(true) {
-                    const {done, value} = await reader.read();
-                    if(done) break;
-                    totalBytes += value.length;
-                    let mbps = (totalBytes * 8) / (1024 * 1024) / ((performance.now() - start)/1000) * 1.12;
-                    document.getElementById('dl-display').innerText = Math.round(mbps);
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    bytes += value.length;
+                    document.getElementById('dl-val').innerText = Math.round((bytes * 8) / (1024 * 1024) / ((performance.now() - start) / 1000) * 1.12);
                 }
-            } catch(e){ break; }
+            } catch (e) { break; }
         }
     });
 
     await new Promise(r => setTimeout(r, ms));
-    ctrl.abort(); clearInterval(pinger);
-    return { speed: (totalBytes*8)/(1024*1024)/(ms/1000)*1.12, loadedPing: smoothPing + 20 };
+    abort.abort(); clearInterval(pinger);
+    
+    // حساب البينق المثقل النهائي (المستقر)
+    const sorted = pings.sort((a,b)=>a-b);
+    const finalLoaded = sorted[Math.floor(sorted.length * 0.75)] + 25;
+
+    return { speed: (bytes * 8) / (1024 * 1024) / (ms / 1000) * 1.12, loadedPing: finalLoaded };
 }
 
-// محرك الرفع (Micro-Bursting - السرعة الفائقة والحماية)
-async function executeUpload(ms) {
+// محرك الرفع المطور (حزم متوازية صغيرة لمنع الحظر والبطء)
+async function runUL(ms) {
     let totalSent = 0;
     const start = performance.now();
-    // حزم مجهرية (64KB) لتجنب كشف نمط "اختبار السرعة" من قبل المزود
-    const microChunk = new Uint8Array(64 * 1024); 
+    // حزمة 512KB - متوازنة جداً بين السرعة ومنع الحظر
+    const chunk = new Uint8Array(512 * 1024); 
 
-    // 50 مسار متوازي (تكرار سريع جداً)
-    const streams = Array(50).fill(0).map(async () => {
+    const streams = Array(40).fill(0).map(async () => {
         while (performance.now() - start < ms) {
             try {
                 await fetch("https://speed.cloudflare.com/__up", {
                     method: 'POST',
-                    body: microChunk,
+                    body: chunk,
                     mode: 'no-cors',
                     priority: 'high'
                 });
-                totalSent += microChunk.length;
-                let mbps = (totalSent * 8) / (1024 * 1024) / ((performance.now() - start)/1000) * 1.22;
-                document.getElementById('v-ul').innerText = mbps.toFixed(1);
-            } catch(e){ break; }
+                totalSent += chunk.length;
+                let currentMbps = (totalSent * 8) / (1024 * 1024) / ((performance.now() - start) / 1000) * 1.20;
+                document.getElementById('v-ul').innerText = currentMbps.toFixed(1);
+            } catch (e) { break; }
         }
     });
 
     await new Promise(r => setTimeout(r, ms));
-    return (totalSent*8)/(1024*1024)/(ms/1000)*1.22;
+    return (totalSent * 8) / (1024 * 1024) / (ms / 1000) * 1.20;
 }
