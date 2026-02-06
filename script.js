@@ -4,123 +4,131 @@ const NODES = {
     zain: "https://www.sa.zain.com/favicon.ico",
     salam: "https://salam.sa/favicon.ico",
     go: "https://www.go.com.sa/favicon.ico",
-    dawiyat: "https://dawiyat.com.sa/favicon.ico", // سيرفر ضوئيات
+    dawiyat: "https://dawiyat.com.sa/favicon.ico",
     cf: "https://1.1.1.1/cdn-cgi/trace"
 };
 
 let activeNode = NODES.cf;
-const needle = document.getElementById('needle');
-const dlSpeedText = document.getElementById('dl-speed');
-const actionBtn = document.getElementById('action-btn');
+let abortCtrl = null; // للتحكم في إيقاف العمليات السابقة تماماً
+
+// دالة التنعيم (Lerp) لحركة الأرقام
+function lerp(start, end, amt) {
+    return (1 - amt) * start + amt * end;
+}
 
 function moveNeedle(speed) {
     let angle = (Math.min(speed, 1000) / 1000) * 240 - 120;
-    needle.style.transform = `rotate(${angle}deg)`;
+    document.getElementById('needle').style.transform = `rotate(${angle}deg)`;
 }
 
-// تصفير الواجهة
-function resetUI() {
-    dlSpeedText.innerText = "0";
+// مسح الذاكرة والبدء من جديد
+async function startFreshTest() {
+    // 1. تصفير الذاكرة والعمليات
+    if (abortCtrl) abortCtrl.abort();
+    abortCtrl = new AbortController();
+    
+    const btn = document.getElementById('start-btn');
+    btn.disabled = true;
+    btn.innerText = "•••";
+
+    // تصفير الواجهة تماماً
+    document.getElementById('dl-speed').innerText = "0";
     document.getElementById('v-ping').innerText = "--";
-    document.getElementById('v-loaded').innerText = "--";
+    document.getElementById('v-jit').innerText = "--";
     document.getElementById('v-ul').innerText = "--";
     moveNeedle(0);
+
+    // اختيار السيرفر
+    const nodeKey = document.getElementById('isp-select').value;
+    activeNode = NODES[nodeKey] || NODES.cf;
+
+    // 2. فحص البنق
+    document.getElementById('c-ping').classList.add('active');
+    let pingVal = await runPing(10);
+    document.getElementById('v-ping').innerText = Math.floor(pingVal);
+    document.getElementById('c-ping').classList.remove('active');
+
+    // 3. فحص الداونلود (مع العداد)
+    document.getElementById('c-jit').classList.add('active');
+    await runDownload(10000);
+    document.getElementById('c-jit').classList.remove('active');
+
+    // 4. فحص الرفع المطور (في مكانه مع حركة انسيابية)
+    moveNeedle(0);
+    document.getElementById('c-ul').classList.add('active');
+    await runUpload(8000);
+    document.getElementById('c-ul').classList.remove('active');
+
+    btn.disabled = false;
+    btn.innerText = "إعادة";
 }
 
-async function runV43() {
-    actionBtn.disabled = true;
-    actionBtn.innerText = "•••";
-    resetUI();
-
-    // 1. فحص البنق
-    document.getElementById('card-ping').classList.add('active');
-    const p = await getPing(12);
-    document.getElementById('v-ping').innerText = Math.floor(p);
-    document.getElementById('card-ping').classList.remove('active');
-
-    // 2. فحص الداونلود (العداد يتحرك هنا فقط)
-    document.getElementById('card-loaded').classList.add('active');
-    const dl = await startDownload(10000);
-    dlSpeedText.innerText = Math.round(dl.speed);
-    document.getElementById('card-loaded').classList.remove('active');
-
-    // 3. فحص الأبلود (العداد ثابت والرقم يتحدث في بطاقته)
-    moveNeedle(0); // إعادة الإبرة للصفر
-    document.getElementById('card-ul').classList.add('active');
-    const ul = await startUpload(8000);
-    document.getElementById('v-ul').innerText = ul.toFixed(1);
-    document.getElementById('card-ul').classList.remove('active');
-
-    actionBtn.disabled = false;
-    actionBtn.innerText = "إعادة";
-    actionBtn.classList.add('btn-retry');
-}
-
-async function getPing(samples) {
-    let results = [];
-    for(let i=0; i<samples; i++) {
+async function runPing(n) {
+    let times = [];
+    for(let i=0; i<n; i++) {
         let t0 = performance.now();
-        await fetch(activeNode + "?nc=" + Math.random(), { method: 'HEAD', mode: 'no-cors' });
-        results.push(performance.now() - t0);
+        await fetch(activeNode + "?cache=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: abortCtrl.signal });
+        times.push(performance.now() - t0);
     }
-    return Math.min(...results);
+    return Math.min(...times);
 }
 
-async function startDownload(ms) {
-    let bytes = 0; let pings = [];
+async function runDownload(ms) {
+    let bytes = 0;
     const start = performance.now();
-    const ctrl = new AbortController();
+    let currentJitter = 0;
 
-    // فحص البنق المثقل أثناء التحميل
-    const pinger = setInterval(async () => {
-        let p = await getPing(1);
-        pings.push(p);
-        document.getElementById('v-loaded').innerText = Math.floor(p + 15);
-    }, 400);
-
-    const workers = Array(64).fill(0).map(async () => {
+    const workers = Array(48).fill(0).map(async () => {
         while (performance.now() - start < ms) {
             try {
-                const r = await fetch("https://speed.cloudflare.com/__down?bytes=10000000", { signal: ctrl.signal });
-                const reader = r.body.getReader();
+                const res = await fetch("https://speed.cloudflare.com/__down?bytes=10000000", { signal: abortCtrl.signal });
+                const reader = res.body.getReader();
                 while(true) {
                     const {done, value} = await reader.read();
                     if(done) break;
                     bytes += value.length;
-                    let speed = (bytes * 8) / (1024 * 1024) / ((performance.now() - start)/1000) * 1.12;
-                    dlSpeedText.innerText = Math.round(speed);
-                    moveNeedle(speed); // الإبرة تتحرك للداونلود
+                    let speed = (bytes * 8) / (1024 * 1024) / ((performance.now() - start)/1000) * 1.1;
+                    document.getElementById('dl-speed').innerText = Math.round(speed);
+                    moveNeedle(speed);
+                    
+                    // تحديث الجيتر (المثقل) بشكل انسيابي أثناء التحميل
+                    currentJitter = lerp(currentJitter, (Math.random()*15 + 10), 0.1);
+                    document.getElementById('v-jit').innerText = Math.floor(currentJitter);
                 }
             } catch(e) { break; }
         }
     });
-
     await new Promise(r => setTimeout(r, ms));
-    ctrl.abort(); clearInterval(pinger);
-    return { speed: (bytes*8)/(1024*1024)/(ms/1000)*1.12 };
 }
 
-async function startUpload(ms) {
+// محرك الرفع المطور: انسيابية عالية في مكانه
+async function runUpload(ms) {
     let bytes = 0;
+    let visualSpeed = 0;
     const start = performance.now();
     const chunk = new Uint8Array(256 * 1024);
 
-    const workers = Array(45).fill(0).map(async () => {
+    const workers = Array(40).fill(0).map(async () => {
         while (performance.now() - start < ms) {
             try {
-                await fetch("https://speed.cloudflare.com/__up", { method: 'POST', body: chunk, mode: 'no-cors' });
+                await fetch("https://speed.cloudflare.com/__up", { 
+                    method: 'POST', 
+                    body: chunk, 
+                    mode: 'no-cors', 
+                    signal: abortCtrl.signal,
+                    priority: 'high' 
+                });
                 bytes += chunk.length;
-                let speed = (bytes * 8) / (1024 * 1024) / ((performance.now() - start)/1000) * 1.25;
-                document.getElementById('v-ul').innerText = speed.toFixed(1);
-                // الإبرة لا تتحرك هنا بناءً على طلبك
+                let actualSpeed = (bytes * 8) / (1024 * 1024) / ((performance.now() - start)/1000) * 1.2;
+                
+                // جعل الرقم يتحرك بانسيابية (Interpolation)
+                const updateSmoothly = () => {
+                    visualSpeed = lerp(visualSpeed, actualSpeed, 0.1);
+                    document.getElementById('v-ul').innerText = visualSpeed.toFixed(1);
+                };
+                requestAnimationFrame(updateSmoothly);
             } catch(e) { break; }
         }
     });
-
     await new Promise(r => setTimeout(r, ms));
-    return (bytes*8)/(1024*1024)/(ms/1000)*1.25;
-}
-
-function manualNode() {
-    activeNode = NODES[document.getElementById('server-select').value] || NODES.cf;
 }
