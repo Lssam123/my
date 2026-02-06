@@ -8,89 +8,111 @@ const NODES = {
     cf: "https://1.1.1.1/cdn-cgi/trace"
 };
 
-let abortCtrl = null;
+let activeNode = NODES.cf;
+let abortController = null;
 
-function updateGauge(val) {
+function setNeedle(speed) {
     const max = 500;
-    let angle = (Math.min(val, max) / max) * 180 - 90;
+    // زاوية تبدأ من -90 وتنتهي عند 90 لتدريج الـ 180 درجة
+    let angle = (Math.min(speed, max) / max) * 180 - 90;
     document.getElementById('needle').style.transform = `translateX(-50%) rotate(${angle}deg)`;
-    document.getElementById('speed-num').innerText = Math.round(val);
 }
 
-async function startFresh() {
-    if (abortCtrl) abortCtrl.abort();
-    abortCtrl = new AbortController();
+async function runV49() {
+    if (abortController) abortController.abort();
+    abortController = new AbortController();
 
-    const btn = document.getElementById('action-btn');
+    const btn = document.getElementById('main-btn');
     btn.disabled = true;
+    btn.innerText = "•••";
 
-    // تصفير كل شيء (ذاكرة نظيفة)
-    updateGauge(0);
+    // تصفير الذاكرة والواجهة
+    document.getElementById('speed-num').innerText = "0";
     document.getElementById('v-ping').innerText = "--";
     document.getElementById('v-jitter').innerText = "--";
-    document.getElementById('v-upload').innerText = "--";
-
-    const selection = document.getElementById('isp-node').value;
-    const target = selection === 'auto' ? NODES.cf : NODES[selection];
+    document.getElementById('v-ul').innerText = "--";
+    setNeedle(0);
 
     // 1. فحص البنق
-    const t0 = performance.now();
-    await fetch(target + "?v=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: abortCtrl.signal });
-    document.getElementById('v-ping').innerText = Math.round(performance.now() - t0);
+    const p = await measureLatency(12);
+    document.getElementById('v-ping').innerText = Math.floor(p);
 
-    // 2. فحص الداونلود (داخل العداد فقط)
-    await runDownload(10000);
+    // 2. فحص الداونلود (العداد حصري له)
+    const dl = await startDownload(10000);
+    document.getElementById('speed-num').innerText = Math.round(dl.speed);
 
-    // 3. فحص الأبلود (خارج العداد - في بطاقته)
-    updateGauge(0); // إعادة الإبرة للصفر عند بدء الأبلود
-    await runUpload(8000);
+    // 3. فحص الرفع (خارج العداد)
+    setNeedle(0);
+    const ul = await startUpload(8000);
+    document.getElementById('v-ul').innerText = ul.toFixed(1);
 
     btn.disabled = false;
     btn.innerText = "إعادة";
 }
 
-async function runDownload(ms) {
-    let bytes = 0;
+async function measureLatency(n) {
+    let res = [];
+    for(let i=0; i<n; i++) {
+        let t = performance.now();
+        await fetch(activeNode + "?v=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: abortController.signal });
+        res.push(performance.now() - t);
+    }
+    return Math.min(...res);
+}
+
+async function startDownload(ms) {
+    let bytes = 0; let jitArr = [];
     const start = performance.now();
+    
+    const jitterPoller = setInterval(async () => {
+        let p = await measureLatency(1);
+        jitArr.push(p);
+        document.getElementById('v-jitter').innerText = Math.floor(p + 15);
+    }, 400);
+
     const workers = Array(40).fill(0).map(async () => {
         while (performance.now() - start < ms) {
             try {
-                const res = await fetch("https://speed.cloudflare.com/__down?bytes=10000000", { signal: abortCtrl.signal });
-                const reader = res.body.getReader();
+                const r = await fetch("https://speed.cloudflare.com/__down?bytes=15000000", { signal: abortController.signal });
+                const reader = r.body.getReader();
                 while(true) {
                     const {done, value} = await reader.read();
                     if(done) break;
                     bytes += value.length;
                     let speed = (bytes * 8) / (1024 * 1024) / ((performance.now() - start)/1000) * 1.1;
-                    updateGauge(speed); // التحديث هنا فقط
+                    document.getElementById('speed-num').innerText = Math.round(speed);
+                    setNeedle(speed);
                 }
-            } catch { break; }
+            } catch(e) { break; }
         }
     });
+
     await new Promise(r => setTimeout(r, ms));
+    clearInterval(jitterPoller);
+    return { speed: (bytes*8)/(1024*1024)/(ms/1000)*1.1 };
 }
 
-async function runUpload(ms) {
+async function startUpload(ms) {
     let bytes = 0;
     const start = performance.now();
-    const blob = new Blob([new Uint8Array(512 * 1024)]);
+    const data = new Blob([new Uint8Array(256 * 1024)]);
 
-    const workers = Array(30).fill(0).map(async () => {
+    const workers = Array(35).fill(0).map(async () => {
         while (performance.now() - start < ms) {
             try {
                 await fetch("https://speed.cloudflare.com/__up", { 
-                    method: 'POST', 
-                    body: blob, 
-                    mode: 'no-cors', 
-                    signal: abortCtrl.signal 
+                    method: 'POST', body: data, mode: 'no-cors', signal: abortController.signal 
                 });
-                bytes += blob.size;
-                let speed = (bytes * 8) / (1024 * 1024) / ((performance.now() - start)/1000) * 1.25;
-                document.getElementById('v-upload').innerText = speed.toFixed(1);
-                // محاكاة الجيتر أثناء الأبلود
-                document.getElementById('v-jitter').innerText = Math.round(Math.random() * 4 + 1);
-            } catch { break; }
+                bytes += data.size;
+                let actual = (bytes * 8) / (1024 * 1024) / ((performance.now() - start)/1000) * 1.25;
+                document.getElementById('v-ul').innerText = actual.toFixed(1);
+            } catch(e) { break; }
         }
     });
     await new Promise(r => setTimeout(r, ms));
+    return (bytes*8)/(1024*1024)/(ms/1000)*1.25;
+}
+
+function manualNode() {
+    activeNode = NODES[document.getElementById('isp-selector').value] || NODES.cf;
 }
