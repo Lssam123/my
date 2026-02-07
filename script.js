@@ -1,4 +1,4 @@
-const ISP_HOSTS = {
+const NODES = {
     stc: "https://www.stc.com.sa/favicon.ico",
     mobily: "https://www.mobily.com.sa/favicon.ico",
     zain: "https://www.sa.zain.com/favicon.ico",
@@ -10,93 +10,94 @@ const ISP_HOSTS = {
 let ctrl = null;
 let activeUrl = "";
 
-// إعداد التدريج
-const marks = document.getElementById('gauge-marks');
+// إنشاء التدريج
+const ticks = document.getElementById('gauge-ticks');
 [0, 100, 200, 300, 400, 500].forEach(v => {
     let a = (v / 500 * 240) - 120;
-    marks.innerHTML += `<span style="--a: ${a}deg">${v}</span>`;
+    ticks.innerHTML += `<span style="--a: ${a}deg">${v}</span>`;
 });
 
 function moveNeedle(v) {
     const n = document.getElementById('needle');
     let a = (Math.min(v, 500) / 500 * 240) - 120;
     n.style.transform = `translate(-50%, -100%) rotate(${a}deg)`;
-    document.getElementById('speed-display').innerText = Math.round(v);
+    document.getElementById('main-speed').innerText = Math.round(v);
 }
 
-async function igniteEngine() {
+async function startEngine() {
     if(ctrl) ctrl.abort();
     ctrl = new AbortController();
     
-    document.getElementById('ignite-btn').disabled = true;
+    document.getElementById('start-btn').disabled = true;
     moveNeedle(0);
-    ["ping-val", "load-val", "up-val"].forEach(id => document.getElementById(id).innerText = "--");
+    ["res-ping", "res-load", "res-ul"].forEach(id => document.getElementById(id).innerText = "--");
 
     const sel = document.getElementById('server-selector').value;
-    activeUrl = (sel === 'auto') ? ISP_HOSTS[await getBestNode()] : ISP_HOSTS[sel];
+    activeUrl = (sel === 'auto') ? NODES[await getBest()] : NODES[sel];
 
-    // 1. فحص البنق (بأقل زمن استجابة مستقر)
-    document.getElementById('status-display').innerText = "تحليل الاستجابة...";
-    document.getElementById('ping-val').innerText = await runPing(4000);
+    // 1. فحص البنق (نظام سبيد تست للحد الأدنى المستقر)
+    document.getElementById('status-label').innerText = "تحليل الاستجابة...";
+    document.getElementById('res-ping').innerText = await runPrecisionPing(5000);
 
-    // 2. التحميل (البيانات المستمرة)
-    document.getElementById('status-display').innerText = "اختبار التحميل...";
-    await runDownload(12000);
+    // 2. فحص التحميل + البنق المثقل (15 ثانية)
+    document.getElementById('status-label').innerText = "جارِ التحميل...";
+    await runMultiDownload(15000);
 
-    // 3. الرفع التوربيني (نظام الـ TCP المتقدم)
-    document.getElementById('status-display').innerText = "بدء الرفع المتعدد (TCP X12)...";
-    moveNeedle(0);
-    await runRampedUpload(15000);
+    // 3. فحص الرفع (التصاعدي - 15 ثانية)
+    document.getElementById('status-label').innerText = "جارِ الرفع...";
+    moveNeedle(0); 
+    await runSmartUpload(15000);
 
-    document.getElementById('status-display').innerText = "تم الفحص بنجاح";
-    document.getElementById('ignite-btn').disabled = false;
+    document.getElementById('status-label').innerText = "اكتمل الاختبار";
+    document.getElementById('start-btn').disabled = false;
 }
 
-async function getBestNode() {
-    const keys = Object.keys(ISP_HOSTS);
+async function getBest() {
+    const keys = Object.keys(NODES);
     const checks = await Promise.all(keys.map(async k => {
         let t0 = performance.now();
-        try { await fetch(ISP_HOSTS[k] + "?t=" + Date.now(), { method: 'HEAD', mode: 'no-cors' }); 
+        try { await fetch(NODES[k] + "?t=" + Date.now(), { method: 'HEAD', mode: 'no-cors' }); 
         return { k, p: performance.now() - t0 }; } catch { return { k, p: 999 }; }
     }));
     return checks.sort((a,b) => a.p - b.p)[0].k;
 }
 
-async function runPing(ms) {
-    let list = [];
+// البنق الصافي (Idle Ping) - Minimum Latency
+async function runPrecisionPing(duration) {
+    let samples = [];
     const start = performance.now();
-    while (performance.now() - start < ms) {
+    while (performance.now() - start < duration) {
         let t0 = performance.now();
         try {
             await fetch(activeUrl + "?p=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: ctrl.signal });
-            list.push(performance.now() - t0);
+            samples.push(performance.now() - t0);
         } catch {}
         await new Promise(r => setTimeout(r, 100));
     }
-    return list.length ? Math.round(Math.min(...list)) : "--";
+    return samples.length ? Math.round(Math.min(...samples)) : "--";
 }
 
-async function runDownload(ms) {
-    let bytes = 0; let pings = [];
+// التحميل مع مراقبة المثقل
+async function runMultiDownload(ms) {
+    let bytes = 0; let loadPings = [];
     const start = performance.now();
     const dlAbort = new AbortController();
 
-    // البنق المثقل بانسيابية عالية
     const pinger = setInterval(async () => {
         let t0 = performance.now();
         try {
             await fetch(activeUrl + "?lp=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: ctrl.signal });
-            let raw = performance.now() - t0;
-            if(raw < 600) pings.push(raw);
-            let avg = pings.slice(-5).reduce((a,b)=>a+b, 0) / Math.min(pings.length, 5);
-            document.getElementById('load-val').innerText = Math.round(avg + 5);
+            let raw = performance.now() - t0 + 5;
+            if(raw < 600) loadPings.push(raw);
+            let avg = loadPings.slice(-5).reduce((a,b)=>a+b, 0) / Math.min(loadPings.length, 5);
+            document.getElementById('res-load').innerText = Math.round(avg);
         } catch {}
-    }, 400);
+    }, 450);
 
-    const workers = Array(35).fill(0).map(async () => {
+    const workers = Array(40).fill(0).map(async () => {
         while (performance.now() - start < ms && !dlAbort.signal.aborted) {
             try {
-                const res = await fetch("https://speed.cloudflare.com/__down?bytes=10000000", { signal: dlAbort.signal });
+                const res = await fetch("https://speed.cloudflare.com/__down?bytes=15000000", { signal: dlAbort.signal });
                 const r = res.body.getReader();
                 while(true) {
                     const {done, value} = await r.read();
@@ -113,67 +114,41 @@ async function runDownload(ms) {
     clearInterval(pinger);
 }
 
-// محرك الرفع المتقدم (TCP Ramp-up & Multi-stream)
-async function runRampedUpload(ms) {
+// الرفع الذكي (TCP Parallel Ramp-up)
+async function runSmartUpload(ms) {
     let totalBytes = 0;
     let peakSpeeds = [];
     const start = performance.now();
-    
-    // إنشاء بيانات عشوائية تماماً لمنع الكاش والضغط
-    const generateRandomData = (size) => {
-        const data = new Uint8Array(size);
-        crypto.getRandomValues(data);
-        return data;
-    };
+    const data = new Uint8Array(512 * 1024);
+    crypto.getRandomValues(data); // بيانات عشوائية لمنع الضغط
 
-    const uploadWorker = async (connections) => {
-        const payload = generateRandomData(512 * 1024); // حزمة 512KB لزيادة المرونة
+    const worker = async () => {
         while (performance.now() - start < ms) {
             try {
-                await new Promise((resolve, reject) => {
+                await new Promise((res, rej) => {
                     const xhr = new XMLHttpRequest();
                     xhr.open("POST", "https://speed.cloudflare.com/__up", true);
                     xhr.onload = () => {
-                        totalBytes += payload.length;
-                        resolve();
+                        totalBytes += data.length;
+                        let elapsed = (performance.now() - start) / 1000;
+                        let speed = (totalBytes * 8) / (1024 * 1024) / elapsed * 1.3;
+                        peakSpeeds.push(speed);
+                        document.getElementById('res-ul').innerText = speed.toFixed(1);
+                        res();
                     };
-                    xhr.onerror = reject;
-                    xhr.send(payload);
+                    xhr.onerror = rej;
+                    xhr.send(data);
                 });
-            } catch { await new Promise(r => setTimeout(r, 50)); }
+            } catch { await new Promise(r => setTimeout(r, 100)); }
         }
     };
 
-    // نظام التصعيد التلقائي للاتصالات
-    const rampUp = async () => {
-        // البدء بـ 4 اتصالات
-        let conns = [uploadWorker(), uploadWorker(), uploadWorker(), uploadWorker()];
-        
-        // مراقبة الأداء كل 200ms
-        const monitor = setInterval(() => {
-            let elapsed = (performance.now() - start) / 1000;
-            let currentSpeed = (totalBytes * 8) / (1024 * 1024) / elapsed * 1.3;
-            peakSpeeds.push(currentSpeed);
-            
-            // تحديث العداد
-            document.getElementById('up-val').innerText = currentSpeed.toFixed(1);
-            
-            // تصعيد الاتصالات بناءً على الزمن (TCP slow start skip)
-            if (elapsed > 3 && conns.length < 8) {
-                conns.push(uploadWorker(), uploadWorker(), uploadWorker(), uploadWorker());
-            }
-            if (elapsed > 7 && conns.length < 12) {
-                conns.push(uploadWorker(), uploadWorker(), uploadWorker(), uploadWorker());
-            }
-        }, 200);
-
-        await new Promise(r => setTimeout(r, ms));
-        clearInterval(monitor);
-    };
-
-    await rampUp();
-
-    // حساب الـ Sustained Peak (أعلى معدل ثابت في آخر ثانيتين)
-    let sustainedPeak = Math.max(...peakSpeeds.slice(-10));
-    document.getElementById('up-val').innerText = sustainedPeak.toFixed(1);
+    // تشغيل 12 قناة متزامنة (نفس منطق Speedtest للأجهزة القوية)
+    await Promise.all(Array(12).fill(0).map(() => worker()));
+    
+    // اعتماد أعلى معدل مستقر في آخر 2 ثانية
+    if(peakSpeeds.length > 5) {
+        let sustained = Math.max(...peakSpeeds.slice(-10));
+        document.getElementById('res-ul').innerText = sustained.toFixed(1);
+    }
 }
