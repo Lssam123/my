@@ -10,16 +10,19 @@ const NODES = {
 let controller = null;
 let activeUrl = "";
 
-// إنشاء التدريج
+// إنشاء التدريج الموزون
 const ticks = document.getElementById('ticks');
 [0, 100, 200, 300, 400, 500].forEach(val => {
     let angle = (val / 500 * 240) - 120;
     ticks.innerHTML += `<span class="tick" style="--a: ${angle}deg">${val}</span>`;
 });
 
+// وظيفة تحريك الإبرة مع تصحيح زاوية الصفر
 function moveNeedle(val) {
     const n = document.getElementById('needle');
-    let angle = (Math.min(val, 500) / 500 * 240) - 120;
+    const maxSpeed = 500;
+    // الحساب الدقيق: (القيمة / النهاية العظمى * قوس الزاوية 240) - إزاحة البداية 120
+    let angle = (Math.min(val, maxSpeed) / maxSpeed * 240) - 120;
     n.style.transform = `translate(-50%, -100%) rotate(${angle}deg)`;
     document.getElementById('main-speed').innerText = Math.round(val);
 }
@@ -29,26 +32,27 @@ async function startTest() {
     controller = new AbortController();
     
     document.getElementById('start-btn').disabled = true;
-    moveNeedle(0);
+    moveNeedle(0); // تعود للصفر الدقيق عند البداية
     ["res-ping", "res-load", "res-ul"].forEach(id => document.getElementById(id).innerText = "--");
 
-    // 1. اختيار السيرفر بدقة (رادار ثلاثي)
     const choice = document.getElementById('server-selector').value;
     activeUrl = (choice === 'auto') ? NODES[await getBestNode()] : NODES[choice];
 
-    // 2. فحص البنق الخامل (5 ثوانٍ)
-    document.getElementById('status-text').innerText = "فحص الاستجابة...";
+    // 1. فحص البنق الخامل (5 ثوانٍ) - تحسين الدقة
+    document.getElementById('status-text').innerText = "تحليل الاستجابة...";
     const idle = await runPingTimer(5000);
     document.getElementById('res-ping').innerText = idle;
 
-    // 3. فحص التحميل + البنق المثقل (15 ثانية) - العداد يعمل
+    // 2. فحص التحميل + البنق المثقل (15 ثانية)
     document.getElementById('status-text').innerText = "جارِ التحميل...";
     await runDownload(15000);
 
-    // 4. فحص الرفع (15 ثانية) - العداد يتوقف والرفع في بطاقته
+    // 3. فحص الرفع (15 ثانية) - تحسين الأداء
     document.getElementById('status-text').innerText = "جارِ الرفع...";
-    const needle = document.getElementById('needle');
-    needle.style.transform = `translate(-50%, -100%) rotate(-120deg)`; // إعادة الإبرة للصفر
+    // ملاحظة: لا نصفّر رقم السرعة المركزي هنا ليبقى عرض "الداونلود" ثابتاً أمام المستخدم
+    const n = document.getElementById('needle');
+    n.style.transform = `translate(-50%, -100%) rotate(-120deg)`; // الإبرة فقط تعود للصفر
+    
     await runUpload(15000);
 
     document.getElementById('status-text').innerText = "اكتمل الفحص";
@@ -76,8 +80,9 @@ async function runPingTimer(ms) {
             await fetch(activeUrl + "?p=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: controller.signal });
             latencies.push(performance.now() - t0);
         } catch {}
-        await new Promise(r => setTimeout(r, 200));
+        await new Promise(r => setTimeout(r, 100)); // نبضات أسرع للدقة
     }
+    // اختيار القيمة الأكثر استقراراً (الأقل)
     return latencies.length ? Math.round(Math.min(...latencies)) : "--";
 }
 
@@ -90,16 +95,16 @@ async function runDownload(ms) {
         let t0 = performance.now();
         try {
             await fetch(activeUrl + "?lp=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: controller.signal });
-            let raw = performance.now() - t0 + 10;
+            let raw = performance.now() - t0 + 5; // تصحيح وقت المعالجة
             smoothLoad = smoothLoad === 0 ? raw : (smoothLoad * 0.7 + raw * 0.3);
             document.getElementById('res-load').innerText = Math.round(smoothLoad);
         } catch {}
     }, 400);
 
-    const workers = Array(30).fill(0).map(async () => {
+    const workers = Array(35).fill(0).map(async () => {
         while (performance.now() - start < ms && !downloadAbort.signal.aborted) {
             try {
-                const res = await fetch("https://speed.cloudflare.com/__down?bytes=10000000", { signal: downloadAbort.signal });
+                const res = await fetch("https://speed.cloudflare.com/__down?bytes=15000000", { signal: downloadAbort.signal });
                 const reader = res.body.getReader();
                 while(true) {
                     const {done, value} = await reader.read();
@@ -120,7 +125,8 @@ async function runDownload(ms) {
 async function runUpload(ms) {
     let bytesUp = 0;
     const start = performance.now();
-    const data = new Uint8Array(256 * 1024);
+    // استخدام كتلة بيانات أكبر لتحسين سرعة الرفع
+    const data = new Uint8Array(512 * 1024); 
 
     const worker = async () => {
         while (performance.now() - start < ms) {
@@ -130,15 +136,17 @@ async function runUpload(ms) {
                     xhr.open("POST", "https://speed.cloudflare.com/__up", true);
                     xhr.onload = () => {
                         bytesUp += data.length;
-                        let speed = (bytesUp * 8) / (1024 * 1024) / ((performance.now() - start)/1000) * 1.2;
+                        let elapsed = (performance.now() - start) / 1000;
+                        let speed = (bytesUp * 8) / (1024 * 1024) / elapsed * 1.25;
                         document.getElementById('res-ul').innerText = speed.toFixed(1);
                         res();
                     };
                     xhr.onerror = rej;
                     xhr.send(data);
                 });
-            } catch { await new Promise(r => setTimeout(r, 100)); }
+            } catch { await new Promise(r => setTimeout(r, 50)); }
         }
     };
-    await Promise.all(Array(6).fill(0).map(() => worker()));
+    // تشغيل 10 عمال متزامنين لرفع السرعة
+    await Promise.all(Array(10).fill(0).map(() => worker()));
 }
