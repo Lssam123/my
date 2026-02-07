@@ -1,41 +1,27 @@
-:root { --neon: #00f2fe; --purple: #7000ff; --bg: #010103; }
+:root { --neon: #00f2fe; --up-color: #7000ff; --bg: #010206; }
+body { background: var(--bg); color: white; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; font-family: 'Orbitron', sans-serif; overflow: hidden; }
+.cyber-bg { position: fixed; width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, #0d0d2b 0%, #010206 100%); z-index: -1; }
 
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-body { background: var(--bg); color: white; display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
+.app-container { width: 90%; max-width: 420px; padding: 30px; background: rgba(255,255,255,0.03); backdrop-filter: blur(50px); border-radius: 50px; border: 1px solid rgba(255,255,255,0.1); text-align: center; }
 
-.cyber-bg { position: fixed; width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, #10102b 0%, #010103 100%); z-index: -1; }
+.ultra-select { width: 100%; background: #000; color: var(--neon); border: 1px solid #333; padding: 14px; border-radius: 15px; font-weight: bold; margin-bottom: 25px; outline: none; text-align: center; }
 
-.master-hub { width: 90%; max-width: 440px; padding: 30px; background: rgba(255,255,255,0.02); backdrop-filter: blur(40px); border-radius: 40px; border: 1px solid rgba(255,255,255,0.08); text-align: center; }
+.engine-core { position: relative; width: 300px; height: 300px; margin: 0 auto; }
+.track-bg { fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 6; stroke-dasharray: 424; stroke-dashoffset: 0; transform: rotate(135deg); transform-origin: center; }
+.track-fill { fill: none; stroke: var(--neon); stroke-width: 6; stroke-dasharray: 565; stroke-dashoffset: 565; transition: 0.4s; transform: rotate(135deg); transform-origin: center; stroke-linecap: round; }
 
-.modern-select { width: 100%; background: #000; color: var(--neon); border: 1px solid #333; padding: 12px; border-radius: 12px; margin-bottom: 25px; outline: none; font-weight: bold; appearance: none; }
+.needle { position: absolute; top: 50%; left: 50%; width: 4px; height: 120px; background: linear-gradient(to top, var(--neon), transparent); transform-origin: 50% 100%; transform: translate(-50%, -100%) rotate(-120deg); transition: 0.4s cubic-bezier(0.1, 0.8, 0.2, 1); filter: drop-shadow(0 0 10px var(--neon)); z-index: 10; }
 
-/* هندسة العداد */
-.gauge-engine { position: relative; width: 300px; height: 300px; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
-.gauge-ring { width: 100%; height: 100%; position: absolute; }
-.base-track { fill: none; stroke: rgba(255,255,255,0.04); stroke-width: 6; transform: rotate(135deg); transform-origin: center; }
+.readout { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -35%); width: 100%; }
+#main-value { font-size: 6.5rem; font-weight: 900; line-height: 0.8; letter-spacing: -4px; }
+.test-type { font-size: 0.8rem; color: var(--neon); margin-top: 15px; font-weight: bold; text-transform: uppercase; letter-spacing: 3px; }
 
-/* الإبرة: معايرة الصفر الهندسي */
-.active-needle {
-    position: absolute; top: 50%; left: 50%; width: 3px; height: 110px;
-    background: linear-gradient(to top, var(--neon), transparent);
-    transform-origin: 50% 100%; /* الارتكاز في مركز الدائرة تماماً */
-    transform: translate(-50%, -100%) rotate(-120deg); /* محاذاة الصفر */
-    transition: 0.5s cubic-bezier(0.15, 0.85, 0.35, 1); filter: drop-shadow(0 0 10px var(--neon)); z-index: 10;
-}
+.gauge-marks span { position: absolute; top: 50%; left: 50%; font-size: 0.75rem; color: #444; font-weight: bold; transform: rotate(var(--a)) translate(0, -140px) rotate(calc(var(--a) * -1)); }
 
-.core-readout { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -35%); width: 100%; }
-#main-speed { font-size: 6rem; font-weight: 950; line-height: 0.8; letter-spacing: -3px; color: #fff; }
-.status-txt { font-size: 0.85rem; color: var(--neon); margin-top: 15px; font-weight: bold; letter-spacing: 2px; }
+.stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 40px; }
+.stat-item { background: rgba(0,0,0,0.5); padding: 15px 5px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); }
+.s-value { display: block; font-size: 1.4rem; font-weight: 900; color: var(--neon); }
+.s-label { font-size: 0.55rem; color: #666; display: block; margin-bottom: 5px; }
 
-.gauge-ticks span { position: absolute; top: 50%; left: 50%; font-size: 0.75rem; color: #444; font-weight: bold; transform: rotate(var(--a)) translate(0, -135px) rotate(calc(var(--a) * -1)); z-index: 1; }
-
-/* الكروت */
-.stats-panel { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 35px; }
-.stat-card { background: rgba(0,0,0,0.5); padding: 15px 5px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.04); }
-.stat-card .val { display: block; font-size: 1.5rem; font-weight: 900; color: var(--neon); }
-.stat-card .lbl { font-size: 0.6rem; color: #666; display: block; margin-bottom: 5px; }
-
-.ignite-btn { width: 100%; padding: 18px; margin-top: 25px; border-radius: 20px; background: transparent; border: 2px solid var(--neon); color: white; font-weight: 900; cursor: pointer; transition: 0.4s; }
-.ignite-btn:hover { background: var(--neon); color: black; box-shadow: 0 0 30px var(--neon); }
-
-@media (max-width: 400px) { .gauge-engine { width: 260px; height: 260px; } #main-speed { font-size: 4.5rem; } }
+.action-btn { width: 100%; padding: 20px; margin-top: 30px; border-radius: 20px; background: transparent; border: 2px solid var(--neon); color: white; font-weight: bold; cursor: pointer; transition: 0.4s; }
+.action-btn:hover { background: var(--neon); color: black; box-shadow: 0 0 30px var(--neon); }
