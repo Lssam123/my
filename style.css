@@ -1,72 +1,80 @@
 :root {
-    --neon: #00f2fe; --purple: #7000ff; --bg: #020205;
+    --neon: #00f2fe; --purple: #7000ff; --bg: #010103;
 }
 
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
 body {
-    background: var(--bg); margin: 0; overflow: hidden;
-    display: flex; justify-content: center; align-items: center;
-    height: 100vh; font-family: 'Segoe UI', sans-serif; color: white;
+    background: var(--bg); margin: 0; color: white;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    display: flex; justify-content: center; align-items: center; min-height: 100vh;
 }
 
 .cyber-bg {
-    position: absolute; width: 100%; height: 100%;
-    background: radial-gradient(circle at 50% 50%, #0d0d2b 0%, #020205 100%);
+    position: fixed; width: 100%; height: 100%;
+    background: radial-gradient(circle at 50% 50%, #0d0d2b 0%, #010103 100%);
     z-index: -1;
 }
 
-.master-hub {
-    width: 700px; padding: 30px; background: rgba(255,255,255,0.01);
-    backdrop-filter: blur(50px); border-radius: 50px; border: 1px solid rgba(255,255,255,0.1);
+.container {
+    width: 95%; max-width: 500px; padding: 20px;
+    background: rgba(255,255,255,0.02); backdrop-filter: blur(20px);
+    border-radius: 35px; border: 1px solid rgba(255,255,255,0.1);
     text-align: center;
 }
 
+.server-box { margin-bottom: 25px; }
+.server-box label { display: block; font-size: 0.7rem; color: #666; margin-bottom: 8px; font-weight: bold; }
 .modern-select {
-    background: #000; color: var(--neon); border: 1px solid #333;
-    padding: 8px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; direction: ltr;
+    width: 100%; background: #000; color: var(--neon); border: 1px solid #333;
+    padding: 12px; border-radius: 12px; font-size: 0.9rem; font-weight: bold; outline: none;
 }
 
-.gauge-world {
-    position: relative; width: 350px; height: 350px; margin: 0 auto;
+/* العداد */
+.gauge-section {
+    position: relative; width: 280px; height: 280px; margin: 0 auto;
     display: flex; align-items: center; justify-content: center;
 }
 
-.tick {
-    position: absolute; top: 50%; left: 50%;
-    transform: rotate(var(--angle)) translate(0, -135px) rotate(calc(var(--angle) * -1));
-    font-size: 0.8rem; font-weight: bold; color: #555;
-}
+.gauge-wrap { width: 100%; height: 100%; transform: rotate(135deg); }
+.bg-track { fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 6; }
 
-.main-gauge { width: 320px; height: 320px; transform: rotate(135deg); }
-.track { fill: none; stroke: rgba(255,255,255,0.04); stroke-width: 6; }
-
-.digital-needle {
-    position: absolute; top: 50%; left: 50%; width: 3px; height: 125px;
+.needle {
+    position: absolute; top: 50%; left: 50%; width: 3px; height: 100px;
     background: linear-gradient(to top, var(--neon), transparent);
     transform-origin: bottom center; transform: translate(-50%, -100%) rotate(-120deg);
-    filter: drop-shadow(0 0 8px var(--neon)); transition: 0.5s cubic-bezier(0.1, 0.8, 0.1, 1);
-    z-index: 5;
+    transition: 0.4s cubic-bezier(0.1, 0.8, 0.1, 1); z-index: 5;
 }
 
-.center-display {
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -40%); text-align: center; width: 100%;
+.display-center { position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); width: 100%; }
+#main-speed { font-size: 5rem; font-weight: 900; line-height: 1; }
+.status { font-size: 0.8rem; color: var(--neon); margin-top: 5px; font-weight: bold; }
+.unit { font-size: 0.7rem; color: #444; }
+
+/* أرقام التدريج */
+.tick {
+    position: absolute; top: 50%; left: 50%; font-size: 0.7rem; color: #444; font-weight: bold;
+    transform: rotate(var(--a)) translate(0, -120px) rotate(calc(var(--a) * -1));
 }
 
-#main-speed {
-    font-size: 6.5rem; font-weight: 900; line-height: 0.8;
-    background: linear-gradient(to bottom, #fff, var(--neon));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+/* شبكة النتائج */
+.results-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 30px; }
+.card { background: rgba(0,0,0,0.3); padding: 12px 5px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.05); }
+.card .value { display: block; font-size: 1.4rem; font-weight: 900; color: var(--neon); }
+.card .label { font-size: 0.55rem; color: #666; display: block; margin-bottom: 5px; }
+.card .ms { font-size: 0.5rem; color: #333; }
+.card.active { border-color: var(--neon); box-shadow: 0 0 10px rgba(0,242,254,0.1); }
+
+#start-btn {
+    width: 100%; padding: 15px; margin-top: 25px; border-radius: 15px;
+    background: transparent; border: 2px solid var(--neon); color: white;
+    font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.3s;
 }
+#start-btn:active { transform: scale(0.95); background: var(--neon); color: black; }
 
-.status-lbl { font-size: 0.75rem; color: var(--neon); letter-spacing: 2px; margin-top: 15px; font-weight: bold; }
-.mbps-unit { font-size: 0.7rem; color: #444; font-weight: bold; }
-
-.results-matrix { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 25px; }
-.res-card { background: rgba(0,0,0,0.4); padding: 15px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); }
-.res-card .val { font-size: 1.8rem; font-weight: 900; color: var(--neon); display: block; }
-.res-card .lbl { font-size: 0.65rem; color: #666; display: block; margin-bottom: 4px; }
-
-.ignite-btn {
-    width: 90px; height: 90px; border-radius: 50%; border: 2px solid var(--neon);
-    background: transparent; color: white; font-weight: bold; cursor: pointer; margin-top: 25px;
+/* تحسينات الجوال */
+@media (max-width: 400px) {
+    .gauge-section { width: 240px; height: 240px; }
+    #main-speed { font-size: 4rem; }
+    .card .value { font-size: 1.1rem; }
 }
