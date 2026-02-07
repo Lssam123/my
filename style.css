@@ -1,66 +1,67 @@
 :root {
-    --neon: #00f2fe; --purple: #7000ff; --bg: #020205; --glass: rgba(255, 255, 255, 0.03);
+    --neon: #00f2fe; --purple: #7000ff; --bg: #010208; --glass: rgba(255,255,255,0.02);
 }
 
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 body {
-    background: var(--bg); margin: 0; color: white; overflow: hidden;
-    font-family: 'Segoe UI', system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh;
+    background: var(--bg); color: white; min-height: 100vh;
+    display: flex; justify-content: center; align-items: center;
+    font-family: 'Orbitron', 'Segoe UI', sans-serif; overflow: hidden;
 }
 
 .cyber-bg {
     position: fixed; width: 100%; height: 100%;
-    background: radial-gradient(circle at 50% 50%, #0d0d2b 0%, #020205 100%); z-index: -1;
+    background: radial-gradient(circle at 50% 50%, #0d0d2b 0%, #010208 100%); z-index: -1;
 }
 
-.main-container {
-    width: 95%; max-width: 480px; padding: 30px;
-    background: var(--glass); backdrop-filter: blur(30px);
-    border-radius: 40px; border: 1px solid rgba(255,255,255,0.1); text-align: center;
+.main-hub {
+    width: 95%; max-width: 460px; padding: 35px;
+    background: var(--glass); backdrop-filter: blur(40px);
+    border-radius: 50px; border: 1px solid rgba(255,255,255,0.08); text-align: center;
+    box-shadow: 0 0 100px rgba(0,0,0,0.8);
 }
 
-.modern-select {
+.cyber-select {
     width: 100%; background: #000; color: var(--neon); border: 1px solid #333;
-    padding: 12px; border-radius: 15px; font-weight: bold; outline: none; margin-bottom: 25px;
+    padding: 14px; border-radius: 20px; font-weight: 900; outline: none; margin-bottom: 30px;
 }
 
-/* العداد - دقة هندسية */
-.gauge-engine {
-    position: relative; width: 300px; height: 300px; margin: 0 auto;
+/* العداد الهيدروليكي */
+.engine-room {
+    position: relative; width: 320px; height: 320px; margin: 0 auto;
     display: flex; align-items: center; justify-content: center;
 }
 
-.gauge-core { width: 100%; height: 100%; position: absolute; }
-.gauge-track { fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 5; transform: rotate(135deg); transform-origin: center; }
+.gauge-body { width: 100%; height: 100%; position: absolute; }
+.track-outline { fill: none; stroke: rgba(255,255,255,0.03); stroke-width: 4; transform: rotate(135deg); transform-origin: center; }
 
-.needle-shaft {
-    position: absolute; top: 50%; left: 50%; width: 3px; height: 110px;
+.needle-plasma {
+    position: absolute; top: 50%; left: 50%; width: 4px; height: 120px;
     background: linear-gradient(to top, var(--neon), transparent);
     transform-origin: bottom center; transform: translate(-50%, -100%) rotate(-120deg);
-    transition: 0.5s cubic-bezier(0.1, 0.8, 0.2, 1); filter: drop-shadow(0 0 10px var(--neon)); z-index: 5;
+    transition: 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); filter: drop-shadow(0 0 15px var(--neon)); z-index: 5;
 }
 
-.central-readout { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -35%); width: 100%; }
-#main-speed { font-size: 6rem; font-weight: 900; line-height: 0.8; letter-spacing: -3px; }
-.test-status { font-size: 0.8rem; color: var(--neon); margin-top: 15px; font-weight: bold; text-transform: uppercase; }
+.data-core { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -35%); width: 100%; }
+#speed-display { font-size: 6.5rem; font-weight: 950; line-height: 0.8; letter-spacing: -4px; }
+.status-glow { font-size: 0.75rem; color: var(--neon); margin-top: 15px; font-weight: 900; text-shadow: 0 0 10px var(--neon); }
 
-.gauge-labels span {
-    position: absolute; top: 50%; left: 50%; font-size: 0.75rem; color: #444; font-weight: bold;
-    transform: rotate(var(--a)) translate(0, -135px) rotate(calc(var(--a) * -1));
+.gauge-marks span {
+    position: absolute; top: 50%; left: 50%; font-size: 0.8rem; color: #444; font-weight: 900;
+    transform: rotate(var(--a)) translate(0, -145px) rotate(calc(var(--a) * -1));
 }
 
-/* الكروت */
-.results-matrix { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 35px; }
-.res-card { background: rgba(0,0,0,0.5); padding: 15px 5px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; }
-.res-card.active { border-color: var(--neon); box-shadow: 0 0 15px rgba(0, 242, 254, 0.1); }
-.res-card .v { display: block; font-size: 1.5rem; font-weight: 900; color: var(--neon); }
-.res-card .l { font-size: 0.6rem; color: #666; display: block; margin-bottom: 5px; }
+/* لوحة النتائج */
+.diagnostic-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 40px; }
+.diag-card { background: rgba(0,0,0,0.5); padding: 18px 2px; border-radius: 25px; border: 1px solid rgba(255,255,255,0.05); }
+.diag-card .d-value { display: block; font-size: 1.6rem; font-weight: 950; color: var(--neon); }
+.diag-card .d-label { font-size: 0.6rem; color: #666; display: block; margin-bottom: 5px; }
 
-.master-btn {
-    width: 100%; padding: 18px; margin-top: 30px; border-radius: 20px;
+.ignite-btn {
+    width: 100%; padding: 20px; margin-top: 35px; border-radius: 25px;
     background: transparent; border: 2px solid var(--neon); color: white;
-    font-size: 1.1rem; font-weight: 900; cursor: pointer; transition: 0.4s;
+    font-size: 1.2rem; font-weight: 950; cursor: pointer; transition: 0.4s;
 }
-.master-btn:hover { background: var(--neon); color: black; box-shadow: 0 0 30px var(--neon); }
+.ignite-btn:hover { background: var(--neon); color: black; box-shadow: 0 0 40px var(--neon); }
 
-@media (max-width: 400px) { .gauge-engine { width: 260px; height: 260px; } #main-speed { font-size: 4.5rem; } }
+@media (max-width: 400px) { .engine-room { width: 280px; height: 280px; } #speed-display { font-size: 5rem; } }
