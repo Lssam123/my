@@ -3,34 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S-SPEED ELITE V76 | مشروع التخرج</title>
+    <title>S-SPEED V77 | PRO ARCHITECTURE</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="cyber-bg"></div>
     <div class="main-hub">
-        
         <div class="glass-header">
-            <div class="selector-container">
-                <label>رادار المواقع (KSA Nodes Radar)</label>
-                <select id="server-selector" class="cyber-select">
-                    <option value="auto">⚡ الاختيار الذكي (Smart Selection)</option>
-                    <option value="stc">STC (Saudi Telecom)</option>
-                    <option value="mobily">Mobily (Etisalat)</option>
-                    <option value="zain">Zain KSA</option>
-                    <option value="salam">Salam (Integrated)</option>
-                    <option value="go">GO (Atheeb)</option>
-                    <option value="dawiyat">Dawiyat (Fiber)</option>
-                </select>
-            </div>
+            <select id="server-selector" class="cyber-select">
+                <option value="auto">⚡ الاختيار الذكي (Smart Node)</option>
+                <option value="stc">STC (Saudi Telecom)</option>
+                <option value="mobily">Mobily (Etisalat)</option>
+                <option value="zain">Zain KSA</option>
+                <option value="salam">Salam (Integrated)</option>
+                <option value="go">GO (Atheeb)</option>
+                <option value="dawiyat">Dawiyat (Fiber)</option>
+            </select>
         </div>
 
         <div class="engine-room">
             <div id="gauge-marks" class="gauge-marks"></div>
             <div class="gauge-body">
                 <svg viewBox="0 0 200 200">
-                    <circle class="track-outline" cx="100" cy="100" r="90"></circle>
-                    <circle class="track-fill" cx="100" cy="100" r="90"></circle>
+                    <circle class="track-outline" cx="100" cy="100" r="92"></circle>
                 </svg>
                 <div id="needle" class="needle-plasma"></div>
             </div>
@@ -42,24 +37,24 @@
         </div>
 
         <div class="diagnostic-grid">
-            <div class="diag-card" id="ping-slot">
+            <div class="diag-card">
                 <span class="d-label">البنق الخامل</span>
                 <span id="ping-val" class="d-value">--</span>
                 <span class="d-unit">ms</span>
             </div>
-            <div class="diag-card pulse" id="load-slot">
+            <div class="diag-card active-pulse">
                 <span class="d-label">البنق المثقل</span>
                 <span id="load-val" class="d-value">--</span>
                 <span class="d-unit">ms</span>
             </div>
-            <div class="diag-card" id="up-slot">
+            <div class="diag-card">
                 <span class="d-label">سرعة الرفع</span>
                 <span id="up-val" class="d-value">--</span>
                 <span class="d-unit">Mbps</span>
             </div>
         </div>
 
-        <button id="ignite-btn" class="ignite-btn" onclick="igniteEngine()">إطلاق محرك الفحص</button>
+        <button id="ignite-btn" class="ignite-btn" onclick="igniteEngine()">بدأ فحص الـ TCP المتعدد</button>
     </div>
     <script src="script.js"></script>
 </body>
