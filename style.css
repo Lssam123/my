@@ -1,39 +1,36 @@
-:root { --neon: #00f2fe; --bg: #010208; --glass: rgba(255,255,255,0.02); }
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-body { background: var(--bg); color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+:root { --neon: #00f2fe; --bg: #010103; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: white; display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: sans-serif; overflow: hidden; }
 
-.cyber-bg { position: fixed; width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, #0d0d2b 0%, #010208 100%); z-index: -1; }
-.main-hub { width: 95%; max-width: 440px; padding: 30px; background: var(--glass); backdrop-filter: blur(40px); border-radius: 40px; border: 1px solid rgba(255,255,255,0.08); text-align: center; }
+.cyber-bg { position: fixed; width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, #0d0d2b 0%, #010103 100%); z-index: -1; }
 
-.cyber-select { width: 100%; background: #000; color: var(--neon); border: 1px solid #333; padding: 12px; border-radius: 15px; margin-bottom: 25px; outline: none; }
+.master-container { width: 90%; max-width: 420px; padding: 25px; background: rgba(255,255,255,0.02); backdrop-filter: blur(30px); border-radius: 40px; border: 1px solid rgba(255,255,255,0.1); text-align: center; }
 
-.engine-room { position: relative; width: 300px; height: 300px; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
-.gauge-body { width: 100%; height: 100%; position: absolute; }
-.track-outline { fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 4; transform: rotate(135deg); transform-origin: center; }
+.cyber-select { width: 100%; background: #000; color: var(--neon); border: 1px solid #333; padding: 12px; border-radius: 12px; margin-bottom: 20px; outline: none; font-weight: bold; }
 
-/* الإبرة: تم ضبطها لتكون فوق كل شيء */
-.needle-plasma {
-    position: absolute; top: 50%; left: 50%; width: 4px; height: 115px;
+.gauge-engine { position: relative; width: 280px; height: 280px; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+.gauge-wrap { width: 100%; height: 100%; position: absolute; }
+.track { fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 5; transform: rotate(135deg); transform-origin: center; }
+
+.needle-core {
+    position: absolute; top: 50%; left: 50%; width: 3px; height: 100px;
     background: linear-gradient(to top, var(--neon), transparent);
     transform-origin: bottom center; transform: translate(-50%, -100%) rotate(-120deg);
-    transition: 0.4s cubic-bezier(0.1, 0.8, 0.2, 1); filter: drop-shadow(0 0 10px var(--neon)); z-index: 10;
+    transition: 0.4s cubic-bezier(0.1, 0.8, 0.1, 1); filter: drop-shadow(0 0 8px var(--neon)); z-index: 10;
 }
 
-/* الأرقام: خلف الإبرة وبعيدة عن التشتت */
-.gauge-marks span {
-    position: absolute; top: 50%; left: 50%; font-size: 0.85rem; color: #555; font-weight: bold;
-    transform: rotate(var(--a)) translate(0, -138px) rotate(calc(var(--a) * -1));
-    z-index: 1;
-}
+.center-data { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -30%); width: 100%; z-index: 5; }
+#main-speed { font-size: 5rem; font-weight: 900; line-height: 0.8; letter-spacing: -2px; }
+.status-label { font-size: 0.8rem; color: var(--neon); margin-top: 10px; font-weight: bold; }
 
-.data-core { position: absolute; z-index: 5; }
-#speed-display { font-size: 5.5rem; font-weight: 900; line-height: 0.8; letter-spacing: -3px; }
-.status-glow { font-size: 0.8rem; color: var(--neon); margin-top: 10px; font-weight: bold; }
+.gauge-ticks span { position: absolute; top: 50%; left: 50%; font-size: 0.7rem; color: #444; font-weight: bold; transform: rotate(var(--a)) translate(0, -115px) rotate(calc(var(--a) * -1)); z-index: 1; }
 
-.diagnostic-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 35px; }
-.diag-card { background: rgba(0,0,0,0.5); padding: 15px 5px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); }
-.diag-card .d-value { display: block; font-size: 1.5rem; font-weight: 900; color: var(--neon); transition: 0.5s ease-out; }
-.diag-card .d-label { font-size: 0.6rem; color: #888; display: block; margin-bottom: 5px; }
+.results-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 30px; }
+.res-card { background: rgba(0,0,0,0.4); padding: 12px 2px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.05); }
+.res-card .val { display: block; font-size: 1.3rem; font-weight: 900; color: var(--neon); }
+.res-card .lbl { font-size: 0.55rem; color: #666; display: block; margin-bottom: 5px; }
 
-.ignite-btn { width: 100%; padding: 18px; margin-top: 25px; border-radius: 20px; background: transparent; border: 2px solid var(--neon); color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
-.ignite-btn:hover { background: var(--neon); color: black; box-shadow: 0 0 30px var(--neon); }
+.ignite-btn { width: 100%; padding: 16px; margin-top: 20px; border-radius: 15px; background: transparent; border: 2px solid var(--neon); color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
+.ignite-btn:hover { background: var(--neon); color: black; }
+
+@media (max-width: 380px) { .gauge-engine { width: 240px; height: 240px; } #main-speed { font-size: 4rem; } }
