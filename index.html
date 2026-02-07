@@ -3,57 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S-SPEED V78 | النسخة الاحترافية</title>
+    <title>S-SPEED ULTRA V79</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="cyber-bg"></div>
-    <div class="master-container">
-        <div class="server-panel">
-            <label>سيرفر الفحص (KSA Node)</label>
-            <select id="server-selector" class="cyber-select">
-                <option value="auto">⚡ رادار تلقائي (أفضل بنق)</option>
-                <option value="stc">STC (Saudi Telecom)</option>
-                <option value="mobily">Mobily (Etisalat)</option>
-                <option value="zain">Zain KSA</option>
-                <option value="salam">Salam (Integrated)</option>
-                <option value="go">GO (Atheeb)</option>
-                <option value="dawiyat">Dawiyat (Fiber)</option>
-            </select>
+    <div class="master-hub">
+        
+        <div class="header-section">
+            <div class="node-wrapper">
+                <label>نقطة الفحص (KSA Node)</label>
+                <select id="server-selector" class="modern-select">
+                    <option value="auto">⚡ رادار تلقائي (الأمثل)</option>
+                    <option value="stc">STC (Saudi Telecom)</option>
+                    <option value="mobily">Mobily (Etisalat)</option>
+                    <option value="zain">Zain KSA</option>
+                    <option value="salam">Salam (Integrated)</option>
+                    <option value="go">GO (Atheeb)</option>
+                    <option value="dawiyat">Dawiyat (Fiber)</option>
+                </select>
+            </div>
         </div>
 
         <div class="gauge-engine">
             <div class="gauge-ticks" id="gauge-ticks"></div>
-            <div class="gauge-wrap">
-                <svg viewBox="0 0 200 200"><circle class="track" cx="100" cy="100" r="88"></circle></svg>
-                <div id="needle" class="needle-core"></div>
+            <div class="gauge-ring">
+                <svg viewBox="0 0 200 200">
+                    <circle class="base-track" cx="100" cy="100" r="88"></circle>
+                </svg>
+                <div id="needle" class="active-needle"></div>
             </div>
-            <div class="center-data">
+            <div class="core-readout">
                 <div id="main-speed">0</div>
-                <div id="status-label" class="status-label">جاهز</div>
+                <div id="status-txt" class="status-txt">جاهز</div>
                 <div class="unit">MBPS</div>
             </div>
         </div>
 
-        <div class="results-grid">
-            <div class="res-card">
-                <span class="lbl">البنق (Idle)</span>
+        <div class="stats-panel">
+            <div class="stat-card">
+                <span class="lbl">البنق (الخامل)</span>
                 <span id="res-ping" class="val">--</span>
-                <span class="unit-s">ms</span>
+                <span class="unt">ms</span>
             </div>
-            <div class="res-card active">
-                <span class="lbl">البنق (Loaded)</span>
+            <div class="stat-card active">
+                <span class="lbl">البنق (المثقل)</span>
                 <span id="res-load" class="val">--</span>
-                <span class="unit-s">ms</span>
+                <span class="unt">ms</span>
             </div>
-            <div class="res-card">
-                <span class="lbl">الرفع</span>
+            <div class="stat-card">
+                <span class="lbl">سرعة الرفع</span>
                 <span id="res-ul" class="val">--</span>
-                <span class="unit-s">Mbps</span>
+                <span class="unt">Mbps</span>
             </div>
         </div>
 
-        <button id="start-btn" class="ignite-btn" onclick="startEngine()">ابدأ الاختبار</button>
+        <button id="start-btn" class="ignite-btn" onclick="igniteV79()">بدء فحص النظام</button>
     </div>
     <script src="script.js"></script>
 </body>
