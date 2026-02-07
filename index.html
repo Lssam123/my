@@ -2,66 +2,64 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>S-SPEED V69 | التدفق السريع</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>S-SPEED V70 | PRO</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="cyber-bg"></div>
-    <div class="master-hub">
-        <div class="server-control">
-            <div class="select-wrapper">
-                <label>اختيار السيرفر (Node Selection)</label>
-                <select id="server-selector" class="modern-select">
-                    <option value="auto">⚡ AUTO RADAR (أسرع بنق)</option>
-                    <option value="stc">STC</option>
-                    <option value="mobily">Mobily</option>
-                    <option value="zain">Zain</option>
-                    <option value="salam">Salam</option>
-                    <option value="go">GO</option>
-                    <option value="dawiyat">Dawiyat</option>
-                </select>
-            </div>
+    
+    <div class="container">
+        <div class="server-box">
+            <label>سيرفر الفحص (Server Node)</label>
+            <select id="server-selector" class="modern-select">
+                <option value="auto">⚡ رادار تلقائي (الأفضل)</option>
+                <option value="stc">STC (Saudi Telecom)</option>
+                <option value="mobily">Mobily (Etisalat)</option>
+                <option value="zain">Zain KSA</option>
+                <option value="salam">Salam (Integrated)</option>
+                <option value="go">GO (Atheeb)</option>
+                <option value="dawiyat">Dawiyat (Fiber)</option>
+            </select>
         </div>
 
-        <div class="gauge-world">
-            <div class="gauge-ticks">
-                <span class="tick" style="--angle: -120deg;">0</span>
-                <span class="tick" style="--angle: -72deg;">100</span>
-                <span class="tick" style="--angle: -24deg;">200</span>
-                <span class="tick" style="--angle: 24deg;">300</span>
-                <span class="tick" style="--angle: 72deg;">400</span>
-                <span class="tick" style="--angle: 120deg;">500</span>
-            </div>
-            <div class="turbine-wrap">
-                <svg class="main-gauge" viewBox="0 0 200 200">
-                    <circle class="track" cx="100" cy="100" r="85"></circle>
+        <div class="gauge-section">
+            <div class="gauge-ticks" id="ticks">
+                </div>
+            <div class="gauge-wrap">
+                <svg viewBox="0 0 200 200">
+                    <circle class="bg-track" cx="100" cy="100" r="85"></circle>
                 </svg>
-                <div id="needle" class="digital-needle"></div>
+                <div id="needle" class="needle"></div>
             </div>
-            <div class="center-display">
+            <div class="display-center">
                 <div id="main-speed">0</div>
-                <div id="mode-text" class="status-lbl">جاهز</div>
-                <div class="mbps-unit">ميجابت/ث</div>
+                <div id="status-text" class="status">جاهز</div>
+                <div class="unit">Mbps</div>
             </div>
         </div>
 
-        <div class="results-matrix">
-            <div class="res-card">
-                <span class="lbl">البنق الخامل (5 ث)</span>
-                <span id="res-ping" class="val">--</span>
+        <div class="results-grid">
+            <div class="card">
+                <span class="label">البنق الخامل (5ث)</span>
+                <span id="res-ping" class="value">--</span>
+                <span class="ms">ms</span>
             </div>
-            <div class="res-card active-pulse">
-                <span class="lbl">البنق المثقل (15 ث)</span>
-                <span id="res-load" class="val">--</span>
+            <div class="card active">
+                <span class="label">البنق المثقل (15ث)</span>
+                <span id="res-load" class="value">--</span>
+                <span class="ms">ms</span>
             </div>
-            <div class="res-card">
-                <span class="lbl">سرعة الرفع (15 ث)</span>
-                <span id="res-ul" class="val">--</span>
+            <div class="card">
+                <span class="label">سرعة الرفع (15ث)</span>
+                <span id="res-ul" class="value">--</span>
+                <span class="ms">Mbps</span>
             </div>
         </div>
 
-        <button id="ignite-btn" class="ignite-btn" onclick="startV69()">ابدأ الفحص</button>
+        <button id="start-btn" onclick="startTest()">ابدأ فحص السرعة</button>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
