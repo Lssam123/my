@@ -3,44 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S-SPEED V74 | دقة سبيد تست</title>
+    <title>S-SPEED ULTRA V75 | GLOBAL STANDARD</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="cyber-bg"></div>
-    <div class="container">
-        <div class="server-box">
-            <label>سيرفر الفحص (KSA Server Node)</label>
-            <select id="server-selector" class="modern-select">
-                <option value="auto">⚡ رادار تلقائي (الأفضل)</option>
-                <option value="stc">STC (Saudi Telecom)</option>
-                <option value="mobily">Mobily (Etisalat)</option>
-                <option value="zain">Zain KSA</option>
-                <option value="salam">Salam (Integrated)</option>
-                <option value="go">GO (Atheeb)</option>
-                <option value="dawiyat">Dawiyat (Fiber)</option>
-            </select>
+    <div class="main-container">
+        <div class="header-box">
+            <div class="server-selector-wrap">
+                <label>سيرفر الفحص (KSA Node)</label>
+                <select id="server-selector" class="modern-select">
+                    <option value="auto">⚡ رادار تلقائي (الأفضل عالمياً)</option>
+                    <option value="stc">STC (Saudi Telecom)</option>
+                    <option value="mobily">Mobily (Etisalat)</option>
+                    <option value="zain">Zain KSA</option>
+                    <option value="salam">Salam (Integrated)</option>
+                    <option value="go">GO (Atheeb)</option>
+                    <option value="dawiyat">Dawiyat (Fiber)</option>
+                </select>
+            </div>
         </div>
 
-        <div class="gauge-section">
-            <div class="gauge-ticks" id="ticks"></div>
-            <div class="gauge-wrap">
-                <svg viewBox="0 0 200 200"><circle class="bg-track" cx="100" cy="100" r="85"></circle></svg>
-                <div id="needle" class="needle"></div>
+        <div class="gauge-engine">
+            <div class="gauge-labels" id="gauge-labels"></div>
+            <div class="gauge-core">
+                <svg viewBox="0 0 200 200">
+                    <circle class="gauge-track" cx="100" cy="100" r="88"></circle>
+                </svg>
+                <div id="needle" class="needle-shaft"></div>
             </div>
-            <div class="display-center">
+            <div class="central-readout">
                 <div id="main-speed">0</div>
-                <div id="status-text" class="status">جاهز</div>
-                <div class="unit">Mbps</div>
+                <div id="test-status" class="test-status">جاهز للاختبار</div>
+                <div class="unit-text">MBPS</div>
             </div>
         </div>
 
-        <div class="results-grid">
-            <div class="card"><span class="label">البنق الخامل</span><span id="res-ping" class="value">--</span><span class="ms">ms</span></div>
-            <div class="card active"><span class="label">البنق المثقل</span><span id="res-load" class="val-load">--</span><span class="ms">ms</span></div>
-            <div class="card"><span class="label">سرعة الرفع</span><span id="res-ul" class="val-ul">--</span><span class="ms">Mbps</span></div>
+        <div class="results-matrix">
+            <div class="res-card" id="ping-card">
+                <span class="l">البنق الخامل</span>
+                <span id="res-ping" class="v">--</span>
+                <span class="u">ms</span>
+            </div>
+            <div class="res-card" id="load-card">
+                <span class="l">البنق المثقل</span>
+                <span id="res-load" class="v">--</span>
+                <span class="u">ms</span>
+            </div>
+            <div class="res-card" id="ul-card">
+                <span class="l">سرعة الرفع</span>
+                <span id="res-ul" class="v">--</span>
+                <span class="u">Mbps</span>
+            </div>
         </div>
-        <button id="start-btn" onclick="startTest()">ابدأ الفحص النهائي</button>
+
+        <button id="master-btn" class="master-btn" onclick="startGlobalTest()">ابدأ الفحص العالمي</button>
     </div>
     <script src="script.js"></script>
 </body>
