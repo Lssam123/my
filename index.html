@@ -3,62 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S-SPEED ULTRA V79</title>
+    <title>S-SPEED V80 | GOLDEN PATH</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="cyber-bg"></div>
-    <div class="master-hub">
+    <div class="app-container">
         
-        <div class="header-section">
-            <div class="node-wrapper">
-                <label>نقطة الفحص (KSA Node)</label>
-                <select id="server-selector" class="modern-select">
-                    <option value="auto">⚡ رادار تلقائي (الأمثل)</option>
-                    <option value="stc">STC (Saudi Telecom)</option>
-                    <option value="mobily">Mobily (Etisalat)</option>
-                    <option value="zain">Zain KSA</option>
-                    <option value="salam">Salam (Integrated)</option>
-                    <option value="go">GO (Atheeb)</option>
-                    <option value="dawiyat">Dawiyat (Fiber)</option>
-                </select>
-            </div>
+        <div class="server-box">
+            <select id="server-selector" class="ultra-select">
+                <option value="auto">⚡ رادار المسار الأقل ازدحاماً</option>
+                <option value="stc">STC (Saudi Telecom)</option>
+                <option value="mobily">Mobily (Etisalat)</option>
+                <option value="zain">Zain KSA</option>
+                <option value="salam">Salam (Integrated)</option>
+                <option value="go">GO (Atheeb)</option>
+                <option value="dawiyat">Dawiyat (Fiber)</option>
+            </select>
         </div>
 
-        <div class="gauge-engine">
-            <div class="gauge-ticks" id="gauge-ticks"></div>
-            <div class="gauge-ring">
+        <div class="engine-core">
+            <div class="gauge-marks" id="gauge-marks"></div>
+            <div class="gauge-vessel">
                 <svg viewBox="0 0 200 200">
-                    <circle class="base-track" cx="100" cy="100" r="88"></circle>
+                    <circle class="track-bg" cx="100" cy="100" r="90"></circle>
+                    <circle id="progress-bar" class="track-fill" cx="100" cy="100" r="90"></circle>
                 </svg>
-                <div id="needle" class="active-needle"></div>
+                <div id="needle" class="needle"></div>
             </div>
-            <div class="core-readout">
-                <div id="main-speed">0</div>
-                <div id="status-txt" class="status-txt">جاهز</div>
+            <div class="readout">
+                <div id="main-value">0</div>
+                <div id="test-type" class="test-type">READY</div>
                 <div class="unit">MBPS</div>
             </div>
         </div>
 
-        <div class="stats-panel">
-            <div class="stat-card">
-                <span class="lbl">البنق (الخامل)</span>
-                <span id="res-ping" class="val">--</span>
-                <span class="unt">ms</span>
+        <div class="stats-row">
+            <div class="stat-item">
+                <span class="s-label">الاستجابة (Ping)</span>
+                <span id="ping-res" class="s-value">--</span>
             </div>
-            <div class="stat-card active">
-                <span class="lbl">البنق (المثقل)</span>
-                <span id="res-load" class="val">--</span>
-                <span class="unt">ms</span>
+            <div class="stat-item highlight">
+                <span class="s-label">المثقل (Loaded)</span>
+                <span id="load-res" class="s-value">--</span>
             </div>
-            <div class="stat-card">
-                <span class="lbl">سرعة الرفع</span>
-                <span id="res-ul" class="val">--</span>
-                <span class="unt">Mbps</span>
+            <div class="stat-item">
+                <span class="s-label">القمة (Peak)</span>
+                <span id="peak-res" class="s-value">--</span>
             </div>
         </div>
 
-        <button id="start-btn" class="ignite-btn" onclick="igniteV79()">بدء فحص النظام</button>
+        <button id="action-btn" class="action-btn" onclick="runEliteTest()">إطلاق الفحص الشامل</button>
     </div>
     <script src="script.js"></script>
 </body>
