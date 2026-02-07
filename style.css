@@ -1,10 +1,10 @@
 :root { --neon: #00f2fe; --bg: #010103; }
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-    background: var(--bg); margin: 0; color: white;
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    display: flex; justify-content: center; align-items: center; min-height: 100vh;
+    background: var(--bg); color: white; min-height: 100vh;
+    display: flex; justify-content: center; align-items: center;
+    font-family: 'Segoe UI', system-ui, sans-serif; overflow: hidden;
 }
 
 .cyber-bg {
@@ -13,54 +13,46 @@ body {
 }
 
 .container {
-    width: 95%; max-width: 450px; padding: 25px;
-    background: rgba(255,255,255,0.02); backdrop-filter: blur(25px);
-    border-radius: 40px; border: 1px solid rgba(255,255,255,0.1); text-align: center;
+    width: 90%; max-width: 420px; padding: 20px;
+    background: rgba(255,255,255,0.02); backdrop-filter: blur(20px);
+    border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); text-align: center;
 }
 
 .modern-select {
     width: 100%; background: #000; color: var(--neon); border: 1px solid #333;
-    padding: 12px; border-radius: 12px; font-weight: bold; outline: none; margin-bottom: 20px;
+    padding: 12px; border-radius: 12px; font-weight: bold; margin-bottom: 20px;
 }
 
-/* العداد - المعايرة الصفرية */
-.gauge-section {
-    position: relative; width: 300px; height: 300px; margin: 0 auto;
-    display: flex; align-items: center; justify-content: center;
-}
-
+.gauge-section { position: relative; width: 280px; height: 280px; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
 .gauge-wrap { width: 100%; height: 100%; position: absolute; }
-.gauge-svg { width: 100%; height: 100%; transform: rotate(135deg); }
-.bg-track { fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 6; }
+.bg-track { fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 6; transform: rotate(135deg); transform-origin: center; }
 
-/* الإبرة: تم ضبط الارتكاز في المنتصف تماماً */
 .needle {
-    position: absolute; top: 50%; left: 50%; width: 4px; height: 110px;
+    position: absolute; top: 50%; left: 50%; width: 3px; height: 100px;
     background: linear-gradient(to top, var(--neon), transparent);
-    /* نقطة الارتكاز: أسفل الإبرة في مركز العداد */
-    transform-origin: 50% 100%; 
-    /* وضع البداية: محاذاة الصفر تماماً (-120 درجة) */
-    transform: translate(-50%, -100%) rotate(-120deg);
-    filter: drop-shadow(0 0 10px var(--neon)); transition: 0.5s cubic-bezier(0.1, 0.8, 0.1, 1); z-index: 5;
+    transform-origin: bottom center;
+    transform: translate(-50%, -100%) rotate(-120deg); /* الصفر الهندسي المطلق */
+    filter: drop-shadow(0 0 8px var(--neon)); transition: 0.4s cubic-bezier(0.1, 0.8, 0.1, 1);
 }
 
-.display-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -35%); width: 100%; }
-#main-speed { font-size: 5.5rem; font-weight: 900; line-height: 0.8; }
-.status { font-size: 0.8rem; color: var(--neon); margin-top: 15px; font-weight: bold; }
+.display-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -30%); width: 100%; }
+#main-speed { font-size: 5rem; font-weight: 900; line-height: 0.8; letter-spacing: -2px; }
+.status { font-size: 0.8rem; color: var(--neon); margin-top: 10px; font-weight: bold; }
 
-/* أرقام التدريج */
 .tick {
-    position: absolute; top: 50%; left: 50%; font-size: 0.75rem; color: #444; font-weight: bold;
-    transform: rotate(var(--a)) translate(0, -130px) rotate(calc(var(--a) * -1));
+    position: absolute; top: 50%; left: 50%; font-size: 0.7rem; color: #444; font-weight: bold;
+    transform: rotate(var(--a)) translate(0, -115px) rotate(calc(var(--a) * -1));
 }
 
-.results-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 30px; }
-.card { background: rgba(0,0,0,0.3); padding: 15px 5px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); }
-.card .value, .val-ul { display: block; font-size: 1.5rem; font-weight: 900; color: var(--neon); }
-.card .label { font-size: 0.6rem; color: #666; display: block; margin-bottom: 5px; }
+.results-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 25px; }
+.card { background: rgba(0,0,0,0.4); padding: 12px 2px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.05); }
+.card .value { display: block; font-size: 1.3rem; font-weight: 900; color: var(--neon); }
+.card .label { font-size: 0.55rem; color: #666; display: block; margin-bottom: 3px; }
 
 #start-btn {
-    width: 100%; padding: 18px; margin-top: 25px; border-radius: 20px;
+    width: 100%; padding: 15px; margin-top: 20px; border-radius: 15px;
     background: transparent; border: 2px solid var(--neon); color: white;
-    font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s;
+    font-weight: bold; cursor: pointer; transition: 0.3s;
 }
+
+@media (max-width: 380px) { .gauge-section { width: 240px; height: 240px; } #main-speed { font-size: 4rem; } }
