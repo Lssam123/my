@@ -2,61 +2,68 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S-SPEED V83 | PRO CALIBRATION</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>S-SPEED V84 | النسخة النهائية للمشروع</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="cyber-bg"></div>
-    <div class="app-shell">
-        <div class="memory-bar">
-            <div class="mem-item"><span>البنق:</span> <b id="top-ping">--</b></div>
-            <div class="mem-item"><span>تحميل:</span> <b id="top-dl">--</b></div>
-            <div class="mem-item"><span>رفع:</span> <b id="top-ul">--</b></div>
+    
+    <div class="master-hub">
+        <div class="memory-strip">
+            <div class="mem-box">البنق: <b id="mem-ping">--</b></div>
+            <div class="mem-box">التحميل: <b id="mem-dl">--</b></div>
+            <div class="mem-box">الرفع: <b id="mem-ul">--</b></div>
         </div>
 
-        <div class="server-panel">
-            <select id="server-selector" class="cyber-select">
-                <option value="auto">⚡ رادار تلقائي (المسار الأفضل)</option>
-                <option value="stc">STC (الاتصالات السعودية)</option>
-                <option value="mobily">Mobily (موبايلي)</option>
-                <option value="zain">Zain (زين)</option>
-                <option value="salam">Salam (سلام)</option>
-                <option value="go">GO (عذيب)</option>
-                <option value="dawiyat">Dawiyat (ضوئيات)</option>
+        <div class="server-zone">
+            <select id="server-selector" class="pro-select">
+                <option value="auto">⚡ رادار المسار الأسرع (تلقائي)</option>
+                <option value="stc">الاتصالات السعودية (STC)</option>
+                <option value="mobily">موبايلي (Mobily)</option>
+                <option value="zain">زين (Zain)</option>
+                <option value="salam">سلام (Salam)</option>
+                <option value="go">عذيب (GO)</option>
+                <option value="dawiyat">ضوئيات (Dawiyat)</option>
             </select>
         </div>
 
-        <div class="gauge-engine">
+        <div class="gauge-sector">
             <div class="gauge-ticks" id="gauge-ticks"></div>
             <div class="gauge-vessel">
-                <svg viewBox="0 0 200 200"><circle class="track-bg" cx="100" cy="100" r="90"></circle></svg>
-                <div id="needle" class="needle-plasma"></div>
+                <svg viewBox="0 0 200 200">
+                    <circle class="gauge-path-bg" cx="100" cy="100" r="90"></circle>
+                </svg>
+                <div id="needle" class="needle-neon"></div>
             </div>
-            <div class="readout-core">
+            <div class="readout-box">
                 <div id="main-value">0</div>
-                <div id="test-status" class="status-msg">جاهز للاختبار</div>
+                <div id="status-label" class="status-label">نظام جاهز</div>
                 <div id="unit-label" class="unit-label">Mbps</div>
             </div>
         </div>
 
-        <div class="diagnostic-grid">
-            <div class="diag-card">
-                <span class="lbl">استجابة (Ping)</span>
-                <span id="res-ping" class="val">--</span>
+        <div class="results-grid">
+            <div class="card">
+                <span class="l">البنق الصافي</span>
+                <span id="card-ping" class="v">--</span>
+                <span class="u">ms</span>
             </div>
-            <div class="diag-card active-pulse">
-                <span class="lbl">مثقل (Loaded)</span>
-                <span id="res-load" class="val">--</span>
+            <div class="card active">
+                <span class="l">البنق المثقل</span>
+                <span id="card-load" class="v">--</span>
+                <span class="u">ms</span>
             </div>
-            <div class="diag-card">
-                <span class="lbl">رفع (Upload)</span>
-                <span id="res-ul" class="val">--</span>
+            <div class="card">
+                <span class="l">سرعة الرفع</span>
+                <span id="card-ul" class="v">--</span>
+                <span class="u">Mbps</span>
             </div>
         </div>
 
-        <button id="ignite-btn" class="ignite-btn" onclick="startV83()">ابدأ فحص النخبة</button>
+        <button id="run-btn" class="run-btn" onclick="startUltimateTest()">بدء الفحص الشامل</button>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
