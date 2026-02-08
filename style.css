@@ -1,47 +1,38 @@
-:root { --neon-dl: #00f2fe; --neon-ul: #f5576c; --bg: #05050a; }
+:root { --dl-color: #00f2fe; --ul-color: #bd00ff; --bg: #0b0c15; }
 body { background: var(--bg); color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
 
-.cyber-bg { position: fixed; width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, #1a1b2e 0%, #05050a 100%); z-index: -1; }
+.cyber-bg { position: fixed; width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, #15162b 0%, #0b0c15 100%); z-index: -1; }
 
-.quantum-shell { width: 95%; max-width: 460px; padding: 20px; background: rgba(255,255,255,0.02); backdrop-filter: blur(30px); border-radius: 40px; border: 1px solid rgba(255,255,255,0.08); text-align: center; }
+.main-console { width: 95%; max-width: 450px; padding: 25px; background: rgba(255,255,255,0.03); backdrop-filter: blur(30px); border-radius: 40px; border: 1px solid rgba(255,255,255,0.08); text-align: center; }
 
-.quantum-select { width: 100%; background: #000; color: var(--neon-dl); border: 1px solid #333; padding: 12px; border-radius: 12px; font-weight: bold; margin-bottom: 25px; outline: none; }
+.pro-selector { width: 100%; background: #000; color: var(--dl-color); border: 1px solid #333; padding: 12px; border-radius: 12px; font-weight: bold; margin-bottom: 25px; outline: none; }
 
-/* العداد المعقد */
-.gauge-reactor { position: relative; width: 320px; height: 320px; margin: 0 auto; }
-.gauge-ring-box { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+/* العداد */
+.gauge-container { position: relative; width: 300px; height: 300px; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+.track-gray { fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 8; transform: rotate(135deg); transform-origin: center; }
+.track-color { fill: none; stroke: var(--dl-color); stroke-width: 8; stroke-dasharray: 565; stroke-dashoffset: 565; transform: rotate(135deg); transform-origin: center; stroke-linecap: round; transition: stroke-dashoffset 0.1s linear, stroke 0.3s; }
 
-/* مسار الدائرة SVG */
-.track-bg { stroke: rgba(255,255,255,0.05); stroke-width: 8; stroke-linecap: round; }
-.track-active { stroke-width: 8; stroke-linecap: round; stroke-dasharray: 440; stroke-dashoffset: 440; transition: stroke-dashoffset 0.3s ease-out; }
-
-/* الإبرة */
-.quantum-needle {
-    position: absolute; top: 50%; left: 50%; width: 4px; height: 130px;
-    background: white; border-radius: 50% 50% 0 0;
-    transform-origin: 50% 100%; transform: translate(-50%, -100%) rotate(-135deg); /* -135 هي نقطة البداية */
-    transition: 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); box-shadow: 0 0 15px white; z-index: 10;
+.needle-pointer {
+    position: absolute; top: 50%; left: 50%; width: 4px; height: 120px;
+    background: white; border-radius: 4px;
+    transform-origin: 50% 100%; transform: translate(-50%, -100%) rotate(-120deg);
+    transition: transform 0.4s cubic-bezier(0.1, 0.5, 0.1, 1); /* حركة ناعمة جداً */
+    box-shadow: 0 0 15px white; z-index: 10;
 }
 
-.gauge-scale span {
-    position: absolute; top: 50%; left: 50%; font-size: 0.7rem; color: #666; font-weight: bold;
-    /* توزيع الأرقام حول الدائرة */
-    transform: rotate(var(--deg)) translate(0, -145px) rotate(calc(var(--deg) * -1));
-}
+.center-data { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -35%); width: 100%; }
+#speed-val { font-size: 5.5rem; font-weight: 900; line-height: 0.9; letter-spacing: -3px; }
+.phase-label { font-size: 0.9rem; font-weight: bold; margin-top: 10px; color: var(--dl-color); letter-spacing: 2px; }
+.unit-label { font-size: 0.7rem; color: #666; font-weight: bold; }
 
-.reactor-core { position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); width: 100%; }
-#main-val { font-size: 5rem; font-weight: 900; line-height: 1; letter-spacing: -2px; }
-.phase-lbl { font-size: 0.9rem; font-weight: bold; margin-top: 5px; color: var(--neon-dl); text-transform: uppercase; }
-.unit-lbl { font-size: 0.7rem; color: #555; }
+.gauge-ticks span { position: absolute; top: 50%; left: 50%; font-size: 0.75rem; color: #555; font-weight: bold; transform: rotate(var(--a)) translate(0, -140px) rotate(calc(var(--a) * -1)); }
 
-.data-grid { display: flex; justify-content: space-around; margin-top: 30px; }
-.data-cell { background: rgba(0,0,0,0.4); padding: 10px 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.05); min-width: 90px; }
-.data-cell .l { font-size: 0.6rem; color: #777; display: block; }
-.data-cell .v { font-size: 1.2rem; font-weight: 900; color: white; }
-.dl-color { color: var(--neon-dl) !important; }
-.ul-color { color: var(--neon-ul) !important; }
+/* البطاقات السفلية */
+.stats-deck { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 30px; }
+.stat-box { background: rgba(0,0,0,0.4); padding: 15px 5px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.05); }
+.stat-box.highlight { border-color: rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.05); }
+.stat-box .val { display: block; font-size: 1.4rem; font-weight: 900; color: white; }
+.stat-box .lbl { font-size: 0.6rem; color: #888; display: block; margin-bottom: 5px; }
 
-.quantum-btn { width: 100%; padding: 18px; margin-top: 30px; border-radius: 50px; background: white; color: black; font-weight: 900; font-size: 1.1rem; border: none; cursor: pointer; transition: 0.3s; box-shadow: 0 0 20px rgba(255,255,255,0.2); }
-.quantum-btn:hover { transform: scale(1.02); box-shadow: 0 0 30px rgba(255,255,255,0.4); }
-
-@media (max-width: 400px) { .gauge-reactor { width: 280px; height: 280px; } #main-val { font-size: 4rem; } }
+.turbo-btn { width: 100%; padding: 18px; margin-top: 30px; border-radius: 50px; background: var(--dl-color); color: black; font-weight: 900; font-size: 1.2rem; border: none; cursor: pointer; transition: 0.3s; }
+.turbo-btn:hover { transform: scale(1.02); box-shadow: 0 0 30px var(--dl-color); }
