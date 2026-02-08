@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S-SPEED V86 | QUANTUM</title>
+    <title>S-SPEED V87 | TURBO ENGINE</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="cyber-bg"></div>
-    <div class="quantum-shell">
+    <div class="main-console">
         
-        <div class="server-deck">
-            <select id="server-selector" class="quantum-select">
+        <div class="server-control">
+            <select id="server-selector" class="pro-selector">
                 <option value="auto">⚡ أفضل مسار (Auto Best)</option>
                 <option value="stc">STC KSA</option>
                 <option value="mobily">Mobily KSA</option>
@@ -22,50 +22,42 @@
             </select>
         </div>
 
-        <div class="gauge-reactor">
-            <div class="gauge-scale" id="gauge-scale"></div>
-            
-            <div class="gauge-ring-box">
+        <div class="gauge-container">
+            <div class="gauge-ticks" id="gauge-ticks"></div>
+            <div class="gauge-ring">
                 <svg viewBox="0 0 200 200">
-                    <defs>
-                        <linearGradient id="dl-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" style="stop-color:#00f2fe;stop-opacity:1" />
-                            <stop offset="100%" style="stop-color:#4facfe;stop-opacity:1" />
-                        </linearGradient>
-                        <linearGradient id="ul-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" style="stop-color:#f093fb;stop-opacity:1" />
-                            <stop offset="100%" style="stop-color:#f5576c;stop-opacity:1" />
-                        </linearGradient>
-                    </defs>
-                    <path class="track-bg" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" />
-                    <path id="progress-path" class="track-active" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" stroke="url(#dl-grad)" />
+                    <circle class="track-gray" cx="100" cy="100" r="90"></circle>
+                    <circle id="track-active" class="track-color" cx="100" cy="100" r="90"></circle>
                 </svg>
-                <div id="needle" class="quantum-needle"></div>
+                <div id="needle" class="needle-pointer"></div>
             </div>
-
-            <div class="reactor-core">
-                <div id="main-val">0.0</div>
-                <div id="phase-lbl" class="phase-lbl">READY</div>
-                <div class="unit-lbl">Mbps</div>
-            </div>
-        </div>
-
-        <div class="data-grid">
-            <div class="data-cell">
-                <span class="l">Ping</span>
-                <span id="res-ping" class="v">--</span>
-            </div>
-            <div class="data-cell">
-                <span class="l">Download</span>
-                <span id="res-dl" class="v dl-color">--</span>
-            </div>
-            <div class="data-cell">
-                <span class="l">Upload</span>
-                <span id="res-ul" class="v ul-color">--</span>
+            
+            <div class="center-data">
+                <div id="speed-val">0</div>
+                <div id="phase-label" class="phase-label">READY</div>
+                <div id="unit-label" class="unit-label">Mbps</div>
             </div>
         </div>
 
-        <button id="start-btn" class="quantum-btn" onclick="startQuantumTest()">بدء الفحص الدقيق</button>
+        <div class="stats-deck">
+            <div class="stat-box">
+                <span class="lbl">البنق (Ping)</span>
+                <span id="res-ping" class="val">--</span>
+                <span class="unit">ms</span>
+            </div>
+            <div class="stat-box highlight">
+                <span class="lbl">المثقل (Loaded)</span>
+                <span id="res-loaded" class="val">--</span>
+                <span class="unit">ms</span>
+            </div>
+            <div class="stat-box">
+                <span class="lbl">الرفع (Upload)</span>
+                <span id="res-ul" class="val">--</span>
+                <span class="unit">Mbps</span>
+            </div>
+        </div>
+
+        <button id="start-btn" class="turbo-btn" onclick="startTurboTest()">🚀 ابدأ الفحص</button>
     </div>
     <script src="script.js"></script>
 </body>
