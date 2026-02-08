@@ -3,67 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S-SPEED V84 | النسخة النهائية للمشروع</title>
+    <title>S-SPEED GLOBAL V85</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="cyber-bg"></div>
-    
-    <div class="master-hub">
-        <div class="memory-strip">
-            <div class="mem-box">البنق: <b id="mem-ping">--</b></div>
-            <div class="mem-box">التحميل: <b id="mem-dl">--</b></div>
-            <div class="mem-box">الرفع: <b id="mem-ul">--</b></div>
+    <div class="interface-shell">
+        
+        <div class="global-status-bar">
+            <div class="stat-box ping-box">
+                <span class="icon">📶</span>
+                <span class="label">PING</span>
+                <span id="top-ping" class="value">-- ms</span>
+            </div>
+            <div class="stat-box dl-box">
+                <span class="icon">⬇️</span>
+                <span class="label">DOWNLOAD</span>
+                <span id="top-dl" class="value">--</span>
+            </div>
+            <div class="stat-box ul-box">
+                <span class="icon">⬆️</span>
+                <span class="label">UPLOAD</span>
+                <span id="top-ul" class="value">--</span>
+            </div>
         </div>
 
-        <div class="server-zone">
-            <select id="server-selector" class="pro-select">
-                <option value="auto">⚡ رادار المسار الأسرع (تلقائي)</option>
-                <option value="stc">الاتصالات السعودية (STC)</option>
-                <option value="mobily">موبايلي (Mobily)</option>
-                <option value="zain">زين (Zain)</option>
-                <option value="salam">سلام (Salam)</option>
-                <option value="go">عذيب (GO)</option>
-                <option value="dawiyat">ضوئيات (Dawiyat)</option>
+        <div class="control-panel">
+            <select id="server-selector" class="global-select">
+                <option value="auto">⚡ أفضل سيرفر تلقائي (Best Ping)</option>
+                <option value="stc">STC KSA</option>
+                <option value="mobily">Mobily KSA</option>
+                <option value="zain">Zain KSA</option>
+                <option value="salam">Salam Integrated</option>
+                <option value="go">GO Telecom</option>
+                <option value="dawiyat">Dawiyat Fiber</option>
             </select>
         </div>
 
-        <div class="gauge-sector">
+        <div class="gauge-assembly">
             <div class="gauge-ticks" id="gauge-ticks"></div>
-            <div class="gauge-vessel">
+            <div class="gauge-circle">
                 <svg viewBox="0 0 200 200">
-                    <circle class="gauge-path-bg" cx="100" cy="100" r="90"></circle>
+                    <defs>
+                        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style="stop-color:#00f2fe;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#4facfe;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <circle class="track-bg" cx="100" cy="100" r="90"></circle>
+                    <circle id="progress-ring" class="track-active" cx="100" cy="100" r="90"></circle>
                 </svg>
-                <div id="needle" class="needle-neon"></div>
+                <div id="needle" class="needle-master"></div>
             </div>
-            <div class="readout-box">
-                <div id="main-value">0</div>
-                <div id="status-label" class="status-label">نظام جاهز</div>
-                <div id="unit-label" class="unit-label">Mbps</div>
-            </div>
-        </div>
-
-        <div class="results-grid">
-            <div class="card">
-                <span class="l">البنق الصافي</span>
-                <span id="card-ping" class="v">--</span>
-                <span class="u">ms</span>
-            </div>
-            <div class="card active">
-                <span class="l">البنق المثقل</span>
-                <span id="card-load" class="v">--</span>
-                <span class="u">ms</span>
-            </div>
-            <div class="card">
-                <span class="l">سرعة الرفع</span>
-                <span id="card-ul" class="v">--</span>
-                <span class="u">Mbps</span>
+            <div class="center-info">
+                <div id="main-speed">0</div>
+                <div id="phase-text" class="phase-text">READY</div>
+                <div class="unit">MBPS</div>
             </div>
         </div>
 
-        <button id="run-btn" class="run-btn" onclick="startUltimateTest()">بدء الفحص الشامل</button>
+        <div class="details-row">
+            <div class="detail-card">
+                <span class="lbl">Jitter (مثقل)</span>
+                <span id="res-jitter" class="val">-- ms</span>
+            </div>
+            <div class="detail-card">
+                <span class="lbl">أعلى قمة (Peak)</span>
+                <span id="res-peak" class="val">--</span>
+            </div>
+        </div>
+
+        <button id="start-btn" class="global-btn" onclick="startGlobalTest()">GO</button>
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>
