@@ -1,37 +1,45 @@
-:root { --neon: #00f2fe; --bg: #010103; }
-body { background: var(--bg); color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: sans-serif; overflow: hidden; }
+:root { --neon: #00f2fe; --bg: #010208; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
 
-.cyber-bg { position: fixed; width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, #0d0d2b 0%, #010103 100%); z-index: -1; }
-
-.app-shell { width: 95%; max-width: 440px; padding: 20px; background: rgba(255,255,255,0.02); backdrop-filter: blur(40px); border-radius: 40px; border: 1px solid rgba(255,255,255,0.08); text-align: center; }
-
-/* شريط علوي عصري */
-.top-results-bar { display: flex; justify-content: space-around; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 20px; margin-bottom: 20px; border: 1px solid var(--neon); font-size: 0.8rem; }
-.top-results-bar b { color: var(--neon); margin-right: 5px; }
-
-.cyber-select { width: 100%; background: #000; color: var(--neon); border: 1px solid #333; padding: 10px; border-radius: 12px; margin-bottom: 20px; outline: none; }
-
-.gauge-engine { position: relative; width: 280px; height: 280px; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
-.track-bg { fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 4; transform: rotate(135deg); transform-origin: center; }
-
-.needle-plasma {
-    position: absolute; top: 50%; left: 50%; width: 3px; height: 100px;
-    background: linear-gradient(to top, var(--neon), transparent);
-    transform-origin: 50% 100%; transform: translate(-50%, -100%) rotate(-120deg);
-    transition: 0.4s cubic-bezier(0.1, 0.8, 0.1, 1); filter: drop-shadow(0 0 8px var(--neon)); z-index: 10;
+body { 
+    background: var(--bg); color: white; margin: 0; display: flex; align-items: center; justify-content: center; 
+    min-height: 100vh; font-family: 'Segoe UI', system-ui, sans-serif; overflow: hidden;
 }
 
-.readout-core { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -30%); width: 100%; }
-#main-value { font-size: 5.5rem; font-weight: 900; line-height: 0.8; letter-spacing: -3px; }
-.status-msg { font-size: 0.75rem; color: var(--neon); margin-top: 10px; font-weight: bold; }
-.unit-label { font-size: 0.65rem; color: #444; font-weight: bold; margin-top: 5px; }
+.cyber-bg { position: fixed; width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, #0d0d2b 0%, #010208 100%); z-index: -1; }
 
-.gauge-ticks span { position: absolute; top: 50%; left: 50%; font-size: 0.7rem; color: #333; font-weight: bold; transform: rotate(var(--a)) translate(0, -115px) rotate(calc(var(--a) * -1)); }
+.master-hub { 
+    width: 92%; max-width: 450px; padding: 25px; background: rgba(255,255,255,0.03); 
+    backdrop-filter: blur(40px); border-radius: 40px; border: 1px solid rgba(255,255,255,0.1); text-align: center;
+}
 
-.results-matrix { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 25px; }
-.res-card { background: rgba(0,0,0,0.4); padding: 15px 5px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); }
-.res-card .val { display: block; font-size: 1.4rem; font-weight: 900; color: var(--neon); }
-.res-card .lbl { font-size: 0.55rem; color: #666; display: block; margin-bottom: 5px; }
+.memory-strip { display: flex; justify-content: space-between; margin-bottom: 20px; background: rgba(0,0,0,0.5); padding: 12px; border-radius: 15px; border-bottom: 2px solid var(--neon); font-size: 0.8rem; }
+.mem-box b { color: var(--neon); margin-right: 3px; }
 
-.ignite-btn { width: 100%; padding: 15px; margin-top: 20px; border-radius: 15px; background: transparent; border: 2px solid var(--neon); color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
-.ignite-btn:hover { background: var(--neon); color: black; }
+.pro-select { width: 100%; background: #000; color: var(--neon); border: 1px solid #333; padding: 12px; border-radius: 12px; font-weight: bold; margin-bottom: 20px; }
+
+.gauge-sector { position: relative; width: 300px; height: 300px; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+.gauge-path-bg { fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 5; transform: rotate(135deg); transform-origin: center; }
+
+.needle-neon {
+    position: absolute; top: 50%; left: 50%; width: 4px; height: 110px;
+    background: linear-gradient(to top, var(--neon), transparent);
+    transform-origin: 50% 100%; transform: translate(-50%, -100%) rotate(-120deg);
+    transition: 0.4s cubic-bezier(0.1, 0.8, 0.2, 1); filter: drop-shadow(0 0 10px var(--neon)); z-index: 10;
+}
+
+.readout-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -30%); width: 100%; }
+#main-value { font-size: 6rem; font-weight: 900; line-height: 0.8; letter-spacing: -3px; }
+.status-label { font-size: 0.8rem; color: var(--neon); margin-top: 15px; font-weight: bold; }
+
+.gauge-ticks span { position: absolute; top: 50%; left: 50%; font-size: 0.75rem; color: #444; font-weight: bold; transform: rotate(var(--a)) translate(0, -135px) rotate(calc(var(--a) * -1)); }
+
+.results-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 30px; }
+.card { background: rgba(0,0,0,0.4); padding: 15px 5px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); }
+.card .v { display: block; font-size: 1.5rem; font-weight: 900; color: var(--neon); }
+.card .l { font-size: 0.6rem; color: #666; display: block; margin-bottom: 5px; }
+
+.run-btn { width: 100%; padding: 18px; margin-top: 25px; border-radius: 20px; background: var(--neon); color: black; font-weight: 950; font-size: 1.1rem; border: none; cursor: pointer; transition: 0.3s; }
+.run-btn:disabled { background: #333; color: #666; cursor: not-allowed; }
+
+@media (max-width: 400px) { .gauge-sector { width: 260px; height: 260px; } #main-value { font-size: 4.5rem; } }
