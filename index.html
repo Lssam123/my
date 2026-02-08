@@ -3,34 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S-SPEED GLOBAL V85</title>
+    <title>S-SPEED V86 | QUANTUM</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="cyber-bg"></div>
-    <div class="interface-shell">
+    <div class="quantum-shell">
         
-        <div class="global-status-bar">
-            <div class="stat-box ping-box">
-                <span class="icon">📶</span>
-                <span class="label">PING</span>
-                <span id="top-ping" class="value">-- ms</span>
-            </div>
-            <div class="stat-box dl-box">
-                <span class="icon">⬇️</span>
-                <span class="label">DOWNLOAD</span>
-                <span id="top-dl" class="value">--</span>
-            </div>
-            <div class="stat-box ul-box">
-                <span class="icon">⬆️</span>
-                <span class="label">UPLOAD</span>
-                <span id="top-ul" class="value">--</span>
-            </div>
-        </div>
-
-        <div class="control-panel">
-            <select id="server-selector" class="global-select">
-                <option value="auto">⚡ أفضل سيرفر تلقائي (Best Ping)</option>
+        <div class="server-deck">
+            <select id="server-selector" class="quantum-select">
+                <option value="auto">⚡ أفضل مسار (Auto Best)</option>
                 <option value="stc">STC KSA</option>
                 <option value="mobily">Mobily KSA</option>
                 <option value="zain">Zain KSA</option>
@@ -40,40 +22,50 @@
             </select>
         </div>
 
-        <div class="gauge-assembly">
-            <div class="gauge-ticks" id="gauge-ticks"></div>
-            <div class="gauge-circle">
+        <div class="gauge-reactor">
+            <div class="gauge-scale" id="gauge-scale"></div>
+            
+            <div class="gauge-ring-box">
                 <svg viewBox="0 0 200 200">
                     <defs>
-                        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <linearGradient id="dl-grad" x1="0%" y1="0%" x2="100%" y2="0%">
                             <stop offset="0%" style="stop-color:#00f2fe;stop-opacity:1" />
                             <stop offset="100%" style="stop-color:#4facfe;stop-opacity:1" />
                         </linearGradient>
+                        <linearGradient id="ul-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style="stop-color:#f093fb;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#f5576c;stop-opacity:1" />
+                        </linearGradient>
                     </defs>
-                    <circle class="track-bg" cx="100" cy="100" r="90"></circle>
-                    <circle id="progress-ring" class="track-active" cx="100" cy="100" r="90"></circle>
+                    <path class="track-bg" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" />
+                    <path id="progress-path" class="track-active" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" stroke="url(#dl-grad)" />
                 </svg>
-                <div id="needle" class="needle-master"></div>
+                <div id="needle" class="quantum-needle"></div>
             </div>
-            <div class="center-info">
-                <div id="main-speed">0</div>
-                <div id="phase-text" class="phase-text">READY</div>
-                <div class="unit">MBPS</div>
+
+            <div class="reactor-core">
+                <div id="main-val">0.0</div>
+                <div id="phase-lbl" class="phase-lbl">READY</div>
+                <div class="unit-lbl">Mbps</div>
             </div>
         </div>
 
-        <div class="details-row">
-            <div class="detail-card">
-                <span class="lbl">Jitter (مثقل)</span>
-                <span id="res-jitter" class="val">-- ms</span>
+        <div class="data-grid">
+            <div class="data-cell">
+                <span class="l">Ping</span>
+                <span id="res-ping" class="v">--</span>
             </div>
-            <div class="detail-card">
-                <span class="lbl">أعلى قمة (Peak)</span>
-                <span id="res-peak" class="val">--</span>
+            <div class="data-cell">
+                <span class="l">Download</span>
+                <span id="res-dl" class="v dl-color">--</span>
+            </div>
+            <div class="data-cell">
+                <span class="l">Upload</span>
+                <span id="res-ul" class="v ul-color">--</span>
             </div>
         </div>
 
-        <button id="start-btn" class="global-btn" onclick="startGlobalTest()">GO</button>
+        <button id="start-btn" class="quantum-btn" onclick="startQuantumTest()">بدء الفحص الدقيق</button>
     </div>
     <script src="script.js"></script>
 </body>
