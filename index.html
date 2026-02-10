@@ -3,33 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S-SPEED V91 | FINAL FIX</title>
+    <title>S-SPEED V100 | SOVEREIGN</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="cyber-overlay"></div>
-    <div class="cmd-center">
+    <div class="matrix-bg"></div>
+    <div class="system-shell">
         
-        <div class="stat-ribbon">
-            <div class="stat-cell">
-                <span class="t-head">PING</span>
-                <span id="final-ping" class="t-data">--</span>
+        <div class="telemetry-bar">
+            <div class="t-module">
+                <span class="t-lbl">PING (IDLE)</span>
+                <span id="final-ping" class="t-val">-- <small>ms</small></span>
             </div>
-            <div class="stat-cell">
-                <span class="t-head">DOWNLOAD</span>
-                <span id="final-dl" class="t-data cyan-glow">--</span>
+            <div class="t-module">
+                <span class="t-lbl">DOWNLOAD</span>
+                <span id="final-dl" class="t-val dl-c">-- <small>Mbps</small></span>
             </div>
-            <div class="stat-cell">
-                <span class="t-head">UPLOAD</span>
-                <span id="final-ul" class="t-data purple-glow">--</span>
+            <div class="t-module">
+                <span class="t-lbl">UPLOAD</span>
+                <span id="final-ul" class="t-val ul-c">-- <small>Mbps</small></span>
             </div>
         </div>
 
-        <div class="server-zone">
-            <select id="srv-select" class="glass-select">
-                <option value="auto">⚡ تلقائي (Best Server)</option>
-                <option value="stc">STC KSA</option>
-                <option value="mobily">Mobily KSA</option>
+        <div class="control-deck">
+            <select id="srv-select" class="quantum-select">
+                <option value="auto">📡 AUTO PILOT (أفضل مسار)</option>
+                <option value="stc">STC (Saudi Telecom)</option>
+                <option value="mobily">Mobily (Etisalat)</option>
                 <option value="zain">Zain KSA</option>
                 <option value="salam">Salam Integrated</option>
                 <option value="go">GO Telecom</option>
@@ -37,39 +37,40 @@
             </select>
         </div>
 
-        <div class="gauge-unit">
-            <div class="ticks-ring" id="ticks-ring"></div>
-            <div class="gauge-face">
+        <div class="reactor-core">
+            <div class="gauge-ticks" id="gauge-ticks"></div>
+            <div class="gauge-ring-group">
                 <svg viewBox="0 0 200 200">
                     <defs>
-                        <linearGradient id="g-cyan" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00C9FF"/><stop offset="1" stop-color="#92FE9D"/></linearGradient>
-                        <linearGradient id="g-purple" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8E2DE2"/><stop offset="1" stop-color="#4A00E0"/></linearGradient>
+                        <linearGradient id="grad-dl" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#00C9FF"/><stop offset="1" stop-color="#92FE9D"/></linearGradient>
+                        <linearGradient id="grad-ul" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#F45C43"/><stop offset="1" stop-color="#EB3349"/></linearGradient>
                     </defs>
-                    <path class="bg-arc" d="M 30 170 A 100 100 0 1 1 170 170" fill="none"/>
-                    <path id="active-arc" class="fg-arc" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" stroke="url(#g-cyan)"/>
+                    <path class="track-base" d="M 30 170 A 100 100 0 1 1 170 170" />
+                    <path id="track-progress" class="track-live" d="M 30 170 A 100 100 0 1 1 170 170" stroke="url(#grad-dl)" />
                 </svg>
-                <div id="needle-arm" class="needle"></div>
+                <div id="needle-arm" class="needle-arm"></div>
             </div>
-            <div class="hud-info">
-                <div id="big-speed">0</div>
-                <div id="test-phase" class="phase">IDLE</div>
-                <div class="unit">Mbps</div>
+            
+            <div class="hud-center">
+                <div id="live-speed">0.0</div>
+                <div id="phase-txt" class="phase-txt">SYSTEM READY</div>
+                <div class="unit-txt">Mbps</div>
             </div>
         </div>
 
-        <div class="jitter-monitor">
-            <div class="j-header">
-                <span>البنق المثقل (Live Jitter)</span>
-                <span id="live-jitter" class="j-num">--</span>
-                <span class="ms">ms</span>
+        <div class="live-stats">
+            <div class="ls-card">
+                <span>البنق المثقل (Jitter)</span>
+                <div class="ls-val"><b id="live-jitter">--</b> ms</div>
+                <div class="progress-mini"><div id="jitter-bar" style="width:0%"></div></div>
             </div>
-            <div class="j-track"><div id="j-bar" class="j-fill"></div></div>
+            <div class="ls-card">
+                <span>أعلى قمة (Max Peak)</span>
+                <div class="ls-val"><b id="live-peak">--</b> Mbps</div>
+            </div>
         </div>
 
-        <div class="ctrl-panel">
-            <button id="start-btn" class="power-btn" onclick="startV91()">GO</button>
-            <button id="reset-btn" class="reset-btn" onclick="location.reload()">↺</button>
-        </div>
+        <button id="ignite-btn" class="ignite-btn" onclick="startV100()">INITIALIZE TEST</button>
     </div>
     <script src="script.js"></script>
 </body>
