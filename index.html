@@ -3,82 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S-SPEED V101 | GLOBAL STANDARD</title>
+    <title>S-SPEED V102 | MAX STRESS</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="network-grid"></div>
-    <div class="dashboard">
+    <div class="void-bg"></div>
+    <div class="system-panel">
         
-        <div class="top-deck">
-            <div class="server-control">
-                <div class="icon-pulse"></div>
-                <select id="server-select" class="global-select">
-                    <option value="auto">📍 تلقائي (أفضل نقطة وصول)</option>
-                    <option value="stc">STC (Saudi Telecom)</option>
-                    <option value="mobily">Mobily (Etisalat)</option>
-                    <option value="zain">Zain KSA</option>
-                    <option value="salam">Salam Integrated</option>
-                    <option value="go">GO Telecom</option>
-                    <option value="dawiyat">Dawiyat Fiber</option>
-                </select>
+        <div class="top-stats">
+            <div class="stat-block">
+                <span class="label">PING</span>
+                <span id="mem-ping" class="value">-- <small>ms</small></span>
             </div>
-            
-            <div class="score-board">
-                <div class="score-item">
-                    <span class="lbl">PING</span>
-                    <span id="res-ping" class="val">-- <small>ms</small></span>
-                </div>
-                <div class="score-item">
-                    <span class="lbl">DOWN</span>
-                    <span id="res-dl" class="val dl-c">-- <small>Mbps</small></span>
-                </div>
-                <div class="score-item">
-                    <span class="lbl">UP</span>
-                    <span id="res-ul" class="val ul-c">-- <small>Mbps</small></span>
-                </div>
+            <div class="stat-block border">
+                <span class="label">DOWNLOAD</span>
+                <span id="mem-dl" class="value dl-color">-- <small>Mbps</small></span>
+            </div>
+            <div class="stat-block">
+                <span class="label">UPLOAD</span>
+                <span id="mem-ul" class="value ul-color">-- <small>Mbps</small></span>
             </div>
         </div>
 
-        <div class="gauge-complex">
+        <div class="control-box">
+            <select id="server-select" class="cyber-dropdown">
+                <option value="auto">🔥 Auto Stress (أقوى ضغط)</option>
+                <option value="stc">STC KSA</option>
+                <option value="mobily">Mobily KSA</option>
+                <option value="zain">Zain KSA</option>
+                <option value="salam">Salam Integrated</option>
+                <option value="go">GO Telecom</option>
+            </select>
+        </div>
+
+        <div class="gauge-core">
             <div class="gauge-ticks" id="gauge-ticks"></div>
-            <div class="gauge-outer-ring"></div>
-            <div class="gauge-inner">
+            <div class="gauge-rings">
                 <svg viewBox="0 0 200 200">
                     <defs>
-                        <linearGradient id="grad-dl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00C9FF"/><stop offset="1" stop-color="#92FE9D"/></linearGradient>
-                        <linearGradient id="grad-ul" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7F00FF"/><stop offset="1" stop-color="#E100FF"/></linearGradient>
+                        <linearGradient id="g-dl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00C9FF"/><stop offset="1" stop-color="#92FE9D"/></linearGradient>
+                        <linearGradient id="g-ul" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FF416C"/><stop offset="1" stop-color="#FF4B2B"/></linearGradient>
                     </defs>
-                    <path class="track-bg" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" />
-                    <path id="track-active" class="track-fg" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" stroke="url(#grad-dl)" />
+                    <path class="track-back" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" />
+                    <path id="track-active" class="track-front" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" stroke="url(#g-dl)" />
                 </svg>
-                <div id="needle" class="needle-blade"></div>
+                <div id="needle" class="needle-laser"></div>
             </div>
             
-            <div class="hud-display">
-                <div id="big-val">0.0</div>
-                <div id="phase-status" class="status-pill">READY</div>
+            <div class="center-readout">
+                <div id="live-speed">0.0</div>
+                <div id="phase-txt" class="phase-txt">STANDBY</div>
                 <div class="unit">Mbps</div>
             </div>
         </div>
 
-        <div class="live-metrics">
-            <div class="metric-card">
-                <div class="m-head">
-                    <span>البنق المثقل (Jitter)</span>
-                    <strong id="live-jitter" class="yellow">--</strong>
-                </div>
-                <div class="graph-line"><div id="jitter-bar" style="width:0%"></div></div>
+        <div class="stress-monitor">
+            <div class="stress-row">
+                <span>البنق المثقل (Loaded Latency)</span>
+                <span id="live-loaded" class="stress-val">--</span>
+                <span class="unit">ms</span>
             </div>
-            <div class="metric-card">
-                <div class="m-head">
-                    <span>ثبات الاتصال (Stability)</span>
-                    <strong id="live-stability" class="green">--%</strong>
-                </div>
-            </div>
+            <div class="stress-bar-bg"><div id="stress-bar" class="stress-bar-fill"></div></div>
+            <div class="note">محاكاة ضغط الشبكة العالي (>150ms)</div>
         </div>
 
-        <button id="start-btn" class="start-btn" onclick="initiateGlobalTest()">START SPEEDTEST</button>
+        <div class="btn-group">
+            <button id="start-btn" class="main-btn" onclick="startMaxTest()">START TEST</button>
+            <button id="reset-btn" class="sub-btn" onclick="resetSystem()">↻ RESET</button>
+        </div>
     </div>
     <script src="script.js"></script>
 </body>
