@@ -3,31 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S-SPEED V104 | HOLOGRAPHIC</title>
+    <title>S-SPEED V105 | STABILITY CORE</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="holo-bg"></div>
-    <div class="glass-interface">
-        
-        <div class="hud-strip">
-            <div class="hud-box">
+    <div class="quantum-bg"></div>
+    
+    <div class="main-deck">
+        <div class="top-hud">
+            <div class="hud-col">
                 <span class="lbl">PING</span>
-                <span id="val-ping" class="val">-- <small>ms</small></span>
+                <span id="fin-ping" class="val">-- <span class="unit">ms</span></span>
             </div>
-            <div class="hud-box">
-                <span class="lbl">JITTER (LOADED)</span>
-                <span id="val-jitter" class="val load-color">-- <small>ms</small></span>
+            <div class="hud-col center-border">
+                <span class="lbl">DOWNLOAD</span>
+                <span id="fin-dl" class="val dl-txt">-- <span class="unit">Mbps</span></span>
             </div>
-            <div class="hud-box">
-                <span class="lbl">LOSS</span>
-                <span id="val-loss" class="val">0 <small>%</small></span>
+            <div class="hud-col">
+                <span class="lbl">UPLOAD</span>
+                <span id="fin-ul" class="val ul-txt">-- <span class="unit">Mbps</span></span>
             </div>
         </div>
 
-        <div class="server-nav">
-            <select id="server-select" class="holo-select">
-                <option value="auto">📡 الشبكة الذكية (Auto)</option>
+        <div class="srv-box">
+            <select id="srv-select" class="glass-dropdown">
+                <option value="auto">🚀 تلقائي (أفضل استجابة)</option>
                 <option value="stc">STC KSA</option>
                 <option value="mobily">Mobily KSA</option>
                 <option value="zain">Zain KSA</option>
@@ -36,39 +36,35 @@
             </select>
         </div>
 
-        <div class="reactor-container">
-            <div class="gauge-ticks" id="gauge-ticks"></div>
-            <div class="gauge-ring">
+        <div class="gauge-module">
+            <div class="ticks-circle" id="ticks"></div>
+            <div class="gauge-body">
                 <svg viewBox="0 0 200 200">
                     <defs>
-                        <linearGradient id="grad-cyan" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00F260"/><stop offset="1" stop-color="#0575E6"/></linearGradient>
-                        <linearGradient id="grad-magenta" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#833ab4"/><stop offset="1" stop-color="#fd1d1d"/></linearGradient>
+                        <linearGradient id="g-dl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00C9FF"/><stop offset="1" stop-color="#92FE9D"/></linearGradient>
+                        <linearGradient id="g-ul" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#F45C43"/><stop offset="1" stop-color="#EB3349"/></linearGradient>
                     </defs>
-                    <path class="track-dim" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" />
-                    <path id="track-main" class="track-lit" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" stroke="url(#grad-cyan)" />
+                    <path class="bg-path" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" />
+                    <path id="active-path" class="fg-path" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" stroke="url(#g-dl)" />
                 </svg>
-                <div id="needle" class="needle-laser"></div>
+                <div id="needle" class="needle-main"></div>
             </div>
-            
-            <div class="center-data">
-                <div id="big-speed">0</div>
-                <div id="status-text" class="status-text">READY</div>
-                <div class="unit">Mbps</div>
-            </div>
-        </div>
-
-        <div class="results-dock">
-            <div class="res-pill">
-                <span>DOWNLOAD</span>
-                <b id="final-dl" class="cyan">--</b>
-            </div>
-            <div class="res-pill">
-                <span>UPLOAD</span>
-                <b id="final-ul" class="magenta">--</b>
+            <div class="center-info">
+                <div id="live-num">0.0</div>
+                <div id="phase-txt" class="phase-txt">READY</div>
+                <div class="unit-sm">Mbps</div>
             </div>
         </div>
 
-        <button id="start-btn" class="holo-btn" onclick="startHoloTest()">ابدأ الفحص</button>
+        <div class="jitter-panel">
+            <div class="j-row">
+                <span>البنق المثقل (Live Jitter)</span>
+                <span id="live-jitter" class="j-val">--</span>
+            </div>
+            <div class="j-track"><div id="j-bar" class="j-fill"></div></div>
+        </div>
+
+        <button id="start-btn" class="power-btn" onclick="startV105()">START TEST</button>
     </div>
     <script src="script.js"></script>
 </body>
