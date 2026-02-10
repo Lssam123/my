@@ -1,51 +1,57 @@
-:root { --cyan: #00F260; --purple: #8E2DE2; --bg: #1a1a1a; --metal: #2c2c2c; }
-body { background: var(--bg); color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+:root { --cyan: #00C9FF; --magenta: #f80759; --bg: #0b0c10; }
+body { background: var(--bg); color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'Segoe UI', system-ui, sans-serif; overflow: hidden; }
 
-.titanium-bg { position: fixed; width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, #2b323c 0%, #000000 100%); z-index: -1; }
+.deep-space { position: fixed; width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, #1f2833 0%, #0b0c10 100%); z-index: -1; }
 
-.main-console { width: 95%; max-width: 460px; padding: 25px; background: rgba(30, 30, 30, 0.9); border-radius: 40px; border: 2px solid #444; box-shadow: 0 20px 60px rgba(0,0,0,0.8), inset 0 0 50px rgba(0,0,0,0.5); text-align: center; }
+.central-hub { width: 95%; max-width: 460px; padding: 25px; background: rgba(255,255,255,0.03); backdrop-filter: blur(35px); border-radius: 40px; border: 1px solid rgba(255,255,255,0.08); text-align: center; box-shadow: 0 30px 80px rgba(0,0,0,0.6); }
 
-/* الشريط العلوي */
-.top-display { display: flex; justify-content: space-between; background: #222; padding: 15px; border-radius: 20px; margin-bottom: 25px; border-bottom: 3px solid #444; }
-.disp-box { display: flex; flex-direction: column; width: 33%; }
-.disp-box.border { border-left: 1px solid #444; border-right: 1px solid #444; }
-.lbl { font-size: 0.65rem; color: #888; font-weight: bold; letter-spacing: 1px; }
-.val { font-size: 1.2rem; font-weight: 900; color: white; margin-top: 5px; }
-.cyan { color: var(--cyan); } .purple { color: var(--purple); }
+/* التنسيق العلوي */
+.hud-top { display: flex; justify-content: space-between; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 20px; margin-bottom: 20px; border-bottom: 2px solid var(--cyan); transition: border-color 0.3s; }
+.hud-slot { display: flex; flex-direction: column; width: 32%; text-align: center; }
+.middle { border-left: 1px solid rgba(255,255,255,0.1); border-right: 1px solid rgba(255,255,255,0.1); }
+.hud-label { font-size: 0.65rem; color: #888; font-weight: 800; letter-spacing: 1px; }
+.hud-value { font-size: 1.2rem; font-weight: 900; margin-top: 5px; }
+.dim { font-size: 0.7rem; color: #666; font-weight: normal; }
+.cyan { color: var(--cyan); } .magenta { color: var(--magenta); }
 
-.metal-select { width: 100%; background: #111; color: white; border: 1px solid #444; padding: 12px; border-radius: 12px; font-weight: bold; margin-bottom: 25px; outline: none; }
+.precision-select { width: 100%; background: #000; color: white; border: 1px solid #333; padding: 12px; border-radius: 12px; font-weight: bold; margin-bottom: 25px; outline: none; }
 
-/* العداد */
-.gauge-complex { position: relative; width: 300px; height: 300px; margin: 0 auto; }
-.gauge-center { position: absolute; width: 100%; height: 100%; }
-.track-bg { stroke: #333; stroke-width: 12; stroke-linecap: round; }
-.track-fg { stroke-width: 12; stroke-linecap: round; stroke-dasharray: 440; stroke-dashoffset: 440; transition: stroke-dashoffset 0.1s linear; filter: drop-shadow(0 0 5px var(--cyan)); }
+/* العداد المصحح هندسياً */
+.gauge-wrapper { position: relative; width: 320px; height: 320px; margin: 0 auto; }
+.gauge-svg-layer { position: absolute; width: 100%; height: 100%; top: 0; left: 0; z-index: 2; }
 
-.needle-metal {
-    position: absolute; top: 50%; left: 50%; width: 6px; height: 125px;
-    background: linear-gradient(to right, #ccc, #fff, #ccc); /* معدني */
-    border-radius: 50% 50% 0 0;
-    transform-origin: 50% 100%; transform: translate(-50%, -100%) rotate(-135deg);
+/* المسارات */
+.track-bg { stroke: rgba(255,255,255,0.05); stroke-width: 14; stroke-linecap: round; }
+/* الطول المحيطي للدائرة الجزئية: (2 * PI * 110) * (260/360) ≈ 500 */
+.track-fg { stroke-width: 14; stroke-linecap: round; stroke-dasharray: 500; stroke-dashoffset: 500; transition: stroke-dashoffset 0.1s linear; filter: drop-shadow(0 0 10px var(--cyan)); }
+
+.needle-arrow {
+    position: absolute; top: 50%; left: 50%; width: 4px; height: 135px;
+    background: white; border-radius: 4px;
+    /* التمركز الدقيق: النقطة 130deg- هي البداية */
+    transform-origin: 50% 100%; transform: translate(-50%, -100%) rotate(-130deg);
     transition: transform 0.15s cubic-bezier(0.2, 0.6, 0.3, 1);
-    box-shadow: 0 0 10px rgba(0,0,0,0.5); z-index: 10;
+    box-shadow: 0 0 15px white; z-index: 10;
 }
 
-.info-core { position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); width: 100%; }
-#live-speed { font-size: 5rem; font-weight: 900; line-height: 0.9; letter-spacing: -3px; color: #eee; }
-.phase-txt { font-size: 0.9rem; font-weight: bold; color: var(--cyan); margin-top: 5px; }
+.gauge-info { position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%); width: 100%; z-index: 5; }
+#live-num { font-size: 5rem; font-weight: 900; line-height: 0.9; letter-spacing: -3px; }
+.status-pill { display: inline-block; padding: 4px 12px; border-radius: 20px; background: rgba(255,255,255,0.1); font-size: 0.8rem; font-weight: bold; color: var(--cyan); margin-top: 10px; }
+.unit-txt { font-size: 0.7rem; color: #666; margin-top: 5px; }
 
-.ticks-ring span { position: absolute; top: 50%; left: 50%; font-size: 0.7rem; color: #666; font-weight: bold; transform: rotate(var(--d)) translate(0, -145px) rotate(calc(var(--d) * -1)); }
-
-/* الرسم البياني */
-.graph-container { width: 100%; height: 40px; background: #111; margin-top: 20px; border-radius: 10px; overflow: hidden; display: flex; align-items: flex-end; gap: 2px; padding: 2px; }
-.graph-bar { flex: 1; background: var(--cyan); opacity: 0.7; transition: height 0.2s; }
+/* الأرقام حول العداد */
+.ticks-layer span { 
+    position: absolute; top: 50%; left: 50%; font-size: 0.75rem; color: #555; font-weight: bold; 
+    /* توسيع المدار ليكون خارج الدائرة */
+    transform: rotate(var(--d)) translate(0, -155px) rotate(calc(var(--d) * -1)); 
+}
 
 /* البنق المثقل */
-.jitter-zone { margin-top: 20px; background: #222; padding: 12px; border-radius: 12px; text-align: left; border-left: 4px solid #ffca28; }
-.jz-head { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.8rem; color: #aaa; }
-.jz-val { font-weight: 900; color: #ffca28; font-size: 1.1rem; }
-.jz-bar-bg { width: 100%; height: 6px; background: #111; border-radius: 3px; overflow: hidden; }
-.jz-fill { height: 100%; width: 0%; background: #ffca28; transition: width 0.2s; }
+.jitter-row { margin-top: 30px; background: rgba(255,255,255,0.04); padding: 15px; border-radius: 15px; }
+.j-info { display: flex; justify-content: space-between; align-items: baseline; font-size: 0.8rem; color: #aaa; margin-bottom: 8px; }
+.j-num { font-size: 1.2rem; color: #ffeb3b; }
+.j-graph-bg { width: 100%; height: 4px; background: #222; border-radius: 2px; overflow: hidden; }
+.j-bar-fill { height: 100%; width: 0%; background: #ffeb3b; transition: width 0.2s; }
 
-.metal-btn { width: 100%; padding: 18px; margin-top: 25px; border-radius: 15px; background: linear-gradient(180deg, #fff, #ccc); color: black; font-weight: 900; font-size: 1.2rem; border: none; cursor: pointer; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-.metal-btn:hover { background: #fff; transform: translateY(-2px); box-shadow: 0 10px 25px rgba(255,255,255,0.2); }
+.precision-btn { width: 100%; padding: 18px; margin-top: 25px; border-radius: 15px; background: white; color: black; font-weight: 900; font-size: 1.2rem; border: none; cursor: pointer; transition: 0.3s; }
+.precision-btn:hover { background: var(--cyan); box-shadow: 0 0 30px var(--cyan); }
