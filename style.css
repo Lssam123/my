@@ -1,48 +1,49 @@
-:root { --cyan: #00f2fe; --pink: #f5576c; --bg: #080910; --glass: rgba(255,255,255,0.03); }
+:root { --cyan: #00C9FF; --purple: #8E2DE2; --bg: #0a0b10; }
 body { background: var(--bg); color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
 
-.cyber-bg { position: fixed; width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, #15162b 0%, #080910 100%); z-index: -1; }
+.cyber-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, #1a1c29 0%, #000000 100%); z-index: -1; }
 
-.main-interface { width: 95%; max-width: 460px; padding: 25px; background: var(--glass); backdrop-filter: blur(40px); border-radius: 40px; border: 1px solid rgba(255,255,255,0.08); text-align: center; }
+.cmd-center { width: 95%; max-width: 440px; padding: 20px; background: rgba(255,255,255,0.02); backdrop-filter: blur(30px); border-radius: 30px; border: 1px solid rgba(255,255,255,0.08); text-align: center; }
 
 /* الشريط العلوي */
-.top-history { display: flex; justify-content: space-between; background: rgba(0,0,0,0.4); padding: 15px; border-radius: 15px; margin-bottom: 25px; border-bottom: 2px solid var(--cyan); transition: border-color 0.3s; }
-.hist-item { display: flex; flex-direction: column; width: 33%; }
-.hist-item.border-x { border-left: 1px solid rgba(255,255,255,0.1); border-right: 1px solid rgba(255,255,255,0.1); }
-.h-lbl { font-size: 0.65rem; color: #888; font-weight: bold; margin-bottom: 4px; }
-.h-val { font-size: 1.1rem; font-weight: 900; color: white; }
-.dl-text { color: var(--cyan); } .ul-text { color: var(--pink); }
+.stat-ribbon { display: flex; justify-content: space-between; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 12px; margin-bottom: 20px; }
+.stat-cell { display: flex; flex-direction: column; width: 33%; }
+.t-head { font-size: 0.65rem; color: #777; font-weight: bold; }
+.t-data { font-size: 1.1rem; font-weight: 900; color: white; }
+.cyan-glow { color: var(--cyan); text-shadow: 0 0 10px rgba(0,201,255,0.3); }
+.purple-glow { color: #d482ff; text-shadow: 0 0 10px rgba(212,130,255,0.3); }
 
-.tech-select { width: 100%; background: #000; color: white; border: 1px solid #333; padding: 12px; border-radius: 12px; font-weight: bold; margin-bottom: 25px; outline: none; }
+.glass-select { width: 100%; background: #050505; color: white; border: 1px solid #333; padding: 10px; border-radius: 8px; margin-bottom: 20px; outline: none; font-weight: bold; }
 
 /* العداد */
-.gauge-wrapper { position: relative; width: 300px; height: 300px; margin: 0 auto; }
-.gauge-circle { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-.track-bg { stroke: rgba(255,255,255,0.05); stroke-width: 8; stroke-linecap: round; }
-.track-fg { stroke-width: 8; stroke-linecap: round; stroke-dasharray: 440; stroke-dashoffset: 440; transition: stroke-dashoffset 0.1s linear; }
+.gauge-unit { position: relative; width: 280px; height: 280px; margin: 0 auto; }
+.gauge-face { position: absolute; width: 100%; height: 100%; }
+.bg-arc { stroke: rgba(255,255,255,0.05); stroke-width: 8; stroke-linecap: round; }
+.fg-arc { stroke-width: 8; stroke-linecap: round; stroke-dasharray: 440; stroke-dashoffset: 440; transition: stroke-dashoffset 0.1s linear; }
 
-.needle-arrow {
-    position: absolute; top: 50%; left: 50%; width: 4px; height: 125px;
+.needle {
+    position: absolute; top: 50%; left: 50%; width: 4px; height: 120px;
     background: white; border-radius: 50% 50% 0 0;
     transform-origin: 50% 100%; transform: translate(-50%, -100%) rotate(-135deg);
-    transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
     box-shadow: 0 0 15px white; z-index: 10;
 }
 
-.center-text { position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); width: 100%; }
-#live-speed { font-size: 5rem; font-weight: 900; line-height: 1; letter-spacing: -2px; }
-.status-phase { font-size: 1rem; font-weight: bold; color: var(--cyan); text-transform: uppercase; margin-top: 5px; }
+.hud-info { position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); width: 100%; }
+#big-speed { font-size: 4.5rem; font-weight: 900; line-height: 1; letter-spacing: -2px; }
+.phase { font-size: 0.9rem; font-weight: bold; color: var(--cyan); margin-top: 5px; }
 
-.gauge-ticks span { position: absolute; top: 50%; left: 50%; font-size: 0.7rem; color: #666; font-weight: bold; transform: rotate(var(--deg)) translate(0, -145px) rotate(calc(var(--deg) * -1)); }
+.ticks-ring span { position: absolute; top: 50%; left: 50%; font-size: 0.7rem; color: #555; font-weight: bold; transform: rotate(var(--d)) translate(0, -135px) rotate(calc(var(--d) * -1)); }
 
-/* البنق المثقل الحي */
-.live-jitter-section { margin-top: 30px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; text-align: left; }
-.jitter-head { display: flex; align-items: baseline; margin-bottom: 8px; }
-.jitter-head span { font-size: 0.75rem; color: #aaa; font-weight: bold; flex-grow: 1; }
-.jitter-val { font-size: 1.4rem; font-weight: 900; color: #ffeb3b; }
-.ms { font-size: 0.8rem; color: #666; margin-left: 5px; }
-.jitter-graph-track { width: 100%; height: 4px; background: #333; border-radius: 2px; overflow: hidden; }
-.jitter-bar-fill { height: 100%; width: 0%; background: #ffeb3b; transition: width 0.2s; }
+/* البنق المثقل */
+.jitter-monitor { margin-top: 25px; background: rgba(255,255,255,0.04); padding: 12px; border-radius: 12px; text-align: left; }
+.j-header { display: flex; align-items: baseline; margin-bottom: 5px; }
+.j-header span { flex-grow: 1; font-size: 0.75rem; color: #aaa; }
+.j-num { font-size: 1.2rem; font-weight: bold; color: #F7CA18; margin-right: 5px; }
+.j-track { width: 100%; height: 4px; background: #222; border-radius: 2px; overflow: hidden; }
+.j-fill { height: 100%; width: 0%; background: #F7CA18; transition: width 0.2s; }
 
-.action-btn { width: 100%; padding: 18px; margin-top: 30px; border-radius: 50px; background: white; color: black; font-weight: 900; font-size: 1.2rem; border: none; cursor: pointer; transition: 0.3s; box-shadow: 0 0 20px rgba(255,255,255,0.2); }
-.action-btn:hover { transform: scale(1.02); box-shadow: 0 0 35px rgba(255,255,255,0.4); }
+.ctrl-panel { display: flex; gap: 10px; margin-top: 25px; }
+.power-btn { flex-grow: 1; padding: 15px; border-radius: 12px; background: white; color: black; font-weight: 900; font-size: 1.1rem; border: none; cursor: pointer; transition: 0.3s; }
+.power-btn:hover { background: var(--cyan); box-shadow: 0 0 20px var(--cyan); }
+.reset-btn { width: 50px; padding: 15px; border-radius: 12px; background: rgba(255,255,255,0.1); color: white; font-weight: bold; border: none; cursor: pointer; }
