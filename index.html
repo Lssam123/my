@@ -3,74 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S-SPEED V100 | SOVEREIGN</title>
+    <title>S-SPEED V101 | GLOBAL STANDARD</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="matrix-bg"></div>
-    <div class="system-shell">
+    <div class="network-grid"></div>
+    <div class="dashboard">
         
-        <div class="telemetry-bar">
-            <div class="t-module">
-                <span class="t-lbl">PING (IDLE)</span>
-                <span id="final-ping" class="t-val">-- <small>ms</small></span>
-            </div>
-            <div class="t-module">
-                <span class="t-lbl">DOWNLOAD</span>
-                <span id="final-dl" class="t-val dl-c">-- <small>Mbps</small></span>
-            </div>
-            <div class="t-module">
-                <span class="t-lbl">UPLOAD</span>
-                <span id="final-ul" class="t-val ul-c">-- <small>Mbps</small></span>
-            </div>
-        </div>
-
-        <div class="control-deck">
-            <select id="srv-select" class="quantum-select">
-                <option value="auto">📡 AUTO PILOT (أفضل مسار)</option>
-                <option value="stc">STC (Saudi Telecom)</option>
-                <option value="mobily">Mobily (Etisalat)</option>
-                <option value="zain">Zain KSA</option>
-                <option value="salam">Salam Integrated</option>
-                <option value="go">GO Telecom</option>
-                <option value="dawiyat">Dawiyat Fiber</option>
-            </select>
-        </div>
-
-        <div class="reactor-core">
-            <div class="gauge-ticks" id="gauge-ticks"></div>
-            <div class="gauge-ring-group">
-                <svg viewBox="0 0 200 200">
-                    <defs>
-                        <linearGradient id="grad-dl" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#00C9FF"/><stop offset="1" stop-color="#92FE9D"/></linearGradient>
-                        <linearGradient id="grad-ul" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#F45C43"/><stop offset="1" stop-color="#EB3349"/></linearGradient>
-                    </defs>
-                    <path class="track-base" d="M 30 170 A 100 100 0 1 1 170 170" />
-                    <path id="track-progress" class="track-live" d="M 30 170 A 100 100 0 1 1 170 170" stroke="url(#grad-dl)" />
-                </svg>
-                <div id="needle-arm" class="needle-arm"></div>
+        <div class="top-deck">
+            <div class="server-control">
+                <div class="icon-pulse"></div>
+                <select id="server-select" class="global-select">
+                    <option value="auto">📍 تلقائي (أفضل نقطة وصول)</option>
+                    <option value="stc">STC (Saudi Telecom)</option>
+                    <option value="mobily">Mobily (Etisalat)</option>
+                    <option value="zain">Zain KSA</option>
+                    <option value="salam">Salam Integrated</option>
+                    <option value="go">GO Telecom</option>
+                    <option value="dawiyat">Dawiyat Fiber</option>
+                </select>
             </div>
             
-            <div class="hud-center">
-                <div id="live-speed">0.0</div>
-                <div id="phase-txt" class="phase-txt">SYSTEM READY</div>
-                <div class="unit-txt">Mbps</div>
+            <div class="score-board">
+                <div class="score-item">
+                    <span class="lbl">PING</span>
+                    <span id="res-ping" class="val">-- <small>ms</small></span>
+                </div>
+                <div class="score-item">
+                    <span class="lbl">DOWN</span>
+                    <span id="res-dl" class="val dl-c">-- <small>Mbps</small></span>
+                </div>
+                <div class="score-item">
+                    <span class="lbl">UP</span>
+                    <span id="res-ul" class="val ul-c">-- <small>Mbps</small></span>
+                </div>
             </div>
         </div>
 
-        <div class="live-stats">
-            <div class="ls-card">
-                <span>البنق المثقل (Jitter)</span>
-                <div class="ls-val"><b id="live-jitter">--</b> ms</div>
-                <div class="progress-mini"><div id="jitter-bar" style="width:0%"></div></div>
+        <div class="gauge-complex">
+            <div class="gauge-ticks" id="gauge-ticks"></div>
+            <div class="gauge-outer-ring"></div>
+            <div class="gauge-inner">
+                <svg viewBox="0 0 200 200">
+                    <defs>
+                        <linearGradient id="grad-dl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00C9FF"/><stop offset="1" stop-color="#92FE9D"/></linearGradient>
+                        <linearGradient id="grad-ul" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7F00FF"/><stop offset="1" stop-color="#E100FF"/></linearGradient>
+                    </defs>
+                    <path class="track-bg" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" />
+                    <path id="track-active" class="track-fg" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" stroke="url(#grad-dl)" />
+                </svg>
+                <div id="needle" class="needle-blade"></div>
             </div>
-            <div class="ls-card">
-                <span>أعلى قمة (Max Peak)</span>
-                <div class="ls-val"><b id="live-peak">--</b> Mbps</div>
+            
+            <div class="hud-display">
+                <div id="big-val">0.0</div>
+                <div id="phase-status" class="status-pill">READY</div>
+                <div class="unit">Mbps</div>
             </div>
         </div>
 
-        <button id="ignite-btn" class="ignite-btn" onclick="startV100()">INITIALIZE TEST</button>
+        <div class="live-metrics">
+            <div class="metric-card">
+                <div class="m-head">
+                    <span>البنق المثقل (Jitter)</span>
+                    <strong id="live-jitter" class="yellow">--</strong>
+                </div>
+                <div class="graph-line"><div id="jitter-bar" style="width:0%"></div></div>
+            </div>
+            <div class="metric-card">
+                <div class="m-head">
+                    <span>ثبات الاتصال (Stability)</span>
+                    <strong id="live-stability" class="green">--%</strong>
+                </div>
+            </div>
+        </div>
+
+        <button id="start-btn" class="start-btn" onclick="initiateGlobalTest()">START SPEEDTEST</button>
     </div>
     <script src="script.js"></script>
 </body>
