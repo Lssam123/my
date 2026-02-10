@@ -1,91 +1,55 @@
-:root { --cyan: #0575E6; --purple: #b20a2c; --bg: #000000; }
-body { background: var(--bg); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'Segoe UI', sans-serif; overflow: hidden; perspective: 1000px; /* سر الـ 3D */ }
+:root { --cyan: #0575E6; --magenta: #fd1d1d; --bg: #000; }
+body { background: var(--bg); color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
 
-.space-bg { position: fixed; width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, #1b1b1b 0%, #000000 100%); z-index: -2; }
+/* خلفية متحركة */
+.holo-bg { position: fixed; width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, #1a1f35 0%, #000 100%); z-index: -1; }
 
-/* المسرح ثلاثي الأبعاد */
-.stage-3d { transform-style: preserve-3d; transform: rotateX(10deg); transition: transform 0.5s; }
-
-.dashboard-3d {
-    width: 440px; padding: 30px; 
-    background: rgba(20, 20, 20, 0.8); 
+.glass-interface { 
+    width: 95%; max-width: 480px; padding: 30px; 
+    background: rgba(255, 255, 255, 0.03); 
+    backdrop-filter: blur(20px); 
     border-radius: 40px; 
-    border: 1px solid rgba(255,255,255,0.1);
-    box-shadow: 0 50px 100px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(255,255,255,0.05);
-    transform-style: preserve-3d;
-    position: relative;
-    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 0 50px rgba(0,0,0,0.5);
+    text-align: center;
 }
 
-.hud-top { 
-    display: flex; justify-content: space-between; 
-    background: linear-gradient(180deg, rgba(30,30,30,0.8), rgba(10,10,10,0.8));
-    padding: 15px; border-radius: 15px; margin-bottom: 25px;
-    border-bottom: 2px solid var(--cyan);
-    transform: translateZ(20px); /* يطفو فوق اللوحة */
-    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-}
+/* الشريط العلوي */
+.hud-strip { display: flex; justify-content: space-between; margin-bottom: 25px; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.hud-box { display: flex; flex-direction: column; width: 30%; }
+.lbl { font-size: 0.65rem; color: #888; font-weight: bold; letter-spacing: 1px; }
+.val { font-size: 1.1rem; font-weight: 900; color: white; margin-top: 5px; }
+.val small { font-size: 0.7rem; font-weight: normal; color: #aaa; }
+.load-color { color: #ffca28; }
 
-.hud-item { display: flex; flex-direction: column; width: 32%; text-align: center; }
-.h-lbl { font-size: 0.65rem; color: #666; font-weight: 800; letter-spacing: 1px; }
-.h-val { font-size: 1.2rem; font-weight: 900; color: white; margin-top: 5px; }
-.cyan { color: #00F260; } .purple { color: #ff4b1f; }
+.holo-select { width: 100%; background: rgba(0,0,0,0.5); color: white; border: 1px solid #333; padding: 12px; border-radius: 12px; font-weight: bold; margin-bottom: 30px; outline: none; }
 
-.holo-select { 
-    width: 100%; background: #050505; color: white; border: 1px solid #333; 
-    padding: 12px; border-radius: 10px; margin-bottom: 30px; outline: none; 
-    transform: translateZ(10px);
-}
+/* العداد */
+.reactor-container { position: relative; width: 300px; height: 300px; margin: 0 auto; }
+.gauge-ring { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.track-dim { stroke: rgba(255,255,255,0.05); stroke-width: 10; stroke-linecap: round; }
+.track-lit { stroke-width: 10; stroke-linecap: round; stroke-dasharray: 440; stroke-dashoffset: 440; transition: stroke-dashoffset 0.1s linear; filter: drop-shadow(0 0 8px var(--cyan)); }
 
-/* المحرك المجسم */
-.reactor-3d { position: relative; width: 280px; height: 280px; margin: 0 auto; transform-style: preserve-3d; }
-
-.ring-back { 
-    position: absolute; width: 100%; height: 100%; border-radius: 50%;
-    border: 15px solid rgba(255,255,255,0.02);
-    transform: translateZ(-20px);
-}
-.ring-front { 
-    position: absolute; width: 100%; height: 100%; 
-    transform: translateZ(20px); /* الحلقة تطفو */
-}
-
-.track-bg { stroke: rgba(255,255,255,0.05); stroke-width: 12; stroke-linecap: round; }
-.track-fg { stroke-width: 12; stroke-linecap: round; stroke-dasharray: 440; stroke-dashoffset: 440; transition: stroke-dashoffset 0.1s linear; filter: drop-shadow(0 0 10px var(--cyan)); }
-
-.needle-3d {
-    position: absolute; top: 50%; left: 50%; width: 6px; height: 120px;
+.needle-laser {
+    position: absolute; top: 50%; left: 50%; width: 4px; height: 125px;
     background: linear-gradient(to top, white, transparent);
-    border-radius: 6px;
     transform-origin: 50% 100%; transform: translate(-50%, -100%) rotate(-135deg);
-    transition: transform 0.2s cubic-bezier(0.2, 0.6, 0.2, 1);
-    transform-style: preserve-3d;
-    box-shadow: 0 0 20px white;
-    z-index: 50;
-    transform: translateZ(40px) translate(-50%, -100%) rotate(-135deg); /* الإبرة أعلى شيء */
+    transition: transform 0.15s cubic-bezier(0.2, 0.6, 0.3, 1);
+    box-shadow: 0 0 15px white; z-index: 10;
 }
 
-.core-text { 
-    position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%) translateZ(30px); 
-    text-align: center; width: 100%;
-}
-#live-val { font-size: 5rem; font-weight: 900; line-height: 0.8; letter-spacing: -2px; color: white; text-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-.phase { font-size: 0.9rem; font-weight: 700; color: var(--cyan); margin-top: 10px; }
+.center-data { position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); width: 100%; }
+#big-speed { font-size: 5rem; font-weight: 900; line-height: 0.9; letter-spacing: -3px; text-shadow: 0 0 20px rgba(0,0,0,0.5); }
+.status-text { font-size: 0.9rem; font-weight: bold; color: var(--cyan); margin-top: 5px; letter-spacing: 2px; }
 
-/* البنق المثقل */
-.live-metrics-3d { 
-    margin-top: 40px; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 15px;
-    transform: translateZ(15px); border-left: 4px solid #ffeb3b;
-}
-.metric-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; font-size: 0.8rem; color: #aaa; }
-.m-val { font-size: 1.4rem; font-weight: 900; color: #ffeb3b; }
-.graph-3d { width: 100%; height: 6px; background: #222; border-radius: 3px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); }
-.bar-fill { height: 100%; width: 0%; background: #ffeb3b; transition: width 0.1s; }
+.gauge-ticks span { position: absolute; top: 50%; left: 50%; font-size: 0.7rem; color: #555; font-weight: bold; transform: rotate(var(--d)) translate(0, -145px) rotate(calc(var(--d) * -1)); }
 
-.holo-btn { 
-    width: 100%; padding: 20px; margin-top: 30px; border-radius: 12px; 
-    background: white; color: black; font-weight: 900; font-size: 1.2rem; border: none; 
-    cursor: pointer; transition: 0.3s; transform: translateZ(25px);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-}
-.holo-btn:hover { transform: translateZ(30px) scale(1.02); box-shadow: 0 0 50px rgba(255,255,255,0.2); }
+/* النتائج السفلية */
+.results-dock { display: flex; gap: 15px; margin-top: 30px; }
+.res-pill { flex: 1; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 15px; }
+.res-pill span { display: block; font-size: 0.7rem; color: #888; margin-bottom: 5px; }
+.res-pill b { font-size: 1.3rem; font-weight: 900; color: white; }
+.cyan { color: #00F260; } .magenta { color: #fd1d1d; }
+
+.holo-btn { width: 100%; padding: 18px; margin-top: 30px; border-radius: 50px; background: white; color: black; font-weight: 900; font-size: 1.2rem; border: none; cursor: pointer; transition: 0.3s; box-shadow: 0 0 30px rgba(255,255,255,0.2); }
+.holo-btn:hover { transform: scale(1.02); box-shadow: 0 0 50px rgba(255,255,255,0.4); }
