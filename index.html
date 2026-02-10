@@ -3,31 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S-SPEED V107 | TITANIUM</title>
+    <title>S-SPEED V108 | ABSOLUTE PRECISION</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="titanium-bg"></div>
+    <div class="deep-space"></div>
     
-    <div class="main-console">
-        <div class="top-display">
-            <div class="disp-box">
-                <span class="lbl">PING</span>
-                <span id="final-ping" class="val">-- <small>ms</small></span>
+    <div class="central-hub">
+        <div class="hud-top">
+            <div class="hud-slot">
+                <span class="hud-label">PING</span>
+                <span id="res-ping" class="hud-value">-- <span class="dim">ms</span></span>
             </div>
-            <div class="disp-box border">
-                <span class="lbl">DOWNLOAD</span>
-                <span id="final-dl" class="val cyan">-- <small>Mbps</small></span>
+            <div class="hud-slot middle">
+                <span class="hud-label">DOWNLOAD</span>
+                <span id="res-dl" class="hud-value cyan">-- <span class="dim">Mbps</span></span>
             </div>
-            <div class="disp-box">
-                <span class="lbl">UPLOAD</span>
-                <span id="final-ul" class="val purple">-- <small>Mbps</small></span>
+            <div class="hud-slot">
+                <span class="hud-label">UPLOAD</span>
+                <span id="res-ul" class="hud-value magenta">-- <span class="dim">Mbps</span></span>
             </div>
         </div>
 
-        <div class="server-control">
-            <select id="server-select" class="metal-select">
-                <option value="auto">📡 الاستقبال التلقائي (Best Signal)</option>
+        <div class="server-area">
+            <select id="srv-select" class="precision-select">
+                <option value="auto">📡 الاستقبال التلقائي (Auto Best)</option>
                 <option value="stc">STC KSA</option>
                 <option value="mobily">Mobily KSA</option>
                 <option value="zain">Zain KSA</option>
@@ -36,40 +36,36 @@
             </select>
         </div>
 
-        <div class="gauge-complex">
-            <div class="ticks-ring" id="ticks-ring"></div>
-            <div class="gauge-center">
-                <svg viewBox="0 0 200 200">
-                    <defs>
-                        <linearGradient id="grad-cyan" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00F260"/><stop offset="1" stop-color="#0575E6"/></linearGradient>
-                        <linearGradient id="grad-purple" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8E2DE2"/><stop offset="1" stop-color="#4A00E0"/></linearGradient>
+        <div class="gauge-wrapper">
+            <div class="ticks-layer" id="ticks"></div>
+            
+            <div class="gauge-svg-layer">
+                <svg viewBox="0 0 240 240"> <defs>
+                        <linearGradient id="grad-dl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00C9FF"/><stop offset="1" stop-color="#92FE9D"/></linearGradient>
+                        <linearGradient id="grad-ul" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f80759"/><stop offset="1" stop-color="#bc4e9c"/></linearGradient>
                     </defs>
-                    <path class="track-bg" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" />
-                    <path id="track-active" class="track-fg" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" stroke="url(#grad-cyan)" />
+                    <path class="track-bg" d="M 40 200 A 110 110 0 1 1 200 200" fill="none" />
+                    <path id="track-active" class="track-fg" d="M 40 200 A 110 110 0 1 1 200 200" fill="none" stroke="url(#grad-dl)" />
                 </svg>
-                <div id="needle" class="needle-metal"></div>
+                <div id="needle" class="needle-arrow"></div>
             </div>
             
-            <div class="info-core">
-                <div id="live-speed">0.0</div>
-                <div id="phase-txt" class="phase-txt">STANDBY</div>
+            <div class="gauge-info">
+                <div id="live-num">0.0</div>
+                <div id="phase-txt" class="status-pill">READY</div>
+                <div class="unit-txt">Mbps</div>
             </div>
         </div>
 
-        <div class="graph-container">
-            <div class="graph-bars" id="graph-bars">
-                </div>
-        </div>
-
-        <div class="jitter-zone">
-            <div class="jz-head">
-                <span>Loaded Latency (Jitter)</span>
-                <span id="live-jitter" class="jz-val">-- ms</span>
+        <div class="jitter-row">
+            <div class="j-info">
+                <span>Loaded Latency</span>
+                <strong id="live-jitter" class="j-num">--</strong> ms
             </div>
-            <div class="jz-bar-bg"><div id="jitter-fill" class="jz-fill"></div></div>
+            <div class="j-graph-bg"><div id="j-bar" class="j-bar-fill"></div></div>
         </div>
 
-        <button id="start-btn" class="metal-btn" onclick="startTitaniumTest()">START ENGINE</button>
+        <button id="start-btn" class="precision-btn" onclick="startV108()">START TEST</button>
     </div>
     <script src="script.js"></script>
 </body>
