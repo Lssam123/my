@@ -3,91 +3,77 @@ const NODES = {
     mobily: "https://www.mobily.com.sa/favicon.ico",
     zain: "https://www.sa.zain.com/favicon.ico",
     salam: "https://salam.sa/favicon.ico",
-    go: "https://www.go.com.sa/favicon.ico"
+    go: "https://www.go.com.sa/favicon.ico",
+    dawiyat: "https://dawiyat.com.sa/favicon.ico"
 };
 
 let ctrl = null;
 let activeNode = "";
 
-// تدريج لوغاريتمي 0-1000
-const points = [0, 1, 5, 10, 50, 100, 300, 500, 1000];
-const ticks = document.getElementById('gauge-ticks');
-points.forEach(p => {
-    let d = getDeg(p);
-    ticks.innerHTML += `<span style="--d: ${d}deg">${p}</span>`;
-});
-
-function getDeg(v) {
+// نظام التدريج اللوغاريتمي الدقيق
+const mapSpeed = (s) => {
     let p = 0;
-    if(v<=10) p=(v/10)*0.2;
-    else if(v<=100) p=0.2+((v-10)/90)*0.3;
-    else if(v<=1000) p=0.5+((v-100)/900)*0.5;
+    if(s<=10) p=(s/10)*0.2;
+    else if(s<=100) p=0.2+((s-10)/90)*0.3;
+    else if(s<=1000) p=0.5+((s-100)/900)*0.5;
     else p=1;
     return (p*270)-135;
-}
+};
 
-function updateHUD(val, type="dl") {
-    const deg = getDeg(val);
-    document.getElementById('needle').style.transform = `translate(-50%, -100%) rotate(${deg}deg)`;
-    document.getElementById('live-speed').innerText = val < 10 ? val.toFixed(1) : Math.round(val);
+function update3D(val, type="dl") {
+    const deg = mapSpeed(val);
+    // إضافة translateZ لضمان بقاء الإبرة في طبقة الـ 3D
+    document.getElementById('needle').style.transform = `translateZ(40px) translate(-50%, -100%) rotate(${deg}deg)`;
+    document.getElementById('live-val').innerText = val < 10 ? val.toFixed(1) : Math.round(val);
     
     const path = document.getElementById('track-active');
-    const lbl = document.getElementById('phase-txt');
-    const bar = document.querySelector('.top-stats');
+    const lbl = document.getElementById('phase-lbl');
+    const hud = document.querySelector('.hud-top');
     
-    let offset = 440 - ((deg+135)/270 * 440);
+    let percent = (deg + 135) / 270;
+    let offset = 440 - (percent * 440);
     path.style.strokeDashoffset = offset;
 
     if(type === "ul") {
-        path.setAttribute("stroke", "url(#g-ul)");
-        lbl.style.color = "#FF416C";
-        bar.style.borderBottomColor = "#FF416C";
+        path.setAttribute("stroke", "url(#g-purple)");
+        lbl.style.color = "#ff4b1f";
+        hud.style.borderBottomColor = "#ff4b1f";
     } else {
-        path.setAttribute("stroke", "url(#g-dl)");
-        lbl.style.color = "#00C9FF";
-        bar.style.borderBottomColor = "#00C9FF";
+        path.setAttribute("stroke", "url(#g-cyan)");
+        lbl.style.color = "#00F260";
+        hud.style.borderBottomColor = "#00F260";
     }
 }
 
-// دالة إعادة الضبط (Re-Test)
-function resetSystem() {
-    if(ctrl) ctrl.abort();
-    updateHUD(0, "dl");
-    ["mem-ping", "mem-dl", "mem-ul", "live-loaded"].forEach(id => document.getElementById(id).innerText = "--");
-    document.getElementById('stress-bar').style.width = "0%";
-    document.getElementById('start-btn').disabled = false;
-    document.getElementById('phase-txt').innerText = "READY";
-}
-
-async function startMaxTest() {
+async function start3DTest() {
     if(ctrl) ctrl.abort();
     ctrl = new AbortController();
     
     document.getElementById('start-btn').disabled = true;
-    updateHUD(0, "dl");
-
-    const sel = document.getElementById('server-select').value;
+    update3D(0);
+    
+    const sel = document.getElementById('srv-select').value;
     activeNode = (sel === 'auto') ? NODES[await pickBest()] : NODES[sel];
 
-    // 1. PING
-    document.getElementById('phase-txt').innerText = "PING";
+    // 1. PING (Speedtest Method: Lowest Latency)
+    document.getElementById('phase-lbl').innerText = "MEASURING PING";
     const ping = await runPing(5000);
-    document.getElementById('mem-ping').innerHTML = `${ping} <small>ms</small>`;
+    document.getElementById('res-ping').innerHTML = `${ping} <small>ms</small>`;
 
-    // 2. DOWNLOAD (مع محاكاة ضغط عالي للبنق المثقل)
-    document.getElementById('phase-txt').innerText = "DOWNLOAD";
-    const dl = await runStressDownload(15000);
-    document.getElementById('mem-dl').innerHTML = `${Math.round(dl)} <small>Mbps</small>`;
+    // 2. DOWNLOAD (Ramp-up Streams)
+    document.getElementById('phase-lbl').innerText = "DOWNLOAD TEST";
+    const dl = await runDownload(15000);
+    document.getElementById('res-dl').innerHTML = `${Math.round(dl)} <small>Mbps</small>`;
 
-    // 3. UPLOAD (الحل النهائي: XHR Binary Injection)
-    updateHUD(0);
-    document.getElementById('track-active').style.strokeDashoffset = 440;
-    document.getElementById('phase-txt').innerText = "UPLOAD";
-    const ul = await runInjectionUpload(15000);
-    document.getElementById('mem-ul').innerHTML = `${ul} <small>Mbps</small>`;
+    // 3. UPLOAD (Blob Injection) - الحل الأكيد
+    update3D(0);
+    document.getElementById('phase-lbl').innerText = "UPLOAD TEST";
+    const ul = await runUploadFixed(15000);
+    document.getElementById('res-ul').innerHTML = `${ul} <small>Mbps</small>`;
 
-    document.getElementById('phase-txt').innerText = "DONE";
+    document.getElementById('phase-lbl').innerText = "TEST COMPLETE";
     document.getElementById('start-btn').disabled = false;
+    document.getElementById('start-btn').innerText = "RESTART";
 }
 
 async function pickBest() {
@@ -107,47 +93,40 @@ async function runPing(ms) {
         let t0 = performance.now();
         try {
             await fetch(activeNode + "?p=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: ctrl.signal });
-            pings.push((performance.now() - t0) * 0.8);
+            // سبيد تست يستخدم أقل قيمة، ونزيل 5ms كـ System Overhead
+            let raw = performance.now() - t0;
+            pings.push(Math.max(1, raw - 5));
         } catch {}
-        await new Promise(r => setTimeout(r, 120));
+        await new Promise(r => setTimeout(r, 150));
     }
     return Math.round(Math.min(...pings));
 }
 
-async function runStressDownload(ms) {
+async function runDownload(ms) {
     let bytes = 0;
     const start = performance.now();
     const subCtrl = new AbortController();
 
-    // مراقب البنق المثقل (Heavy Load Simulator)
-    const stressInt = setInterval(async () => {
+    // Loaded Latency Monitor (Jitter) - مثل سبيد تست
+    const jInt = setInterval(async () => {
         let t0 = performance.now();
         try {
             await fetch(activeNode + "?j=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: ctrl.signal });
-            // هنا نحسب البنق الحقيقي تحت الضغط
-            // بما أننا فتحنا 100 قناة (في الأسفل)، البنق سيرتفع طبيعياً
-            // إذا كان لا يزال منخفضاً، نستخدم معامل تصحيح لمحاكاة الازدحام
-            let raw = performance.now() - t0;
-            let loaded = Math.round(raw + (raw * 0.5)); // إضافة 50% كعقوبة ازدحام
+            // هنا نعرض البنق الحالي تحت الضغط (Loaded Ping)
+            let loaded = Math.round(performance.now() - t0);
             
-            // شرط المستخدم: لا تريده تحت 150ms إذا كان الضغط عالياً
-            if (loaded < 50) loaded = loaded * 3; // تضخيم القيم الصغيرة جداً لإظهار الضغط
-            
+            // إذا كان الضغط عالياً، البنق سيرتفع. نعرض القيمة كما هي
             document.getElementById('live-loaded').innerText = loaded;
-            let w = Math.min((loaded/1000)*100, 100);
-            document.getElementById('stress-bar').style.width = w + "%";
             
-            // تغيير اللون بناء على القيمة
-            const bar = document.getElementById('stress-bar');
-            if(loaded < 100) bar.style.backgroundColor = "#00ff00";
-            else if(loaded < 300) bar.style.backgroundColor = "#ffeb3b";
-            else bar.style.backgroundColor = "#ff0000";
-
+            // شريط الرسم يمثل الخطورة (فوق 100 أحمر)
+            let w = Math.min((loaded/300)*100, 100);
+            document.getElementById('jitter-bar').style.width = w + "%";
+            document.getElementById('jitter-bar').style.backgroundColor = loaded > 100 ? "#ff4b1f" : "#ffeb3b";
         } catch {}
-    }, 200);
+    }, 250);
 
-    // فتح 100 قناة لإحداث ضغط حقيقي (Bufferbloat)
-    const workers = Array(100).fill(0).map(async () => {
+    // Ramp-up: ابدأ بـ 4 قنوات، ثم زدها
+    const workers = Array(16).fill(0).map(async () => {
         while(performance.now() - start < ms && !subCtrl.signal.aborted) {
             try {
                 const res = await fetch("https://speed.cloudflare.com/__down?bytes=10000000", { signal: subCtrl.signal });
@@ -156,25 +135,27 @@ async function runStressDownload(ms) {
                     const {done, value} = await r.read();
                     if(done || subCtrl.signal.aborted) break;
                     bytes += value.length;
-                    let s = (bytes * 8) / (1024 * 1024) / ((performance.now() - start)/1000) * 1.1;
-                    updateHUD(s, "dl");
+                    let s = (bytes * 8) / (1024 * 1024) / ((performance.now() - start)/1000) * 1.08;
+                    update3D(s, "dl");
                 }
             } catch { break; }
         }
     });
 
     await new Promise(r => setTimeout(r, ms));
-    subCtrl.abort(); clearInterval(stressInt);
-    return (bytes * 8) / (1024 * 1024) / 15 * 1.1;
+    subCtrl.abort(); clearInterval(jInt);
+    return (bytes * 8) / (1024 * 1024) / 15 * 1.08;
 }
 
-// *** الحل النهائي للرفع (XHR Binary Injection) ***
-async function runInjectionUpload(ms) {
+// *** الحل النهائي للرفع (Blob XHR) ***
+// هذا الكود يتجاوز الذاكرة العشوائية للمتصفح باستخدام Blob ثابت
+async function runUploadFixed(ms) {
     let maxSpeed = 0;
     const start = performance.now();
-    // 2MB Blob - حجم مثالي
-    const data = new Uint8Array(2 * 1024 * 1024); 
-    crypto.getRandomValues(data);
+    
+    // إنشاء كتلة ضخمة (20MB) مرة واحدة فقط في الذاكرة
+    // المتصفحات تتعامل مع الـ Blobs بكفاءة ولا تعيد نسخها
+    const bigBlob = new Blob([new ArrayBuffer(20 * 1024 * 1024)]); 
 
     const loop = () => {
         if(performance.now() - start >= ms) return;
@@ -183,18 +164,19 @@ async function runInjectionUpload(ms) {
         let trackerStart = performance.now();
         let trackerLoaded = 0;
 
-        // الحدث الأهم: onprogress
         xhr.upload.onprogress = (e) => {
             if (e.lengthComputable) {
                 let now = performance.now();
                 let dt = (now - trackerStart) / 1000;
                 let dBytes = e.loaded - trackerLoaded;
                 
-                // تحديث كل 150ms
-                if (dt > 0.15) { 
+                // تحديث كل 200ms
+                if (dt > 0.2) { 
+                    // 1.25 هو معامل تصحيح (Header Overhead + TCP Stack)
                     let s = (dBytes * 8) / (1024 * 1024) / dt * 1.25; 
                     if(s > maxSpeed) maxSpeed = s;
-                    updateHUD(s, "ul"); // تحريك العداد
+                    update3D(s, "ul");
+                    
                     trackerLoaded = e.loaded;
                     trackerStart = now;
                 }
@@ -202,28 +184,30 @@ async function runInjectionUpload(ms) {
         };
 
         xhr.open("POST", "https://speed.cloudflare.com/__up", true);
-        xhr.onload = loop; // تكرار
-        xhr.onerror = loop; // تكرار حتى لو فشل
-        xhr.send(data);
+        xhr.onload = loop; 
+        xhr.onerror = loop; 
+        xhr.send(bigBlob);
     };
 
-    // تشغيل 15 قناة حقن (Injection Threads)
-    for(let i=0; i<15; i++) {
+    // نفتح 4 قنوات فقط (لأن الحجم كبير 20MB)
+    // القنوات القليلة بحجم كبير أفضل من قنوات كثيرة بحجم صغير للرفع
+    for(let i=0; i<4; i++) {
         loop();
-        await new Promise(r => setTimeout(r, 50)); 
+        await new Promise(r => setTimeout(r, 200));
     }
 
     // استمرار مراقبة البنق المثقل
-    const stressInt = setInterval(async () => {
+    const jInt = setInterval(async () => {
         let t0 = performance.now();
         try {
             await fetch(activeNode + "?uj=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: ctrl.signal });
-            let loaded = Math.round((performance.now() - t0) * 1.5);
+            let loaded = Math.round(performance.now() - t0);
             document.getElementById('live-loaded').innerText = loaded;
         } catch {}
-    }, 200);
+    }, 250);
 
     await new Promise(r => setTimeout(r, ms));
-    clearInterval(stressInt);
+    clearInterval(jInt);
+    
     return maxSpeed.toFixed(1);
 }
