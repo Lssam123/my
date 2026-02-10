@@ -3,31 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S-SPEED V105 | STABILITY CORE</title>
+    <title>S-SPEED V106 | STRICT LOGIC</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="quantum-bg"></div>
-    
-    <div class="main-deck">
-        <div class="top-hud">
-            <div class="hud-col">
-                <span class="lbl">PING</span>
-                <span id="fin-ping" class="val">-- <span class="unit">ms</span></span>
+    <div class="logic-bg"></div>
+    <div class="console-frame">
+        
+        <div class="status-bar">
+            <div class="sb-item">
+                <span class="sb-lbl">PING (IDLE)</span>
+                <span id="final-ping" class="sb-val">-- ms</span>
             </div>
-            <div class="hud-col center-border">
-                <span class="lbl">DOWNLOAD</span>
-                <span id="fin-dl" class="val dl-txt">-- <span class="unit">Mbps</span></span>
+            <div class="sb-item">
+                <span class="sb-lbl">DOWNLOAD</span>
+                <span id="final-dl" class="sb-val dl-color">-- Mbps</span>
             </div>
-            <div class="hud-col">
-                <span class="lbl">UPLOAD</span>
-                <span id="fin-ul" class="val ul-txt">-- <span class="unit">Mbps</span></span>
+            <div class="sb-item">
+                <span class="sb-lbl">UPLOAD</span>
+                <span id="final-ul" class="sb-val ul-color">-- Mbps</span>
             </div>
         </div>
 
-        <div class="srv-box">
-            <select id="srv-select" class="glass-dropdown">
-                <option value="auto">🚀 تلقائي (أفضل استجابة)</option>
+        <div class="srv-wrapper">
+            <select id="srv-select" class="logic-select">
+                <option value="auto">🤖 المسار الذكي (Smart Path)</option>
                 <option value="stc">STC KSA</option>
                 <option value="mobily">Mobily KSA</option>
                 <option value="zain">Zain KSA</option>
@@ -36,35 +36,36 @@
             </select>
         </div>
 
-        <div class="gauge-module">
-            <div class="ticks-circle" id="ticks"></div>
-            <div class="gauge-body">
+        <div class="gauge-hub">
+            <div class="gauge-scale" id="gauge-scale"></div>
+            <div class="gauge-center">
                 <svg viewBox="0 0 200 200">
                     <defs>
-                        <linearGradient id="g-dl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00C9FF"/><stop offset="1" stop-color="#92FE9D"/></linearGradient>
-                        <linearGradient id="g-ul" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#F45C43"/><stop offset="1" stop-color="#EB3349"/></linearGradient>
+                        <linearGradient id="grad-dl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00C9FF"/><stop offset="1" stop-color="#92FE9D"/></linearGradient>
+                        <linearGradient id="grad-ul" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7F00FF"/><stop offset="1" stop-color="#E100FF"/></linearGradient>
                     </defs>
-                    <path class="bg-path" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" />
-                    <path id="active-path" class="fg-path" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" stroke="url(#g-dl)" />
+                    <path class="track-dim" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" />
+                    <path id="track-active" class="track-lit" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" stroke="url(#grad-dl)" />
                 </svg>
-                <div id="needle" class="needle-main"></div>
+                <div id="needle" class="needle-blade"></div>
             </div>
-            <div class="center-info">
-                <div id="live-num">0.0</div>
-                <div id="phase-txt" class="phase-txt">READY</div>
-                <div class="unit-sm">Mbps</div>
+            <div class="readout-main">
+                <div id="live-speed">0.0</div>
+                <div id="phase-status" class="phase-status">READY</div>
+                <div class="unit">Mbps</div>
             </div>
         </div>
 
         <div class="jitter-panel">
-            <div class="j-row">
-                <span>البنق المثقل (Live Jitter)</span>
-                <span id="live-jitter" class="j-val">--</span>
+            <div class="jp-head">
+                <span>البنق المثقل (أثناء التحميل فقط)</span>
+                <span id="live-jitter" class="jp-val">--</span>
+                <span class="ms">ms</span>
             </div>
-            <div class="j-track"><div id="j-bar" class="j-fill"></div></div>
+            <div class="jp-track"><div id="jitter-bar" class="jp-fill"></div></div>
         </div>
 
-        <button id="start-btn" class="power-btn" onclick="startV105()">START TEST</button>
+        <button id="start-btn" class="logic-btn" onclick="startLogicTest()">بدء الفحص المنطقي</button>
     </div>
     <script src="script.js"></script>
 </body>
