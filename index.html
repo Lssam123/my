@@ -3,76 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S-SPEED V103 | 3D ENGINE</title>
+    <title>S-SPEED V104 | HOLOGRAPHIC</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="space-bg"></div>
-    
-    <div class="stage-3d">
-        <div class="dashboard-3d">
-            
-            <div class="glass-reflection"></div>
-
-            <div class="hud-top">
-                <div class="hud-item">
-                    <span class="h-lbl">PING</span>
-                    <span id="res-ping" class="h-val">-- <small>ms</small></span>
-                </div>
-                <div class="hud-item sep">
-                    <span class="h-lbl">DOWNLOAD</span>
-                    <span id="res-dl" class="h-val cyan">-- <small>Mbps</small></span>
-                </div>
-                <div class="hud-item">
-                    <span class="h-lbl">UPLOAD</span>
-                    <span id="res-ul" class="h-val purple">-- <small>Mbps</small></span>
-                </div>
+    <div class="holo-bg"></div>
+    <div class="glass-interface">
+        
+        <div class="hud-strip">
+            <div class="hud-box">
+                <span class="lbl">PING</span>
+                <span id="val-ping" class="val">-- <small>ms</small></span>
             </div>
-
-            <div class="server-slot">
-                <select id="srv-select" class="holo-select">
-                    <option value="auto">📡 AUTO SELECT (الأسرع)</option>
-                    <option value="stc">STC (Saudi Telecom)</option>
-                    <option value="mobily">Mobily (Etisalat)</option>
-                    <option value="zain">Zain KSA</option>
-                    <option value="salam">Salam Integrated</option>
-                    <option value="go">GO Telecom</option>
-                    <option value="dawiyat">Dawiyat Fiber</option>
-                </select>
+            <div class="hud-box">
+                <span class="lbl">JITTER (LOADED)</span>
+                <span id="val-jitter" class="val load-color">-- <small>ms</small></span>
             </div>
-
-            <div class="reactor-3d">
-                <div class="ring-back"></div>
-                <div class="ring-middle"></div>
-                <div class="ring-front">
-                    <svg viewBox="0 0 200 200">
-                        <defs>
-                            <linearGradient id="g-cyan" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00F260"/><stop offset="1" stop-color="#0575E6"/></linearGradient>
-                            <linearGradient id="g-purple" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b20a2c"/><stop offset="1" stop-color="#fffbd5"/></linearGradient>
-                        </defs>
-                        <path class="track-bg" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" />
-                        <path id="track-active" class="track-fg" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" stroke="url(#g-cyan)" />
-                    </svg>
-                </div>
-                <div id="needle" class="needle-3d"></div>
-                
-                <div class="core-text">
-                    <div id="live-val">0</div>
-                    <div id="phase-lbl" class="phase">SYSTEM READY</div>
-                </div>
+            <div class="hud-box">
+                <span class="lbl">LOSS</span>
+                <span id="val-loss" class="val">0 <small>%</small></span>
             </div>
-
-            <div class="live-metrics-3d">
-                <div class="metric-row">
-                    <span>Loaded Ping (Jitter)</span>
-                    <span id="live-loaded" class="m-val warning">--</span>
-                    <span class="unit">ms</span>
-                </div>
-                <div class="graph-3d"><div id="jitter-bar" class="bar-fill"></div></div>
-            </div>
-
-            <button id="start-btn" class="holo-btn" onclick="start3DTest()">INITIATE SEQUENCE</button>
         </div>
+
+        <div class="server-nav">
+            <select id="server-select" class="holo-select">
+                <option value="auto">📡 الشبكة الذكية (Auto)</option>
+                <option value="stc">STC KSA</option>
+                <option value="mobily">Mobily KSA</option>
+                <option value="zain">Zain KSA</option>
+                <option value="salam">Salam Integrated</option>
+                <option value="go">GO Telecom</option>
+            </select>
+        </div>
+
+        <div class="reactor-container">
+            <div class="gauge-ticks" id="gauge-ticks"></div>
+            <div class="gauge-ring">
+                <svg viewBox="0 0 200 200">
+                    <defs>
+                        <linearGradient id="grad-cyan" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00F260"/><stop offset="1" stop-color="#0575E6"/></linearGradient>
+                        <linearGradient id="grad-magenta" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#833ab4"/><stop offset="1" stop-color="#fd1d1d"/></linearGradient>
+                    </defs>
+                    <path class="track-dim" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" />
+                    <path id="track-main" class="track-lit" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" stroke="url(#grad-cyan)" />
+                </svg>
+                <div id="needle" class="needle-laser"></div>
+            </div>
+            
+            <div class="center-data">
+                <div id="big-speed">0</div>
+                <div id="status-text" class="status-text">READY</div>
+                <div class="unit">Mbps</div>
+            </div>
+        </div>
+
+        <div class="results-dock">
+            <div class="res-pill">
+                <span>DOWNLOAD</span>
+                <b id="final-dl" class="cyan">--</b>
+            </div>
+            <div class="res-pill">
+                <span>UPLOAD</span>
+                <b id="final-ul" class="magenta">--</b>
+            </div>
+        </div>
+
+        <button id="start-btn" class="holo-btn" onclick="startHoloTest()">ابدأ الفحص</button>
     </div>
     <script src="script.js"></script>
 </body>
