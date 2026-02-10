@@ -3,73 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S-SPEED V102 | MAX STRESS</title>
+    <title>S-SPEED V103 | 3D ENGINE</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="void-bg"></div>
-    <div class="system-panel">
-        
-        <div class="top-stats">
-            <div class="stat-block">
-                <span class="label">PING</span>
-                <span id="mem-ping" class="value">-- <small>ms</small></span>
-            </div>
-            <div class="stat-block border">
-                <span class="label">DOWNLOAD</span>
-                <span id="mem-dl" class="value dl-color">-- <small>Mbps</small></span>
-            </div>
-            <div class="stat-block">
-                <span class="label">UPLOAD</span>
-                <span id="mem-ul" class="value ul-color">-- <small>Mbps</small></span>
-            </div>
-        </div>
-
-        <div class="control-box">
-            <select id="server-select" class="cyber-dropdown">
-                <option value="auto">🔥 Auto Stress (أقوى ضغط)</option>
-                <option value="stc">STC KSA</option>
-                <option value="mobily">Mobily KSA</option>
-                <option value="zain">Zain KSA</option>
-                <option value="salam">Salam Integrated</option>
-                <option value="go">GO Telecom</option>
-            </select>
-        </div>
-
-        <div class="gauge-core">
-            <div class="gauge-ticks" id="gauge-ticks"></div>
-            <div class="gauge-rings">
-                <svg viewBox="0 0 200 200">
-                    <defs>
-                        <linearGradient id="g-dl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00C9FF"/><stop offset="1" stop-color="#92FE9D"/></linearGradient>
-                        <linearGradient id="g-ul" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FF416C"/><stop offset="1" stop-color="#FF4B2B"/></linearGradient>
-                    </defs>
-                    <path class="track-back" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" />
-                    <path id="track-active" class="track-front" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" stroke="url(#g-dl)" />
-                </svg>
-                <div id="needle" class="needle-laser"></div>
-            </div>
+    <div class="space-bg"></div>
+    
+    <div class="stage-3d">
+        <div class="dashboard-3d">
             
-            <div class="center-readout">
-                <div id="live-speed">0.0</div>
-                <div id="phase-txt" class="phase-txt">STANDBY</div>
-                <div class="unit">Mbps</div>
-            </div>
-        </div>
+            <div class="glass-reflection"></div>
 
-        <div class="stress-monitor">
-            <div class="stress-row">
-                <span>البنق المثقل (Loaded Latency)</span>
-                <span id="live-loaded" class="stress-val">--</span>
-                <span class="unit">ms</span>
+            <div class="hud-top">
+                <div class="hud-item">
+                    <span class="h-lbl">PING</span>
+                    <span id="res-ping" class="h-val">-- <small>ms</small></span>
+                </div>
+                <div class="hud-item sep">
+                    <span class="h-lbl">DOWNLOAD</span>
+                    <span id="res-dl" class="h-val cyan">-- <small>Mbps</small></span>
+                </div>
+                <div class="hud-item">
+                    <span class="h-lbl">UPLOAD</span>
+                    <span id="res-ul" class="h-val purple">-- <small>Mbps</small></span>
+                </div>
             </div>
-            <div class="stress-bar-bg"><div id="stress-bar" class="stress-bar-fill"></div></div>
-            <div class="note">محاكاة ضغط الشبكة العالي (>150ms)</div>
-        </div>
 
-        <div class="btn-group">
-            <button id="start-btn" class="main-btn" onclick="startMaxTest()">START TEST</button>
-            <button id="reset-btn" class="sub-btn" onclick="resetSystem()">↻ RESET</button>
+            <div class="server-slot">
+                <select id="srv-select" class="holo-select">
+                    <option value="auto">📡 AUTO SELECT (الأسرع)</option>
+                    <option value="stc">STC (Saudi Telecom)</option>
+                    <option value="mobily">Mobily (Etisalat)</option>
+                    <option value="zain">Zain KSA</option>
+                    <option value="salam">Salam Integrated</option>
+                    <option value="go">GO Telecom</option>
+                    <option value="dawiyat">Dawiyat Fiber</option>
+                </select>
+            </div>
+
+            <div class="reactor-3d">
+                <div class="ring-back"></div>
+                <div class="ring-middle"></div>
+                <div class="ring-front">
+                    <svg viewBox="0 0 200 200">
+                        <defs>
+                            <linearGradient id="g-cyan" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00F260"/><stop offset="1" stop-color="#0575E6"/></linearGradient>
+                            <linearGradient id="g-purple" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b20a2c"/><stop offset="1" stop-color="#fffbd5"/></linearGradient>
+                        </defs>
+                        <path class="track-bg" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" />
+                        <path id="track-active" class="track-fg" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" stroke="url(#g-cyan)" />
+                    </svg>
+                </div>
+                <div id="needle" class="needle-3d"></div>
+                
+                <div class="core-text">
+                    <div id="live-val">0</div>
+                    <div id="phase-lbl" class="phase">SYSTEM READY</div>
+                </div>
+            </div>
+
+            <div class="live-metrics-3d">
+                <div class="metric-row">
+                    <span>Loaded Ping (Jitter)</span>
+                    <span id="live-loaded" class="m-val warning">--</span>
+                    <span class="unit">ms</span>
+                </div>
+                <div class="graph-3d"><div id="jitter-bar" class="bar-fill"></div></div>
+            </div>
+
+            <button id="start-btn" class="holo-btn" onclick="start3DTest()">INITIATE SEQUENCE</button>
         </div>
     </div>
     <script src="script.js"></script>
