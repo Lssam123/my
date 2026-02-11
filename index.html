@@ -3,73 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S-SPEED V110 | NEURAL</title>
+    <title>S-SPEED V112 | TACTICAL SPLIT</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="neural-bg"></div>
-    <div class="interface-wrapper">
+    <div class="tactical-bg"></div>
+    <div class="main-hud">
         
-        <div class="top-stats-panel">
-            <div class="stat-unit">
-                <span class="lbl">PING</span>
-                <span id="final-ping" class="val">-- <small>ms</small></span>
-            </div>
-            <div class="stat-unit">
-                <span class="lbl">DOWNLOAD</span>
-                <span id="final-dl" class="val dl-c">-- <small>Mbps</small></span>
-            </div>
-            <div class="stat-unit">
-                <span class="lbl">UPLOAD</span>
-                <span id="final-ul" class="val ul-c">-- <small>Mbps</small></span>
-            </div>
-        </div>
-
-        <div class="server-selection">
-            <select id="srv-select" class="neural-select">
-                <option value="auto">🌐 المسار الذكي (Auto Route)</option>
-                <option value="stc">STC KSA</option>
-                <option value="mobily">Mobily KSA</option>
-                <option value="zain">Zain KSA</option>
-                <option value="salam">Salam Integrated</option>
-                <option value="go">GO Telecom</option>
-            </select>
-        </div>
-
-        <div class="gauge-section">
-            <div class="gauge-ticks" id="gauge-ticks"></div>
-            <div class="gauge-body">
-                <svg viewBox="0 0 200 200">
-                    <defs>
-                        <linearGradient id="grad-dl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00f260"/><stop offset="1" stop-color="#0575e6"/></linearGradient>
-                        <linearGradient id="grad-ul" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8e2de2"/><stop offset="1" stop-color="#4a00e0"/></linearGradient>
-                    </defs>
-                    <path class="track-bg" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" />
-                    <path id="track-main" class="track-val" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" stroke="url(#grad-dl)" />
-                </svg>
-                <div id="needle" class="needle-core"></div>
+        <div class="cards-zone">
+            <div class="t-card">
+                <span class="c-title">PING</span>
+                <span id="res-ping" class="c-val">-- <small>ms</small></span>
             </div>
             
-            <div class="center-readout">
-                <div id="live-val">0.0</div>
-                <div id="phase-txt" class="phase-txt">READY</div>
-                <div class="unit">Mbps</div>
+            <div class="t-card upload-active">
+                <span class="c-title">UPLOAD SPEED</span>
+                <span id="res-ul" class="c-val purple">-- <small>Mbps</small></span>
+                <div class="ul-bar-bg"><div id="ul-bar-fill" class="ul-bar-fill"></div></div>
+            </div>
+
+            <div class="t-card">
+                <span class="c-title">JITTER (LOADED)</span>
+                <span id="res-jitter" class="c-val yellow">-- <small>ms</small></span>
             </div>
         </div>
 
-        <div class="graph-box">
-            <canvas id="speed-graph"></canvas>
-        </div>
-
-        <div class="jitter-row">
-            <div class="j-info">
-                <span>Loaded Latency (Jitter)</span>
-                <span id="live-jitter" class="j-num">-- ms</span>
+        <div class="gauge-sector">
+            <div class="gauge-header">DOWNLOAD ENGINE</div>
+            <div class="gauge-assembly">
+                <div class="ticks-ring" id="ticks"></div>
+                <svg viewBox="0 0 200 200">
+                    <defs>
+                        <linearGradient id="grad-dl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00F260"/><stop offset="1" stop-color="#0575E6"/></linearGradient>
+                    </defs>
+                    <path class="track-bg" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" />
+                    <path id="track-dl" class="track-fg" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" stroke="url(#grad-dl)" />
+                </svg>
+                <div id="needle" class="needle-tac"></div>
+                
+                <div class="center-readout">
+                    <div id="val-dl">0.0</div>
+                    <div class="unit">Mbps</div>
+                </div>
             </div>
-            <div class="j-track"><div id="j-fill" class="j-fill"></div></div>
+            <div id="phase-lbl" class="phase-lbl">READY</div>
         </div>
 
-        <button id="start-btn" class="neural-btn" onclick="startNeuralTest()">START ENGINE</button>
+        <div class="control-row">
+            <select id="srv-select" class="tac-select">
+                <option value="auto">📡 تلقائي (AUTO)</option>
+                <option value="stc">STC</option>
+                <option value="mobily">Mobily</option>
+                <option value="zain">Zain</option>
+            </select>
+            <button id="start-btn" class="tac-btn" onclick="startV112()">START TEST</button>
+        </div>
     </div>
     <script src="script.js"></script>
 </body>
