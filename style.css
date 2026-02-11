@@ -1,55 +1,57 @@
-:root { --blue: #00f2fe; --purple: #f093fb; --bg: #0e1013; --card: rgba(255,255,255,0.05); }
-body { background: var(--bg); color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+:root { --blue: #4facfe; --purple: #a18cd1; --yellow: #fad0c4; --bg: #09090b; }
+* { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
 
-.orbit-bg { position: fixed; width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, #1a202c 0%, #000 100%); z-index: -1; }
+body { background: var(--bg); color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
 
-.command-deck { width: 95%; max-width: 460px; padding: 25px; background: rgba(20, 20, 25, 0.9); border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; box-shadow: 0 40px 80px rgba(0,0,0,0.8); }
+/* الخلفية المتحركة */
+.aurora-bg { position: fixed; width: 100%; height: 100%; background: radial-gradient(at top right, #1a1a2e, #000); z-index: -1; }
+.aurora-bg::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(79, 172, 254, 0.1), transparent 60%); animation: drift 10s infinite alternate; }
+@keyframes drift { from { transform: translate(0,0); } to { transform: translate(20px, 20px); } }
 
-/* السيرفرات */
-.server-panel { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; background: #000; padding: 5px 15px; border-radius: 15px; border: 1px solid #333; }
-.icon-saudi { width: 20px; height: 14px; background: linear-gradient(to bottom, #13522f, #18753c); border-radius: 2px; }
-.orbit-select { width: 100%; background: transparent; color: white; border: none; padding: 10px; font-weight: bold; outline: none; }
-optgroup { background: #222; }
-
-/* العداد (تحميل فقط) */
-.gauge-orbit { position: relative; width: 280px; height: 280px; margin: 0 auto 30px; }
-.gauge-label { text-align: center; color: var(--blue); font-weight: bold; letter-spacing: 2px; margin-bottom: 10px; }
-.gauge-wrapper { position: relative; width: 100%; height: 100%; }
-
-.track-bg { stroke: #222; stroke-width: 14; stroke-linecap: round; }
-.track-fg { stroke-width: 14; stroke-linecap: round; stroke-dasharray: 440; stroke-dashoffset: 440; transition: stroke-dashoffset 0.1s linear; filter: drop-shadow(0 0 10px var(--blue)); }
-
-.needle-orbit {
-    position: absolute; top: 50%; left: 50%; width: 4px; height: 110px;
-    background: white; border-radius: 4px;
-    transform-origin: 50% 100%; transform: translate(-50%, -100%) rotate(-135deg);
-    transition: transform 0.15s ease-out; box-shadow: 0 0 15px white;
+/* اللوحة الزجاجية */
+.glass-panel {
+    width: 90%; max-width: 420px; padding: 30px;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(25px);
+    border-radius: 40px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    text-align: center;
 }
 
-.center-text { position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
-#val-dl { font-size: 4.5rem; font-weight: 900; line-height: 0.9; color: var(--blue); }
-.unit { font-size: 0.8rem; color: #888; }
-.status-txt { text-align: center; color: #666; font-size: 0.9rem; font-weight: bold; margin-top: -30px; }
+/* القائمة العلوية */
+.header-row { display: flex; align-items: center; justify-content: center; margin-bottom: 40px; gap: 10px; background: rgba(0,0,0,0.2); padding: 8px 15px; border-radius: 20px; width: fit-content; margin-left: auto; margin-right: auto; }
+.status-dot { width: 8px; height: 8px; background: #00ff88; border-radius: 50%; box-shadow: 0 0 10px #00ff88; }
+.clean-select { background: transparent; border: none; color: white; font-weight: bold; outline: none; font-size: 0.9rem; cursor: pointer; }
+.clean-select option { background: #111; }
 
-.ticks-outer span { position: absolute; top: 50%; left: 50%; font-size: 0.7rem; color: #444; font-weight: bold; transform: rotate(var(--d)) translate(0, -145px) rotate(calc(var(--d) * -1)); }
+/* الكرة المركزية */
+.orb-wrapper { position: relative; width: 260px; height: 260px; margin: 0 auto 40px; display: flex; align-items: center; justify-content: center; }
+.orb-glow { position: absolute; width: 200px; height: 200px; background: var(--blue); opacity: 0.1; filter: blur(40px); border-radius: 50%; transition: background 0.5s; }
 
-/* البطاقات */
-.data-grid { display: flex; flex-direction: column; gap: 15px; }
-.data-card { background: var(--card); padding: 15px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.05); }
+.progress-ring { transform: rotate(-90deg); }
+.ring-bg { stroke: rgba(255,255,255,0.05); }
+.ring-fill { 
+    stroke: var(--blue); stroke-dasharray: 754; stroke-dashoffset: 754; 
+    stroke-linecap: round; transition: stroke-dashoffset 0.1s linear, stroke 0.3s;
+    filter: drop-shadow(0 0 8px var(--blue));
+}
 
-.upload-mode { border-left: 4px solid var(--purple); }
-.card-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; font-size: 0.8rem; color: #aaa; }
-.ul-val { font-size: 1.5rem; font-weight: 900; color: var(--purple); }
-.ul-track { width: 100%; height: 6px; background: #222; border-radius: 3px; overflow: hidden; }
-.ul-fill { height: 100%; width: 0%; background: var(--purple); transition: width 0.2s; }
-.ul-unit { font-size: 0.7rem; color: #666; margin-top: 5px; text-align: right; }
+.orb-content { position: absolute; text-align: center; }
+#main-number { font-size: 4.5rem; font-weight: 200; line-height: 1; letter-spacing: -2px; }
+.phase-lbl { font-size: 0.8rem; font-weight: 900; letter-spacing: 2px; color: var(--blue); margin-top: 5px; text-transform: uppercase; }
+.unit-lbl { font-size: 0.7rem; color: #666; }
 
-.split { display: flex; text-align: center; }
-.split-col { flex: 1; }
-.split-col.border { border-right: 1px solid rgba(255,255,255,0.1); }
-.lbl { display: block; font-size: 0.7rem; color: #666; margin-bottom: 5px; }
-.res { font-size: 1.2rem; font-weight: bold; color: white; }
-.yellow { color: #ffeb3b; }
+/* شبكة الإحصائيات */
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px; }
+.stat-item { background: rgba(255,255,255,0.02); padding: 15px; border-radius: 15px; text-align: left; transition: transform 0.2s; }
+.stat-item:hover { background: rgba(255,255,255,0.05); }
+.s-label { display: block; font-size: 0.65rem; color: #888; font-weight: bold; margin-bottom: 5px; }
+.s-val { font-size: 1.2rem; font-weight: bold; }
+.text-blue { color: var(--blue); } .text-purple { color: var(--purple); } .text-yellow { color: #fce77d; }
 
-.orbit-btn { width: 100%; padding: 18px; margin-top: 25px; border-radius: 15px; background: white; color: black; font-weight: 900; font-size: 1.2rem; border: none; cursor: pointer; transition: 0.3s; }
-.orbit-btn:hover { background: var(--blue); box-shadow: 0 0 30px var(--blue); }
+/* الأزرار */
+.action-area { display: flex; gap: 10px; }
+.glass-btn { flex: 1; padding: 18px; border-radius: 15px; background: white; color: black; font-weight: 900; font-size: 1rem; border: none; cursor: pointer; transition: 0.3s; }
+.glass-btn:hover { background: var(--blue); box-shadow: 0 0 30px var(--blue); }
+.reset-icon { width: 50px; border-radius: 15px; background: rgba(255,255,255,0.1); color: white; border: none; font-size: 1.2rem; cursor: pointer; }
