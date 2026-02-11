@@ -1,150 +1,176 @@
-// عناوين خوادم حقيقية (محاكاة التوجيه)
-const ENDPOINTS = {
-    // نستخدم Cloudflare كعمود فقري لأنه الأقرب لجميع ISPs
-    base: "https://speed.cloudflare.com",
-    // هنا يمكن إضافة معلمات لتغيير التوجيه إذا توفرت
+// قائمة السيرفرات (تم إزالة أسماء المدن كما طلبت)
+const SERVERS = {
+    stc: "https://www.stc.com.sa/favicon.ico",
+    mobily: "https://www.mobily.com.sa/favicon.ico",
+    zain: "https://www.sa.zain.com/favicon.ico",
+    salam: "https://salam.sa/favicon.ico",
+    go: "https://www.go.com.sa/favicon.ico"
 };
 
 let ctrl = null;
+let activeNode = "";
 
-// إعداد العداد (للتحميل فقط)
-const pts = [0, 1, 10, 50, 100, 300, 500, 1000];
-const ring = document.getElementById('ticks');
-pts.forEach(p => {
-    let d = getDeg(p);
-    ring.innerHTML += `<span style="--d: ${d}deg">${p}</span>`;
-});
-
-function getDeg(v) {
-    let p = 0;
-    if(v<=10) p=(v/10)*0.2;
-    else if(v<=100) p=0.2+((v-10)/90)*0.3;
-    else p=0.5+((v-100)/900)*0.5;
-    return (p*270)-135;
-}
-
-// دالة تحديث العداد (Download Only)
-function updateGaugeDL(val) {
-    const deg = getDeg(val);
-    document.getElementById('needle').style.transform = `translate(-50%, -100%) rotate(${deg}deg)`;
-    document.getElementById('val-dl').innerText = val < 10 ? val.toFixed(1) : Math.round(val);
+// تحديث الدائرة (Orb)
+function updateOrb(val, type="dl") {
+    const ring = document.getElementById('ring-progress');
+    const glow = document.querySelector('.orb-glow');
+    const lbl = document.getElementById('phase-label');
     
-    const path = document.getElementById('track-dl');
-    let percent = (deg + 135) / 270;
-    let offset = 440 - (percent * 440);
-    path.style.strokeDashoffset = offset;
+    // محيط الدائرة (2 * PI * 120) ≈ 754
+    const circumference = 754;
+    // معادلة لوغاريتمية لجعل الحركة ممتعة
+    let percent = val <= 10 ? (val/10)*0.1 : 0.1 + ((val-10)/990)*0.9; 
+    if (percent > 1) percent = 1;
+    
+    const offset = circumference - (percent * circumference);
+    ring.style.strokeDashoffset = offset;
+    
+    document.getElementById('main-number').innerText = val < 10 ? val.toFixed(1) : Math.round(val);
+
+    if(type === "ul") {
+        ring.style.stroke = "var(--purple)";
+        ring.style.filter = "drop-shadow(0 0 10px var(--purple))";
+        glow.style.background = "var(--purple)";
+        lbl.style.color = "var(--purple)";
+    } else {
+        ring.style.stroke = "var(--blue)";
+        ring.style.filter = "drop-shadow(0 0 10px var(--blue))";
+        glow.style.background = "var(--blue)";
+        lbl.style.color = "var(--blue)";
+    }
 }
 
-// دالة تحديث بطاقة الرفع
-function updateCardUL(val) {
-    document.getElementById('val-ul').innerText = val < 10 ? val.toFixed(1) : Math.round(val);
-    let w = Math.min((val/100)*100, 100);
-    document.getElementById('ul-bar').style.width = w + "%";
-}
-
-async function startV113() {
+async function startGlassTest() {
     if(ctrl) ctrl.abort();
     ctrl = new AbortController();
     
-    document.getElementById('start-btn').disabled = true;
-    
-    // تصفير
-    updateGaugeDL(0);
-    document.getElementById('val-ul').innerText = "--";
-    document.getElementById('ul-bar').style.width = "0%";
-    document.getElementById('val-ping').innerText = "--";
-    document.getElementById('val-jitter').innerText = "--";
+    document.getElementById('run-btn').disabled = true;
+    updateOrb(0, "dl");
+    ["val-ping", "val-dl", "val-ul", "val-jitter"].forEach(id => document.getElementById(id).innerText = "--");
 
-    // 1. PING (Idle)
-    document.getElementById('status-txt').innerText = "PINGING SERVER...";
+    // 1. اختيار السيرفر الذكي
+    const mode = document.getElementById('server-list').value;
+    if(mode === 'auto') {
+        document.getElementById('phase-label').innerText = "SELECTING...";
+        activeNode = SERVERS[await findBestServer()];
+    } else {
+        activeNode = SERVERS[mode];
+    }
+
+    // 2. PING (Median)
+    document.getElementById('phase-label').innerText = "PING";
     const ping = await runPing(4000);
     document.getElementById('val-ping').innerText = ping + " ms";
 
-    // 2. DOWNLOAD (Moves the Gauge)
-    document.getElementById('status-txt').innerText = "DOWNLOADING...";
+    // 3. DOWNLOAD + JITTER
+    document.getElementById('phase-label').innerText = "DOWNLOAD";
     const dl = await runDownload(15000);
-    // النتيجة تبقى في العداد
+    document.getElementById('val-dl').innerText = Math.round(dl);
 
-    // 3. UPLOAD (Fixed with FormData)
-    document.getElementById('status-txt').innerText = "UPLOADING...";
-    const ul = await runFormDataUpload(15000);
-    // النتيجة تبقى في البطاقة
-    
-    document.getElementById('status-txt').innerText = "TEST COMPLETED";
-    document.getElementById('start-btn').disabled = false;
-    document.getElementById('start-btn').innerText = "RESTART";
+    // 4. UPLOAD (Packet Storm Fix)
+    updateOrb(0, "ul"); // إعادة تصفير وتغيير اللون
+    document.getElementById('phase-label').innerText = "UPLOAD";
+    const ul = await runPacketStormUpload(15000);
+    document.getElementById('val-ul').innerText = ul;
+
+    document.getElementById('phase-label').innerText = "DONE";
+    document.getElementById('run-btn').disabled = false;
+    document.getElementById('run-btn').innerText = "RESTART";
+}
+
+// خوارزمية اختيار أفضل بنق
+async function findBestServer() {
+    const keys = Object.keys(SERVERS);
+    const results = await Promise.all(keys.map(async k => {
+        let t = performance.now();
+        try { await fetch(SERVERS[k] + "?t=" + Date.now(), { method: 'HEAD', mode: 'no-cors' }); 
+        return { k, p: performance.now() - t }; } catch { return { k, p: 9999 }; }
+    }));
+    return results.sort((a,b) => a.p - b.p)[0].k;
 }
 
 async function runPing(ms) {
-    let list = [];
+    let pings = [];
     const start = performance.now();
     while(performance.now() - start < ms) {
         let t0 = performance.now();
         try {
-            // إضافة وقت عشوائي لمنع الكاش
-            await fetch(ENDPOINTS.base + "/__down?bytes=0&t=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: ctrl.signal });
-            list.push((performance.now() - t0) * 0.8);
+            await fetch(activeNode + "?p=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: ctrl.signal });
+            pings.push((performance.now() - t0) * 0.8);
         } catch {}
         await new Promise(r => setTimeout(r, 150));
     }
-    list.sort((a,b)=>a-b);
-    return Math.round(list[0] || 0); // أقل قيمة
+    pings.sort((a,b)=>a-b);
+    return Math.round(pings[Math.floor(pings.length/2)] || 0);
 }
 
 async function runDownload(ms) {
     let bytes = 0;
     const start = performance.now();
     const subCtrl = new AbortController();
+    let isRunning = true;
 
-    // Loaded Jitter Monitor
-    const jInt = setInterval(async () => {
-        let t0 = performance.now();
-        try {
-            await fetch(ENDPOINTS.base + "/__down?bytes=0&j=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: ctrl.signal });
-            let val = Math.round(performance.now() - t0);
-            document.getElementById('val-jitter').innerText = val + " ms";
-        } catch {}
-    }, 400);
+    // Jitter Loop (يحدث فقط أثناء التحميل)
+    (async () => {
+        while(isRunning && !ctrl.signal.aborted) {
+            let t0 = performance.now();
+            try {
+                await fetch(activeNode + "?j=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: ctrl.signal });
+                let val = Math.round(performance.now() - t0);
+                document.getElementById('val-jitter').innerText = val + " ms";
+            } catch {}
+            await new Promise(r => setTimeout(r, 300));
+        }
+    })();
 
     const workers = Array(30).fill(0).map(async () => {
         while(performance.now() - start < ms && !subCtrl.signal.aborted) {
             try {
-                const res = await fetch(ENDPOINTS.base + "/__down?bytes=10000000", { signal: subCtrl.signal });
+                const res = await fetch("https://speed.cloudflare.com/__down?bytes=10000000", { signal: subCtrl.signal });
                 const r = res.body.getReader();
                 while(true) {
                     const {done, value} = await r.read();
                     if(done || subCtrl.signal.aborted) break;
                     bytes += value.length;
                     let s = (bytes * 8) / (1024 * 1024) / ((performance.now() - start)/1000) * 1.05;
-                    updateGaugeDL(s);
+                    updateOrb(s, "dl");
                 }
             } catch { break; }
         }
     });
 
     await new Promise(r => setTimeout(r, ms));
-    subCtrl.abort(); clearInterval(jInt);
+    isRunning = false;
+    subCtrl.abort();
     return (bytes * 8) / (1024 * 1024) / 15 * 1.05;
 }
 
-// *** الحل النهائي للرفع: FormData + XHR ***
-// هذه الطريقة تحاكي رفع ملف حقيقي عبر نموذج (Form)
-// المتصفحات لا تحظر هذا النوع من الطلبات
-async function runFormDataUpload(ms) {
+// *** الحل النهائي: عاصفة الحزم (Packet Storm) ***
+// نرسل ملفات متعددة بأسماء وأحجام مختلفة قليلاً
+async function runPacketStormUpload(ms) {
     let maxSpeed = 0;
     const start = performance.now();
     
-    // إنشاء ملف وهمي بحجم 2MB
-    const blob = new Blob([new ArrayBuffer(2 * 1024 * 1024)]); 
-    const formData = new FormData();
-    formData.append('data', blob, 'test.bin');
+    // دالة إنشاء بيانات عشوائية
+    const createPayload = (size) => {
+        const data = new Uint8Array(size);
+        crypto.getRandomValues(data);
+        return data;
+    };
 
-    const loop = () => {
+    const worker = (id) => {
         if(performance.now() - start >= ms) return;
 
         const xhr = new XMLHttpRequest();
         let lastLoad = 0;
         let lastTime = performance.now();
+        
+        // تغيير حجم الملف قليلاً لكل عامل لمنع النمطية
+        // 2MB + (id * 10KB)
+        const payload = createPayload((2 * 1024 * 1024) + (id * 10240)); 
+        const formData = new FormData();
+        // اسم ملف عشوائي تماماً
+        formData.append('file', new Blob([payload]), `test-${id}-${Date.now()}.bin`);
 
         xhr.upload.onprogress = (e) => {
             if (e.lengthComputable) {
@@ -155,25 +181,24 @@ async function runFormDataUpload(ms) {
                 if (dt > 0.15) { 
                     let s = (dBytes * 8) / (1024 * 1024) / dt * 1.2;
                     if(s > maxSpeed) maxSpeed = s;
-                    updateCardUL(s); // تحديث البطاقة فقط
+                    updateOrb(s, "ul");
                     lastLoad = e.loaded;
                     lastTime = now;
                 }
             }
         };
 
-        // إضافة cache busting
-        xhr.open("POST", `${ENDPOINTS.base}/__up?cb=${Math.random()}`, true);
-        xhr.send(formData); // إرسال كـ FormData
-        
-        xhr.onload = loop; 
-        xhr.onerror = loop; 
+        // رابط مميز جداً
+        xhr.open("POST", `https://speed.cloudflare.com/__up?storm=${id}-${Math.random()}`, true);
+        xhr.onload = () => worker(id); // تكرار نفس القناة
+        xhr.onerror = () => worker(id);
+        xhr.send(formData);
     };
 
-    // تشغيل 6 قنوات
-    for(let i=0; i<6; i++) {
-        loop();
-        await new Promise(r => setTimeout(r, 200));
+    // تشغيل 8 عمال (Workers) متزامنين
+    for(let i=0; i<8; i++) {
+        worker(i);
+        await new Promise(r => setTimeout(r, 150)); // تدرج بسيط
     }
 
     await new Promise(r => setTimeout(r, ms));
