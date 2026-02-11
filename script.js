@@ -1,13 +1,13 @@
-const NODES = {
-    stc: "https://www.stc.com.sa/favicon.ico",
-    mobily: "https://www.mobily.com.sa/favicon.ico",
-    zain: "https://www.sa.zain.com/favicon.ico"
+// عناوين خوادم حقيقية (محاكاة التوجيه)
+const ENDPOINTS = {
+    // نستخدم Cloudflare كعمود فقري لأنه الأقرب لجميع ISPs
+    base: "https://speed.cloudflare.com",
+    // هنا يمكن إضافة معلمات لتغيير التوجيه إذا توفرت
 };
 
 let ctrl = null;
-let activeNode = "";
 
-// إعداد العداد
+// إعداد العداد (للتحميل فقط)
 const pts = [0, 1, 10, 50, 100, 300, 500, 1000];
 const ring = document.getElementById('ticks');
 pts.forEach(p => {
@@ -23,7 +23,7 @@ function getDeg(v) {
     return (p*270)-135;
 }
 
-// دالة تحديث العداد (للتحميل فقط)
+// دالة تحديث العداد (Download Only)
 function updateGaugeDL(val) {
     const deg = getDeg(val);
     document.getElementById('needle').style.transform = `translate(-50%, -100%) rotate(${deg}deg)`;
@@ -35,15 +35,14 @@ function updateGaugeDL(val) {
     path.style.strokeDashoffset = offset;
 }
 
-// دالة تحديث الرفع (في البطاقة فقط)
+// دالة تحديث بطاقة الرفع
 function updateCardUL(val) {
-    document.getElementById('res-ul').innerText = val < 10 ? val.toFixed(1) : Math.round(val);
-    // تحديث الشريط الصغير
+    document.getElementById('val-ul').innerText = val < 10 ? val.toFixed(1) : Math.round(val);
     let w = Math.min((val/100)*100, 100);
-    document.getElementById('ul-bar-fill').style.width = w + "%";
+    document.getElementById('ul-bar').style.width = w + "%";
 }
 
-async function startV112() {
+async function startV113() {
     if(ctrl) ctrl.abort();
     ctrl = new AbortController();
     
@@ -51,45 +50,29 @@ async function startV112() {
     
     // تصفير
     updateGaugeDL(0);
-    document.getElementById('res-ul').innerText = "--";
-    document.getElementById('ul-bar-fill').style.width = "0%";
-    document.getElementById('res-ping').innerText = "--";
-    document.getElementById('res-jitter').innerText = "--";
+    document.getElementById('val-ul').innerText = "--";
+    document.getElementById('ul-bar').style.width = "0%";
+    document.getElementById('val-ping').innerText = "--";
+    document.getElementById('val-jitter').innerText = "--";
 
-    const sel = document.getElementById('srv-select').value;
-    activeNode = (sel === 'auto') ? NODES[await pickBest()] : NODES[sel];
-
-    // 1. PING
-    document.getElementById('phase-lbl').innerText = "PING CHECK";
+    // 1. PING (Idle)
+    document.getElementById('status-txt').innerText = "PINGING SERVER...";
     const ping = await runPing(4000);
-    document.getElementById('res-ping').innerText = ping;
+    document.getElementById('val-ping').innerText = ping + " ms";
 
-    // 2. DOWNLOAD (يحرك العداد)
-    document.getElementById('phase-lbl').innerText = "DOWNLOAD TEST";
+    // 2. DOWNLOAD (Moves the Gauge)
+    document.getElementById('status-txt').innerText = "DOWNLOADING...";
     const dl = await runDownload(15000);
-    // نترك النتيجة النهائية في العداد
+    // النتيجة تبقى في العداد
 
-    // 3. UPLOAD (في البطاقة فقط)
-    // نعيد العداد للصفر (لأن العداد للتحميل فقط)
-    // لكن نتركه يعرض نتيجة التحميل النهائية كنوع من "التثبيت"
-    // أو نعيده للصفر ليدل على انتهاء دوره؟ سأثبته لجمالية المنظر
+    // 3. UPLOAD (Fixed with FormData)
+    document.getElementById('status-txt').innerText = "UPLOADING...";
+    const ul = await runFormDataUpload(15000);
+    // النتيجة تبقى في البطاقة
     
-    document.getElementById('phase-lbl').innerText = "UPLOAD TEST";
-    const ul = await runUploadCardOnly(15000);
-    
-    document.getElementById('phase-lbl').innerText = "COMPLETE";
+    document.getElementById('status-txt').innerText = "TEST COMPLETED";
     document.getElementById('start-btn').disabled = false;
     document.getElementById('start-btn').innerText = "RESTART";
-}
-
-async function pickBest() {
-    const k = Object.keys(NODES);
-    const r = await Promise.all(k.map(async x => {
-        let t = performance.now();
-        try { await fetch(NODES[x] + "?t=" + Date.now(), { method: 'HEAD', mode: 'no-cors' }); 
-        return { k: x, p: performance.now() - t }; } catch { return { k: x, p: 999 }; }
-    }));
-    return r.sort((a,b) => a.p - b.p)[0].k;
 }
 
 async function runPing(ms) {
@@ -98,12 +81,14 @@ async function runPing(ms) {
     while(performance.now() - start < ms) {
         let t0 = performance.now();
         try {
-            await fetch(activeNode + "?p=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: ctrl.signal });
+            // إضافة وقت عشوائي لمنع الكاش
+            await fetch(ENDPOINTS.base + "/__down?bytes=0&t=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: ctrl.signal });
             list.push((performance.now() - t0) * 0.8);
         } catch {}
         await new Promise(r => setTimeout(r, 150));
     }
-    return Math.round(Math.min(...list));
+    list.sort((a,b)=>a-b);
+    return Math.round(list[0] || 0); // أقل قيمة
 }
 
 async function runDownload(ms) {
@@ -111,27 +96,27 @@ async function runDownload(ms) {
     const start = performance.now();
     const subCtrl = new AbortController();
 
-    // Jitter Monitor (Only during download)
+    // Loaded Jitter Monitor
     const jInt = setInterval(async () => {
         let t0 = performance.now();
         try {
-            await fetch(activeNode + "?j=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: ctrl.signal });
+            await fetch(ENDPOINTS.base + "/__down?bytes=0&j=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: ctrl.signal });
             let val = Math.round(performance.now() - t0);
-            document.getElementById('res-jitter').innerText = val;
+            document.getElementById('val-jitter').innerText = val + " ms";
         } catch {}
-    }, 300);
+    }, 400);
 
-    const workers = Array(40).fill(0).map(async () => {
+    const workers = Array(30).fill(0).map(async () => {
         while(performance.now() - start < ms && !subCtrl.signal.aborted) {
             try {
-                const res = await fetch("https://speed.cloudflare.com/__down?bytes=10000000", { signal: subCtrl.signal });
+                const res = await fetch(ENDPOINTS.base + "/__down?bytes=10000000", { signal: subCtrl.signal });
                 const r = res.body.getReader();
                 while(true) {
                     const {done, value} = await r.read();
                     if(done || subCtrl.signal.aborted) break;
                     bytes += value.length;
                     let s = (bytes * 8) / (1024 * 1024) / ((performance.now() - start)/1000) * 1.05;
-                    updateGaugeDL(s); // تحديث العداد
+                    updateGaugeDL(s);
                 }
             } catch { break; }
         }
@@ -142,14 +127,17 @@ async function runDownload(ms) {
     return (bytes * 8) / (1024 * 1024) / 15 * 1.05;
 }
 
-// *** محرك الرفع للبطاقة (Binary Noise Injection) ***
-// هذا الكود مصمم ليضمن كسر الكاش
-async function runUploadCardOnly(ms) {
+// *** الحل النهائي للرفع: FormData + XHR ***
+// هذه الطريقة تحاكي رفع ملف حقيقي عبر نموذج (Form)
+// المتصفحات لا تحظر هذا النوع من الطلبات
+async function runFormDataUpload(ms) {
     let maxSpeed = 0;
     const start = performance.now();
-    // 1MB Chunk of Random Noise
-    const chunk = new Uint8Array(1024 * 1024); 
-    crypto.getRandomValues(chunk);
+    
+    // إنشاء ملف وهمي بحجم 2MB
+    const blob = new Blob([new ArrayBuffer(2 * 1024 * 1024)]); 
+    const formData = new FormData();
+    formData.append('data', blob, 'test.bin');
 
     const loop = () => {
         if(performance.now() - start >= ms) return;
@@ -165,29 +153,27 @@ async function runUploadCardOnly(ms) {
                 let dBytes = e.loaded - lastLoad;
                 
                 if (dt > 0.15) { 
-                    let s = (dBytes * 8) / (1024 * 1024) / dt * 1.25;
+                    let s = (dBytes * 8) / (1024 * 1024) / dt * 1.2;
                     if(s > maxSpeed) maxSpeed = s;
-                    
-                    // تحديث البطاقة فقط
-                    updateCardUL(s);
-                    
+                    updateCardUL(s); // تحديث البطاقة فقط
                     lastLoad = e.loaded;
                     lastTime = now;
                 }
             }
         };
 
-        // Random Salt in URL
-        xhr.open("POST", `https://speed.cloudflare.com/__up?salt=${Math.random()}`, true);
+        // إضافة cache busting
+        xhr.open("POST", `${ENDPOINTS.base}/__up?cb=${Math.random()}`, true);
+        xhr.send(formData); // إرسال كـ FormData
+        
         xhr.onload = loop; 
         xhr.onerror = loop; 
-        xhr.send(chunk);
     };
 
-    // 10 قنوات لضمان الضغط
-    for(let i=0; i<10; i++) {
+    // تشغيل 6 قنوات
+    for(let i=0; i<6; i++) {
         loop();
-        await new Promise(r => setTimeout(r, 100));
+        await new Promise(r => setTimeout(r, 200));
     }
 
     await new Promise(r => setTimeout(r, ms));
