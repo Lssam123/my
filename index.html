@@ -3,78 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S-SPEED V109 | GLOBAL PULSE</title>
+    <title>S-SPEED V110 | NEURAL</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="grid-bg"></div>
-    <div class="global-frame">
+    <div class="neural-bg"></div>
+    <div class="interface-wrapper">
         
-        <div class="server-header">
-            <div class="signal-icon"></div>
-            <select id="server-select" class="global-select">
-                <option value="auto">📡 تحديد تلقائي (أفضل اتصال)</option>
+        <div class="top-stats-panel">
+            <div class="stat-unit">
+                <span class="lbl">PING</span>
+                <span id="final-ping" class="val">-- <small>ms</small></span>
+            </div>
+            <div class="stat-unit">
+                <span class="lbl">DOWNLOAD</span>
+                <span id="final-dl" class="val dl-c">-- <small>Mbps</small></span>
+            </div>
+            <div class="stat-unit">
+                <span class="lbl">UPLOAD</span>
+                <span id="final-ul" class="val ul-c">-- <small>Mbps</small></span>
+            </div>
+        </div>
+
+        <div class="server-selection">
+            <select id="srv-select" class="neural-select">
+                <option value="auto">🌐 المسار الذكي (Auto Route)</option>
                 <option value="stc">STC KSA</option>
                 <option value="mobily">Mobily KSA</option>
                 <option value="zain">Zain KSA</option>
                 <option value="salam">Salam Integrated</option>
                 <option value="go">GO Telecom</option>
-                <option value="dawiyat">Dawiyat Fiber</option>
             </select>
         </div>
 
-        <div class="gauge-cluster">
-            <canvas id="bg-chart"></canvas>
-            
-            <div class="gauge-main">
-                <div class="gauge-ticks" id="gauge-ticks"></div>
-                <svg viewBox="0 0 300 300" class="gauge-svg">
+        <div class="gauge-section">
+            <div class="gauge-ticks" id="gauge-ticks"></div>
+            <div class="gauge-body">
+                <svg viewBox="0 0 200 200">
                     <defs>
-                        <linearGradient id="grad-main" x1="0" y1="0" x2="1" y2="0">
-                            <stop offset="0%" stop-color="#00C9FF"/>
-                            <stop offset="100%" stop-color="#92FE9D"/>
-                        </linearGradient>
-                        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-                            <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
-                            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
-                        </filter>
+                        <linearGradient id="grad-dl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00f260"/><stop offset="1" stop-color="#0575e6"/></linearGradient>
+                        <linearGradient id="grad-ul" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8e2de2"/><stop offset="1" stop-color="#4a00e0"/></linearGradient>
                     </defs>
-                    <path class="track-bg" d="M 50 250 A 140 140 0 1 1 250 250" fill="none" />
-                    <path id="track-fill" class="track-fg" d="M 50 250 A 140 140 0 1 1 250 250" fill="none" stroke="url(#grad-main)" filter="url(#glow)" />
+                    <path class="track-bg" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" />
+                    <path id="track-main" class="track-val" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" stroke="url(#grad-dl)" />
                 </svg>
-                <div id="needle" class="needle-global"></div>
-                
-                <div class="center-hud">
-                    <div id="main-val">0.0</div>
-                    <div id="phase-tag" class="phase-tag">READY</div>
-                    <div class="unit">Mbps</div>
-                </div>
+                <div id="needle" class="needle-core"></div>
+            </div>
+            
+            <div class="center-readout">
+                <div id="live-val">0.0</div>
+                <div id="phase-txt" class="phase-txt">READY</div>
+                <div class="unit">Mbps</div>
             </div>
         </div>
 
-        <div class="data-dock">
-            <div class="data-slot">
-                <span class="lbl">PING</span>
-                <span id="res-ping" class="val">-- <small>ms</small></span>
-            </div>
-            <div class="data-slot middle">
-                <span class="lbl">DOWNLOAD</span>
-                <span id="res-dl" class="val cyan">-- <small>Mbps</small></span>
-            </div>
-            <div class="data-slot middle">
-                <span class="lbl">UPLOAD</span>
-                <span id="res-ul" class="val purple">-- <small>Mbps</small></span>
-            </div>
-            <div class="data-slot">
-                <span class="lbl">JITTER</span>
-                <span id="res-jitter" class="val yellow">-- <small>ms</small></span>
-            </div>
+        <div class="graph-box">
+            <canvas id="speed-graph"></canvas>
         </div>
 
-        <div class="controls">
-            <button id="start-btn" class="global-btn" onclick="startGlobalPulse()">START TEST</button>
-            <button class="retry-btn" onclick="location.reload()">↺</button>
+        <div class="jitter-row">
+            <div class="j-info">
+                <span>Loaded Latency (Jitter)</span>
+                <span id="live-jitter" class="j-num">-- ms</span>
+            </div>
+            <div class="j-track"><div id="j-fill" class="j-fill"></div></div>
         </div>
+
+        <button id="start-btn" class="neural-btn" onclick="startNeuralTest()">START ENGINE</button>
     </div>
     <script src="script.js"></script>
 </body>
