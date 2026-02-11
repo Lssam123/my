@@ -3,61 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S-SPEED V112 | TACTICAL SPLIT</title>
+    <title>S-SPEED V113 | KSA EDITION</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="tactical-bg"></div>
-    <div class="main-hud">
+    <div class="orbit-bg"></div>
+    <div class="command-deck">
         
-        <div class="cards-zone">
-            <div class="t-card">
-                <span class="c-title">PING</span>
-                <span id="res-ping" class="c-val">-- <small>ms</small></span>
-            </div>
-            
-            <div class="t-card upload-active">
-                <span class="c-title">UPLOAD SPEED</span>
-                <span id="res-ul" class="c-val purple">-- <small>Mbps</small></span>
-                <div class="ul-bar-bg"><div id="ul-bar-fill" class="ul-bar-fill"></div></div>
-            </div>
-
-            <div class="t-card">
-                <span class="c-title">JITTER (LOADED)</span>
-                <span id="res-jitter" class="c-val yellow">-- <small>ms</small></span>
-            </div>
+        <div class="server-panel">
+            <div class="icon-saudi"></div>
+            <select id="server-select" class="orbit-select">
+                <optgroup label="المنطقة الوسطى">
+                    <option value="ruh-auto">الرياض - تلقائي (Riyadh Auto)</option>
+                    <option value="ruh-stc">الرياض - STC</option>
+                    <option value="ruh-mobily">الرياض - Mobily</option>
+                    <option value="ruh-zain">الرياض - Zain</option>
+                </optgroup>
+                <optgroup label="المنطقة الغربية">
+                    <option value="jed-stc">جدة - STC (Jeddah)</option>
+                    <option value="jed-mobily">جدة - Mobily</option>
+                </optgroup>
+                <optgroup label="المنطقة الشرقية">
+                    <option value="dmm-stc">الدمام - STC (Dammam)</option>
+                    <option value="dmm-global">الدمام - Global Link</option>
+                </optgroup>
+            </select>
         </div>
 
-        <div class="gauge-sector">
-            <div class="gauge-header">DOWNLOAD ENGINE</div>
-            <div class="gauge-assembly">
-                <div class="ticks-ring" id="ticks"></div>
+        <div class="gauge-orbit">
+            <div class="gauge-label">DOWNLOAD</div>
+            <div class="gauge-wrapper">
+                <div class="ticks-outer" id="ticks"></div>
                 <svg viewBox="0 0 200 200">
                     <defs>
-                        <linearGradient id="grad-dl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00F260"/><stop offset="1" stop-color="#0575E6"/></linearGradient>
+                        <linearGradient id="grad-dl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4facfe"/><stop offset="1" stop-color="#00f2fe"/></linearGradient>
                     </defs>
                     <path class="track-bg" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" />
                     <path id="track-dl" class="track-fg" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" stroke="url(#grad-dl)" />
                 </svg>
-                <div id="needle" class="needle-tac"></div>
-                
-                <div class="center-readout">
+                <div id="needle" class="needle-orbit"></div>
+                <div class="center-text">
                     <div id="val-dl">0.0</div>
                     <div class="unit">Mbps</div>
                 </div>
             </div>
-            <div id="phase-lbl" class="phase-lbl">READY</div>
+            <div id="status-txt" class="status-txt">READY</div>
         </div>
 
-        <div class="control-row">
-            <select id="srv-select" class="tac-select">
-                <option value="auto">📡 تلقائي (AUTO)</option>
-                <option value="stc">STC</option>
-                <option value="mobily">Mobily</option>
-                <option value="zain">Zain</option>
-            </select>
-            <button id="start-btn" class="tac-btn" onclick="startV112()">START TEST</button>
+        <div class="data-grid">
+            <div class="data-card upload-mode">
+                <div class="card-head">
+                    <span>UPLOAD SPEED</span>
+                    <span id="val-ul" class="ul-val">--</span>
+                </div>
+                <div class="ul-track"><div id="ul-bar" class="ul-fill"></div></div>
+                <div class="ul-unit">Mbps</div>
+            </div>
+
+            <div class="data-card split">
+                <div class="split-col">
+                    <span class="lbl">PING</span>
+                    <span id="val-ping" class="res">--</span>
+                </div>
+                <div class="split-col border">
+                    <span class="lbl">JITTER</span>
+                    <span id="val-jitter" class="res yellow">--</span>
+                </div>
+            </div>
         </div>
+
+        <button id="start-btn" class="orbit-btn" onclick="startV113()">ابدأ القياس</button>
     </div>
     <script src="script.js"></script>
 </body>
