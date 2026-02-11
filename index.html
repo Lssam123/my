@@ -3,76 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S-SPEED V113 | KSA EDITION</title>
+    <title>S-SPEED V114 | GLASS ORB</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="orbit-bg"></div>
-    <div class="command-deck">
+    <div class="aurora-bg"></div>
+    
+    <div class="glass-panel">
         
-        <div class="server-panel">
-            <div class="icon-saudi"></div>
-            <select id="server-select" class="orbit-select">
-                <optgroup label="المنطقة الوسطى">
-                    <option value="ruh-auto">الرياض - تلقائي (Riyadh Auto)</option>
-                    <option value="ruh-stc">الرياض - STC</option>
-                    <option value="ruh-mobily">الرياض - Mobily</option>
-                    <option value="ruh-zain">الرياض - Zain</option>
-                </optgroup>
-                <optgroup label="المنطقة الغربية">
-                    <option value="jed-stc">جدة - STC (Jeddah)</option>
-                    <option value="jed-mobily">جدة - Mobily</option>
-                </optgroup>
-                <optgroup label="المنطقة الشرقية">
-                    <option value="dmm-stc">الدمام - STC (Dammam)</option>
-                    <option value="dmm-global">الدمام - Global Link</option>
-                </optgroup>
+        <div class="header-row">
+            <div class="status-dot"></div>
+            <select id="server-list" class="clean-select">
+                <option value="auto">⚡ تلقائي (الأسرع)</option>
+                <option value="stc">STC Saudi Arabia</option>
+                <option value="mobily">Mobily</option>
+                <option value="zain">Zain KSA</option>
+                <option value="salam">Salam</option>
+                <option value="go">GO Telecom</option>
             </select>
         </div>
 
-        <div class="gauge-orbit">
-            <div class="gauge-label">DOWNLOAD</div>
-            <div class="gauge-wrapper">
-                <div class="ticks-outer" id="ticks"></div>
-                <svg viewBox="0 0 200 200">
-                    <defs>
-                        <linearGradient id="grad-dl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4facfe"/><stop offset="1" stop-color="#00f2fe"/></linearGradient>
-                    </defs>
-                    <path class="track-bg" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" />
-                    <path id="track-dl" class="track-fg" d="M 30 170 A 100 100 0 1 1 170 170" fill="none" stroke="url(#grad-dl)" />
-                </svg>
-                <div id="needle" class="needle-orbit"></div>
-                <div class="center-text">
-                    <div id="val-dl">0.0</div>
-                    <div class="unit">Mbps</div>
-                </div>
-            </div>
-            <div id="status-txt" class="status-txt">READY</div>
-        </div>
-
-        <div class="data-grid">
-            <div class="data-card upload-mode">
-                <div class="card-head">
-                    <span>UPLOAD SPEED</span>
-                    <span id="val-ul" class="ul-val">--</span>
-                </div>
-                <div class="ul-track"><div id="ul-bar" class="ul-fill"></div></div>
-                <div class="ul-unit">Mbps</div>
-            </div>
-
-            <div class="data-card split">
-                <div class="split-col">
-                    <span class="lbl">PING</span>
-                    <span id="val-ping" class="res">--</span>
-                </div>
-                <div class="split-col border">
-                    <span class="lbl">JITTER</span>
-                    <span id="val-jitter" class="res yellow">--</span>
-                </div>
+        <div class="orb-wrapper">
+            <div class="orb-glow"></div>
+            <svg class="progress-ring" width="260" height="260">
+                <circle class="ring-bg" stroke-width="8" fill="transparent" r="120" cx="130" cy="130"/>
+                <circle id="ring-progress" class="ring-fill" stroke-width="8" fill="transparent" r="120" cx="130" cy="130"/>
+            </svg>
+            <div class="orb-content">
+                <div id="main-number">0</div>
+                <div id="phase-label" class="phase-lbl">READY</div>
+                <div class="unit-lbl">Mbps</div>
             </div>
         </div>
 
-        <button id="start-btn" class="orbit-btn" onclick="startV113()">ابدأ القياس</button>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <span class="s-label">PING</span>
+                <span id="val-ping" class="s-val">--</span>
+            </div>
+            <div class="stat-item">
+                <span class="s-label">DOWNLOAD</span>
+                <span id="val-dl" class="s-val text-blue">--</span>
+            </div>
+            <div class="stat-item">
+                <span class="s-label">UPLOAD</span>
+                <span id="val-ul" class="s-val text-purple">--</span>
+            </div>
+            <div class="stat-item">
+                <span class="s-label">LOADED</span>
+                <span id="val-jitter" class="s-val text-yellow">--</span>
+            </div>
+        </div>
+
+        <div class="action-area">
+            <button id="run-btn" class="glass-btn" onclick="startGlassTest()">START TEST</button>
+            <button class="reset-icon" onclick="location.reload()">↺</button>
+        </div>
+
     </div>
     <script src="script.js"></script>
 </body>
