@@ -1,25 +1,29 @@
+// 1. قائمة السيرفرات الكاملة
 const NODES = {
     stc: "https://www.stc.com.sa/favicon.ico",
     mobily: "https://www.mobily.com.sa/favicon.ico",
     zain: "https://www.sa.zain.com/favicon.ico",
     salam: "https://salam.sa/favicon.ico",
-    go: "https://www.go.com.sa/favicon.ico"
+    go: "https://www.go.com.sa/favicon.ico",
+    dawiyat: "https://dawiyat.com.sa/favicon.ico"
 };
 
-let ctrl = null; // وحدة التحكم لإيقاف العمليات السابقة
-let activeNodeUrl = "";
+let ctrl = null;         // للتحكم في الإلغاء
+let activeNodeUrl = "";  // السيرفر المختار
+let jitterInterval = null; // مؤقت البنق المثقل
 
-// دالة إعادة الفحص (Reset)
+// دالة إعادة تعيين النظام بالكامل (Fix for Hanging)
 function resetSystem() {
-    if(ctrl) ctrl.abort(); // إيقاف أي فحص جاري فوراً
+    if(ctrl) ctrl.abort(); // قتل العمليات السابقة
+    if(jitterInterval) clearInterval(jitterInterval);
     
     updateGauge(0, "dl");
-    ["end-ping", "end-dl", "end-ul"].forEach(id => document.getElementById(id).innerText = "--");
+    ["end-ping", "end-jitter", "end-dl", "end-ul"].forEach(id => document.getElementById(id).innerText = "--");
     document.getElementById('status-msg').innerText = "READY";
     
     const btn = document.getElementById('start-btn');
     btn.disabled = false;
-    btn.innerText = "START";
+    btn.innerText = "START CHECK";
 }
 
 function updateGauge(val, type="dl") {
@@ -31,7 +35,8 @@ function updateGauge(val, type="dl") {
     const path = document.getElementById('track-fill');
     const msg = document.getElementById('status-msg');
     
-    path.style.strokeDashoffset = 660 - (p * 660);
+    // محيط الدائرة 600
+    path.style.strokeDashoffset = 600 - (p * 600);
 
     if(type === "ul") {
         path.style.stroke = "var(--pink)";
@@ -44,9 +49,9 @@ function updateGauge(val, type="dl") {
     }
 }
 
-async function startTest() {
-    resetSystem(); // تنظيف قبل البدء
-    ctrl = new AbortController(); // وحدة تحكم جديدة
+async function startFullTest() {
+    resetSystem(); // ضمان بداية نظيفة
+    ctrl = new AbortController();
     
     document.getElementById('start-btn').disabled = true;
     
@@ -59,25 +64,27 @@ async function startTest() {
         activeNodeUrl = NODES[sel];
     }
 
-    // 1. PING
+    // 1. PING PHASE
     document.getElementById('status-msg').innerText = "PING";
     const ping = await runPing(4000);
     document.getElementById('end-ping').innerText = ping + " ms";
 
-    // 2. DOWNLOAD
+    // 2. DOWNLOAD PHASE (With Jitter Background)
     document.getElementById('status-msg').innerText = "DOWNLOAD";
+    startJitterMonitor(); // تشغيل البنق المثقل
     const dl = await runDownload(15000);
     document.getElementById('end-dl').innerText = Math.round(dl);
+    stopJitterMonitor(); // إيقاف البنق المثقل
 
-    // 3. UPLOAD (إصلاح: بيانات عشوائية ثنائية)
+    // 3. UPLOAD PHASE (Pulse Fix)
     updateGauge(0, "ul");
     document.getElementById('status-msg').innerText = "UPLOAD";
-    const ul = await runBinaryUpload(15000);
+    const ul = await runUploadPulse(15000);
     document.getElementById('end-ul').innerText = ul;
 
     document.getElementById('status-msg').innerText = "DONE";
     document.getElementById('start-btn').disabled = false;
-    document.getElementById('start-btn').innerText = "TEST AGAIN";
+    document.getElementById('start-btn').innerText = "RETEST";
 }
 
 async function pickBest() {
@@ -88,6 +95,22 @@ async function pickBest() {
         return { k: x, p: performance.now() - t }; } catch { return { k: x, p: 9999 }; }
     }));
     return r.sort((a,b) => a.p - b.p)[0].k;
+}
+
+// دالة البنق المثقل (تعمل في الخلفية)
+function startJitterMonitor() {
+    jitterInterval = setInterval(async () => {
+        let t0 = performance.now();
+        try {
+            await fetch(activeNodeUrl + "?j=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: ctrl.signal });
+            let val = Math.round(performance.now() - t0);
+            document.getElementById('end-jitter').innerText = val + " ms";
+        } catch {}
+    }, 400);
+}
+
+function stopJitterMonitor() {
+    if(jitterInterval) clearInterval(jitterInterval);
 }
 
 async function runPing(ms) {
@@ -110,8 +133,7 @@ async function runDownload(ms) {
     let bytes = 0;
     const start = performance.now();
     
-    // استخدام Fetch Stream
-    const workers = Array(30).fill(0).map(async () => {
+    const workers = Array(25).fill(0).map(async () => {
         while(performance.now() - start < ms) {
             if(ctrl.signal.aborted) break;
             try {
@@ -132,15 +154,13 @@ async function runDownload(ms) {
     return (bytes * 8) / (1024 * 1024) / 15 * 1.05;
 }
 
-// *** الحل المؤكد للرفع: Binary Random Blob ***
-// استخدام بيانات عشوائية ثنائية يمنع التوقف
-async function runBinaryUpload(ms) {
+// *** إصلاح الرفع: Pulse Upload Strategy ***
+// إرسال دفعات صغيرة ومتكررة يمنع المتصفح من التعليق
+async function runUploadPulse(ms) {
     let maxSpeed = 0;
     const start = performance.now();
-    
-    // 1MB Random Noise
-    const data = new Uint8Array(1024 * 1024);
-    crypto.getRandomValues(data); // تعبئة عشوائية
+    const data = new Uint8Array(512 * 1024); // 512KB
+    crypto.getRandomValues(data);
 
     const worker = () => {
         if(performance.now() - start >= ms || ctrl.signal.aborted) return;
@@ -156,7 +176,7 @@ async function runBinaryUpload(ms) {
                 let dBytes = e.loaded - lastLoad;
                 
                 if (dt > 0.1) { 
-                    let s = (dBytes * 8) / (1024 * 1024) / dt * 1.2;
+                    let s = (dBytes * 8) / (1024 * 1024) / dt * 1.15;
                     if(s > maxSpeed) maxSpeed = s;
                     updateGauge(s, "ul");
                     lastLoad = e.loaded;
@@ -165,14 +185,14 @@ async function runBinaryUpload(ms) {
             }
         };
 
-        xhr.open("POST", `https://speed.cloudflare.com/__up?ts=${Date.now()}`, true);
+        xhr.open("POST", `https://speed.cloudflare.com/__up?ts=${Date.now() + Math.random()}`, true);
         xhr.onload = worker; 
         xhr.onerror = worker; 
         xhr.send(data);
     };
 
-    // 8 قنوات (عدد مثالي للاستقرار)
-    for(let i=0; i<8; i++) {
+    // 10 قنوات تعمل بتناغم
+    for(let i=0; i<10; i++) {
         worker();
         await new Promise(r => setTimeout(r, 100));
     }
