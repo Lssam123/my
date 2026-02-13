@@ -3,63 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S-SPEED V114 | GLASS ORB</title>
+    <title>S-SPEED V115 | ATOMIC</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="aurora-bg"></div>
-    
-    <div class="glass-panel">
+    <div class="scanlines"></div>
+    <div class="cyber-container">
         
-        <div class="header-row">
-            <div class="status-dot"></div>
-            <select id="server-list" class="clean-select">
-                <option value="auto">⚡ تلقائي (الأسرع)</option>
-                <option value="stc">STC Saudi Arabia</option>
-                <option value="mobily">Mobily</option>
-                <option value="zain">Zain KSA</option>
-                <option value="salam">Salam</option>
-                <option value="go">GO Telecom</option>
+        <div class="sys-header">
+            <div class="sys-title">SYSTEM V.115 // ONLINE</div>
+            <select id="srv-select" class="cyber-select">
+                <option value="auto">⚡ TARGET: AUTO (BEST LATENCY)</option>
+                <option value="stc">TARGET: STC KSA</option>
+                <option value="mobily">TARGET: MOBILY</option>
+                <option value="zain">TARGET: ZAIN</option>
+                <option value="salam">TARGET: SALAM</option>
             </select>
         </div>
 
-        <div class="orb-wrapper">
-            <div class="orb-glow"></div>
-            <svg class="progress-ring" width="260" height="260">
-                <circle class="ring-bg" stroke-width="8" fill="transparent" r="120" cx="130" cy="130"/>
-                <circle id="ring-progress" class="ring-fill" stroke-width="8" fill="transparent" r="120" cx="130" cy="130"/>
-            </svg>
-            <div class="orb-content">
-                <div id="main-number">0</div>
-                <div id="phase-label" class="phase-lbl">READY</div>
-                <div class="unit-lbl">Mbps</div>
+        <div class="core-grid">
+            
+            <div class="gauge-unit">
+                <div class="circle-outer"></div>
+                <div class="circle-inner"></div>
+                <svg class="gauge-svg" viewBox="0 0 200 200">
+                    <defs>
+                        <linearGradient id="g-active" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0%" stop-color="#00ffcc"/>
+                            <stop offset="100%" stop-color="#00ccff"/>
+                        </linearGradient>
+                    </defs>
+                    <path class="track-bg" d="M 40 160 A 85 85 0 1 1 160 160" fill="none" />
+                    <path id="track-main" class="track-val" d="M 40 160 A 85 85 0 1 1 160 160" fill="none" stroke="url(#g-active)" />
+                </svg>
+                
+                <div class="digital-readout">
+                    <div id="live-val">000</div>
+                    <div class="unit-box">Mbps</div>
+                    <div id="status-phase" class="phase-box">STANDBY</div>
+                </div>
+            </div>
+
+            <div class="data-panel">
+                <div class="d-row">
+                    <span class="d-lbl">PING</span>
+                    <span id="res-ping" class="d-val">-- ms</span>
+                </div>
+                <div class="d-row">
+                    <span class="d-lbl">JITTER (LOAD)</span>
+                    <span id="res-jitter" class="d-val warn">-- ms</span>
+                </div>
+                <div class="d-row">
+                    <span class="d-lbl">DOWNLOAD</span>
+                    <span id="res-dl" class="d-val cyan">--</span>
+                </div>
+                <div class="d-row">
+                    <span class="d-lbl">UPLOAD</span>
+                    <span id="res-ul" class="d-val pink">--</span>
+                </div>
             </div>
         </div>
 
-        <div class="stats-grid">
-            <div class="stat-item">
-                <span class="s-label">PING</span>
-                <span id="val-ping" class="s-val">--</span>
-            </div>
-            <div class="stat-item">
-                <span class="s-label">DOWNLOAD</span>
-                <span id="val-dl" class="s-val text-blue">--</span>
-            </div>
-            <div class="stat-item">
-                <span class="s-label">UPLOAD</span>
-                <span id="val-ul" class="s-val text-purple">--</span>
-            </div>
-            <div class="stat-item">
-                <span class="s-label">LOADED</span>
-                <span id="val-jitter" class="s-val text-yellow">--</span>
-            </div>
+        <div class="sys-log" id="sys-log">
+            > Initializing system...<br>
+            > Waiting for user input...
         </div>
 
-        <div class="action-area">
-            <button id="run-btn" class="glass-btn" onclick="startGlassTest()">START TEST</button>
-            <button class="reset-icon" onclick="location.reload()">↺</button>
-        </div>
-
+        <button id="start-btn" class="cyber-btn" onclick="startAtomicTest()">INITIATE SEQUENCE</button>
     </div>
     <script src="script.js"></script>
 </body>
