@@ -3,46 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S-SPEED V120 | HEX CORE</title>
+    <title>S-SPEED V121 | KSA UNLIMITED</title>
     <style>
-        /* --- تصميم السداسيات (Hex CSS) --- */
-        :root { --cyan: #00F260; --pink: #ff0055; --bg: #111; --panel: rgba(30, 30, 40, 0.95); }
+        /* --- تصميم السداسيات المطور --- */
+        :root { --cyan: #00F260; --pink: #ff0055; --bg: #080808; --panel: rgba(20, 20, 30, 0.95); }
         body { background: var(--bg); color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'Segoe UI', system-ui, sans-serif; overflow: hidden; }
 
-        /* الخلفية */
+        /* خلفية شبكية */
         .hex-bg { 
             position: fixed; width: 100%; height: 100%; 
-            background-image: radial-gradient(#222 15%, transparent 16%), radial-gradient(#222 15%, transparent 16%);
-            background-size: 60px 60px; background-position: 0 0, 30px 30px; opacity: 0.2; z-index: -1;
+            background-image: linear-gradient(rgba(0, 242, 96, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 242, 96, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px; z-index: -1;
         }
 
         .engine-shell { 
             width: 95%; max-width: 480px; padding: 30px; 
             background: var(--panel); border: 1px solid #333; 
-            border-radius: 20px; box-shadow: 0 0 50px rgba(0,0,0,0.8); 
+            border-radius: 20px; box-shadow: 0 0 80px rgba(0,0,0,0.9); 
             text-align: center; 
-            clip-path: polygon(10% 0, 90% 0, 100% 5%, 100% 95%, 90% 100%, 10% 100%, 0 95%, 0 5%);
         }
 
         /* الإحصائيات العلوية */
-        .hex-stats { display: flex; justify-content: space-between; margin-bottom: 25px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px; }
+        .hex-stats { display: flex; justify-content: space-between; margin-bottom: 25px; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.05); }
         .stat-hex { flex: 1; display: flex; flex-direction: column; }
         .mid { border-left: 1px solid #333; border-right: 1px solid #333; }
-        .lbl { font-size: 0.65rem; color: #888; font-weight: bold; }
+        .lbl { font-size: 0.65rem; color: #888; font-weight: bold; letter-spacing: 1px; }
         .val { font-size: 1.1rem; font-weight: 900; margin-top: 5px; }
         .cyan { color: var(--cyan); } .pink { color: var(--pink); } .yellow { color: #f1c40f; }
 
         .server-bar { margin-bottom: 30px; }
-        .hex-select { width: 100%; background: #000; color: white; border: 1px solid #444; padding: 10px; border-radius: 5px; font-weight: bold; outline: none; }
+        .hex-select { width: 100%; background: #000; color: white; border: 1px solid #444; padding: 12px; border-radius: 8px; font-weight: bold; outline: none; }
+        optgroup { color: var(--cyan); background: #111; }
 
         /* العداد */
         .gauge-hex { position: relative; width: 280px; height: 280px; margin: 0 auto; }
-        .track-bg { stroke: #222; stroke-width: 15; stroke-linecap: butt; }
+        .track-bg { stroke: #222; stroke-width: 16; stroke-linecap: butt; }
         .track-fg { 
-            stroke-width: 15; stroke-linecap: butt; 
+            stroke-width: 16; stroke-linecap: butt; 
             stroke-dasharray: 660; stroke-dashoffset: 660; 
-            transition: stroke-dashoffset 0.1s linear; 
-            filter: drop-shadow(0 0 5px var(--cyan)); 
+            transition: stroke-dashoffset 0.15s ease-out; 
+            filter: drop-shadow(0 0 8px var(--cyan)); 
         }
 
         .center-data { position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%); width: 100%; }
@@ -51,20 +52,18 @@
         .unit { font-size: 0.8rem; color: #666; }
 
         /* المعلومات السفلية */
-        .net-metrics { display: flex; justify-content: space-between; margin-top: 20px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 5px; }
+        .net-metrics { display: flex; justify-content: space-between; margin-top: 25px; background: rgba(0,0,0,0.4); padding: 12px; border-radius: 10px; }
         .metric span { font-size: 0.7rem; color: #aaa; margin-right: 5px; }
         .metric b { font-size: 1rem; }
 
         .hex-btn { 
             width: 100%; padding: 18px; margin-top: 30px; 
-            background: linear-gradient(45deg, #111, #222); 
-            border: 2px solid var(--cyan); color: var(--cyan); 
-            font-weight: 900; font-size: 1.2rem; cursor: pointer; 
-            transition: 0.3s; text-transform: uppercase; letter-spacing: 2px; 
-            clip-path: polygon(5% 0, 100% 0, 100% 70%, 95% 100%, 0 100%, 0 30%); 
+            background: white; border: none; border-radius: 10px;
+            color: black; font-weight: 900; font-size: 1.2rem; cursor: pointer; 
+            transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; 
         }
-        .hex-btn:hover { background: var(--cyan); color: #000; box-shadow: 0 0 20px var(--cyan); }
-        .hex-btn:disabled { border-color: #444; color: #444; cursor: not-allowed; box-shadow: none; }
+        .hex-btn:hover { background: var(--cyan); box-shadow: 0 0 30px var(--cyan); }
+        .hex-btn:disabled { background: #333; color: #555; cursor: progress; box-shadow: none; }
     </style>
 </head>
 <body>
@@ -88,10 +87,15 @@
 
         <div class="server-bar">
             <select id="srv-select" class="hex-select">
-                <option value="auto">💠 تلقائي (الأسرع استجابة)</option>
-                <option value="stc">STC KSA</option>
-                <option value="mobily">Mobily KSA</option>
-                <option value="zain">Zain KSA</option>
+                <option value="auto">🚀 تلقائي (أفضل استجابة)</option>
+                <optgroup label="شركات الاتصالات السعودية">
+                    <option value="stc">STC (الاتصالات السعودية)</option>
+                    <option value="mobily">Mobily (موبايلي)</option>
+                    <option value="zain">Zain KSA (زين)</option>
+                    <option value="salam">Salam (سلام)</option>
+                    <option value="go">GO Telecom (جو)</option>
+                    <option value="dawiyat">Dawiyat (ضوئيات)</option>
+                </optgroup>
             </select>
         </div>
 
@@ -120,12 +124,12 @@
                 <b id="live-jitter" class="yellow">-- ms</b>
             </div>
             <div class="metric">
-                <span>Stability:</span>
-                <b id="live-stability">100%</b>
+                <span>Server:</span>
+                <b id="active-srv">---</b>
             </div>
         </div>
 
-        <button id="start-btn" class="hex-btn" onclick="startHexTest()">ابدأ الفحص</button>
+        <button id="start-btn" class="hex-btn" onclick="startTest()">ابدأ الفحص</button>
     </div>
 
     <script src="script.js"></script>
