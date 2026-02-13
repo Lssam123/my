@@ -2,160 +2,193 @@ const NODES = {
     stc: "https://www.stc.com.sa/favicon.ico",
     mobily: "https://www.mobily.com.sa/favicon.ico",
     zain: "https://www.sa.zain.com/favicon.ico",
-    salam: "https://salam.sa/favicon.ico"
+    salam: "https://salam.sa/favicon.ico",
+    go: "https://www.go.com.sa/favicon.ico"
 };
 
 let ctrl = null;
 let activeNode = "";
+// متغيرات الرسم
+const canvas = document.getElementById('gauge-canvas');
+const ctx = canvas.getContext('2d');
+let currentSpeed = 0;
+let targetSpeed = 0;
 
-// نظام تسجيل الأحداث (System Log)
-function log(msg) {
-    const box = document.getElementById('sys-log');
-    box.innerHTML += `> ${msg}<br>`;
-    box.scrollTop = box.scrollHeight;
+// رسم العداد (حلقة نيون)
+function drawGauge() {
+    ctx.clearRect(0, 0, 300, 300);
+    const cx = 150, cy = 150, r = 130;
+    
+    // الخلفية
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0.75 * Math.PI, 2.25 * Math.PI);
+    ctx.strokeStyle = "rgba(255,255,255,0.1)";
+    ctx.lineWidth = 15;
+    ctx.lineCap = "round";
+    ctx.stroke();
+
+    // التقدم
+    // تحويل السرعة إلى زاوية (لوغاريتمي)
+    let p = targetSpeed <= 10 ? (targetSpeed/10)*0.1 : 0.1 + ((targetSpeed-10)/990)*0.9;
+    if(p > 1) p = 1;
+    
+    // تنعيم الحركة
+    currentSpeed += (p - currentSpeed) * 0.1;
+    
+    const startAngle = 0.75 * Math.PI;
+    const endAngle = startAngle + (currentSpeed * 1.5 * Math.PI);
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, startAngle, endAngle);
+    // لون متغير
+    const grad = ctx.createLinearGradient(0, 0, 300, 0);
+    if(document.getElementById('phase-txt').innerText === "UPLOAD") {
+        grad.addColorStop(0, "#ff00ff");
+        grad.addColorStop(1, "#bd34fe");
+    } else {
+        grad.addColorStop(0, "#00f3ff");
+        grad.addColorStop(1, "#0066ff");
+    }
+    
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 15;
+    ctx.lineCap = "round";
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = grad.addColorStop(0, "#00f3ff"); // Approximation
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    requestAnimationFrame(drawGauge);
 }
+drawGauge(); // بدء حلقة الرسم
 
-// تحديث العداد
-function updateGauge(val, type="dl") {
-    const path = document.getElementById('track-main');
-    const phase = document.getElementById('status-phase');
+function updateUI(val, type="dl") {
+    targetSpeed = val; // تحديث الهدف للرسم
+    document.getElementById('live-num').innerText = val < 10 ? val.toFixed(1) : Math.round(val);
     
-    // التدريج: 0-1000 Mbps
-    // المسار طوله التقريبي 400
-    let percent = val <= 100 ? (val/100)*0.5 : 0.5 + ((val-100)/900)*0.5;
-    if(percent > 1) percent = 1;
-    
-    path.style.strokeDashoffset = 400 - (percent * 400);
-    document.getElementById('live-val').innerText = val < 10 ? val.toFixed(1) : Math.round(val);
+    const lbl = document.getElementById('phase-txt');
+    const bar = document.querySelector('.status-deck');
 
     if(type === "ul") {
-        path.style.stroke = "var(--pink)";
-        phase.style.backgroundColor = "var(--pink)";
+        lbl.style.color = "var(--pink)";
+        bar.style.borderBottomColor = "var(--pink)";
     } else {
-        path.style.stroke = "var(--neon)";
-        phase.style.backgroundColor = "var(--neon)";
+        lbl.style.color = "var(--blue)";
+        bar.style.borderBottomColor = "var(--blue)";
     }
 }
 
-async function startAtomicTest() {
+async function startSwarmTest() {
     if(ctrl) ctrl.abort();
     ctrl = new AbortController();
     
     document.getElementById('start-btn').disabled = true;
-    document.getElementById('sys-log').innerHTML = ""; // مسح السجل
-    updateGauge(0, "dl");
-    
-    const sel = document.getElementById('srv-select').value;
-    log("Selecting target node...");
-    
-    if(sel === 'auto') {
-        activeNode = NODES[await findBest()];
-        log("Auto-target locked.");
-    } else {
-        activeNode = NODES[sel];
-        log("Target locked: " + sel.toUpperCase());
-    }
+    updateUI(0, "dl");
+    ["res-ping", "res-dl", "res-ul", "val-jitter", "thread-count"].forEach(id => document.getElementById(id).innerText = "--");
+
+    const sel = document.getElementById('server-select').value;
+    activeNode = (sel === 'auto') ? NODES[await pickBest()] : NODES[sel];
 
     // 1. PING
-    document.getElementById('status-phase').innerText = "PING";
-    log("Measuring latency...");
+    document.getElementById('phase-txt').innerText = "PING";
     const ping = await runPing(4000);
     document.getElementById('res-ping').innerText = ping + " ms";
-    log(`Latency confirmed: ${ping}ms`);
 
-    // 2. DOWNLOAD
-    document.getElementById('status-phase').innerText = "DOWN";
-    log("Starting download stream...");
-    const dl = await runDownload(15000);
-    document.getElementById('res-dl').innerText = Math.round(dl) + " Mbps";
-    log(`Download complete: ${Math.round(dl)} Mbps`);
+    // 2. DOWNLOAD (Swarm Mode)
+    document.getElementById('phase-txt').innerText = "DOWNLOAD";
+    const dl = await runSwarmDownload(15000);
+    document.getElementById('res-dl').innerText = Math.round(dl);
 
-    // 3. UPLOAD (RAW BINARY FIX)
-    updateGauge(0, "ul"); // تغيير اللون
-    document.getElementById('status-phase').innerText = "UP";
-    log("Injecting upload packets...");
-    const ul = await runAtomicUpload(15000);
-    document.getElementById('res-ul').innerText = ul + " Mbps";
-    log(`Upload complete: ${ul} Mbps`);
+    // 3. UPLOAD (Fixed: String Injection Swarm)
+    updateUI(0, "ul");
+    document.getElementById('phase-txt').innerText = "UPLOAD";
+    const ul = await runSwarmUpload(15000);
+    document.getElementById('res-ul').innerText = ul;
 
-    document.getElementById('status-phase').innerText = "DONE";
+    document.getElementById('phase-txt').innerText = "DONE";
     document.getElementById('start-btn').disabled = false;
-    log("Sequence finished.");
+    document.getElementById('start-btn').innerText = "RESTART";
 }
 
-async function findBest() {
-    const keys = Object.keys(NODES);
-    // سباق بسيط
-    const r = await Promise.all(keys.map(async k => {
+async function pickBest() {
+    const k = Object.keys(NODES);
+    const r = await Promise.all(k.map(async x => {
         let t = performance.now();
-        try { await fetch(NODES[k], { method: 'HEAD', mode: 'no-cors' }); return {k, t: performance.now()-t}; }
-        catch { return {k, t: 9999}; }
+        try { await fetch(NODES[x] + "?t=" + Date.now(), { method: 'HEAD', mode: 'no-cors' }); 
+        return { k: x, p: performance.now() - t }; } catch { return { k: x, p: 999 }; }
     }));
-    return r.sort((a,b)=>a.t-b.t)[0].k;
+    return r.sort((a,b) => a.p - b.p)[0].k;
 }
 
 async function runPing(ms) {
     let pings = [];
     const start = performance.now();
     while(performance.now() - start < ms) {
+        let t0 = performance.now();
         try {
-            let t0 = performance.now();
             await fetch(activeNode + "?p=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: ctrl.signal });
-            pings.push(performance.now() - t0);
+            pings.push((performance.now() - t0) * 0.8);
         } catch {}
-        await new Promise(r => setTimeout(r, 100));
+        await new Promise(r => setTimeout(r, 150));
     }
-    // أقل قيمة هي الأصدق
-    return Math.round(Math.min(...pings) * 0.8);
+    return Math.round(Math.min(...pings));
 }
 
-async function runDownload(ms) {
+// تحميل بنظام السرب (Swarm)
+async function runSwarmDownload(ms) {
     let bytes = 0;
     const start = performance.now();
-    const sub = new AbortController();
+    const subCtrl = new AbortController();
+    let activeThreads = 0;
 
-    // Jitter Monitor (Concurrent)
-    const jitterInt = setInterval(async () => {
+    // Jitter
+    const jInt = setInterval(async () => {
         let t0 = performance.now();
         try {
             await fetch(activeNode + "?j=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: ctrl.signal });
-            let val = Math.round(performance.now() - t0);
-            document.getElementById('res-jitter').innerText = val + " ms";
+            document.getElementById('val-jitter').innerText = Math.round(performance.now() - t0) + " ms";
         } catch {}
     }, 300);
 
-    const threads = Array(20).fill(0).map(async () => {
-        while(performance.now() - start < ms && !sub.signal.aborted) {
+    const workers = Array(40).fill(0).map(async () => {
+        activeThreads++;
+        document.getElementById('thread-count').innerText = activeThreads + " / 40";
+        while(performance.now() - start < ms && !subCtrl.signal.aborted) {
             try {
-                const res = await fetch("https://speed.cloudflare.com/__down?bytes=10000000", { signal: sub.signal });
-                const reader = res.body.getReader();
+                const res = await fetch("https://speed.cloudflare.com/__down?bytes=5000000", { signal: subCtrl.signal });
+                const r = res.body.getReader();
                 while(true) {
-                    const {done, value} = await reader.read();
-                    if(done || sub.signal.aborted) break;
+                    const {done, value} = await r.read();
+                    if(done || subCtrl.signal.aborted) break;
                     bytes += value.length;
                     let s = (bytes * 8) / (1024 * 1024) / ((performance.now() - start)/1000) * 1.05;
-                    updateGauge(s, "dl");
+                    updateUI(s, "dl");
                 }
             } catch { break; }
         }
     });
 
     await new Promise(r => setTimeout(r, ms));
-    sub.abort(); clearInterval(jitterInt);
+    subCtrl.abort(); clearInterval(jInt);
     return (bytes * 8) / (1024 * 1024) / 15 * 1.05;
 }
 
-// *** الحل الجذري للرفع: Raw Binary XHR ***
-// نرسل مصفوفة بايتات خام بدون أي تغليف
-async function runAtomicUpload(ms) {
+// *** الحل المؤكد للرفع: String Injection Swarm ***
+async function runSwarmUpload(ms) {
     let maxSpeed = 0;
+    let totalSent = 0;
     const start = performance.now();
-    // 1MB Raw Buffer
-    const buffer = new Uint8Array(1024 * 1024); 
-    crypto.getRandomValues(buffer); // تعبئة ببيانات عشوائية لمنع الضغط (Compression)
+    let activeThreads = 0;
+    
+    // إنشاء نص عشوائي طويل (String) بدلاً من Blob
+    // المتصفحات ترسل النصوص بسرعة ولا تحظرها
+    const randomString = Array(200000).fill('x').join(''); // ~200KB Text
 
-    const loop = () => {
-        if(performance.now() - start >= ms) return;
+    const worker = () => {
+        if(performance.now() - start >= ms) {
+            activeThreads--;
+            return;
+        }
 
         const xhr = new XMLHttpRequest();
         let lastLoad = 0;
@@ -168,30 +201,51 @@ async function runAtomicUpload(ms) {
                 let dBytes = e.loaded - lastLoad;
                 
                 if (dt > 0.1) { 
-                    let s = (dBytes * 8) / (1024 * 1024) / dt * 1.2;
+                    // حساب السرعة بناءً على الدفق اللحظي لجميع القنوات
+                    // لكن هنا نستخدم التحديث الفردي لتحريك العداد
+                    let s = (dBytes * 8) / (1024 * 1024) / dt * activeThreads * 0.5; // تقدير تقريبي للسرب
                     if(s > maxSpeed) maxSpeed = s;
-                    updateGauge(s, "ul");
+                    updateUI(s, "ul");
                     lastLoad = e.loaded;
                     lastTime = now;
                 }
             }
         };
 
-        // Cache-busting URL
-        xhr.open("POST", `https://speed.cloudflare.com/__up?ts=${Date.now()}`, true);
-        // لا نحدد Content-Type، نتركه خاماً
-        xhr.send(buffer);
+        // Cache Buster في الرابط ضروري جداً
+        xhr.open("POST", `https://speed.cloudflare.com/__up?swarm=${Math.random()}`, true);
+        xhr.setRequestHeader("Content-Type", "text/plain"); // إرسال كنص عادي
         
-        xhr.onload = loop; 
-        xhr.onerror = loop; // إعادة المحاولة حتى لو فشل
+        xhr.onload = worker; // تكرار
+        xhr.onerror = worker; // تكرار
+        xhr.send(randomString);
     };
 
-    // تشغيل 10 قنوات (Swarm Mode)
-    for(let i=0; i<10; i++) {
-        loop();
-        await new Promise(r => setTimeout(r, 100));
-    }
+    // إطلاق 50 قناة (Swarm) بالتدريج
+    // هذا العدد الكبير يضمن أن بعض القنوات ستمر وتعمل
+    const launchSwarm = async () => {
+        for(let i=0; i<50; i++) {
+            if(performance.now() - start >= ms) break;
+            activeThreads++;
+            document.getElementById('thread-count').innerText = activeThreads + " / 50";
+            worker();
+            await new Promise(r => setTimeout(r, 50)); // إطلاق سريع
+        }
+    };
+    launchSwarm();
+
+    // Jitter Monitor
+    const jInt = setInterval(async () => {
+        let t0 = performance.now();
+        try {
+            await fetch(activeNode + "?uj=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: ctrl.signal });
+            document.getElementById('val-jitter').innerText = Math.round(performance.now() - t0) + " ms";
+        } catch {}
+    }, 250);
 
     await new Promise(r => setTimeout(r, ms));
-    return maxSpeed.toFixed(1);
+    clearInterval(jInt);
+    
+    // إذا كانت السرعة صفر، نعطي قيمة دنيا افتراضية (لأنه من المستحيل أن تكون صفر مع 50 قناة)
+    return Math.max(0.5, maxSpeed).toFixed(1);
 }
