@@ -3,65 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S-SPEED V117 | SMART STABLE</title>
-    <link rel="stylesheet" href="style.css">
+    <title>S-SPEED V120 | HEX CORE</title>
+    <style>
+        /* --- تصميم السداسيات (Hex CSS) --- */
+        :root { --cyan: #00F260; --pink: #ff0055; --bg: #111; --panel: rgba(30, 30, 40, 0.95); }
+        body { background: var(--bg); color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'Segoe UI', system-ui, sans-serif; overflow: hidden; }
+
+        /* الخلفية */
+        .hex-bg { 
+            position: fixed; width: 100%; height: 100%; 
+            background-image: radial-gradient(#222 15%, transparent 16%), radial-gradient(#222 15%, transparent 16%);
+            background-size: 60px 60px; background-position: 0 0, 30px 30px; opacity: 0.2; z-index: -1;
+        }
+
+        .engine-shell { 
+            width: 95%; max-width: 480px; padding: 30px; 
+            background: var(--panel); border: 1px solid #333; 
+            border-radius: 20px; box-shadow: 0 0 50px rgba(0,0,0,0.8); 
+            text-align: center; 
+            clip-path: polygon(10% 0, 90% 0, 100% 5%, 100% 95%, 90% 100%, 10% 100%, 0 95%, 0 5%);
+        }
+
+        /* الإحصائيات العلوية */
+        .hex-stats { display: flex; justify-content: space-between; margin-bottom: 25px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px; }
+        .stat-hex { flex: 1; display: flex; flex-direction: column; }
+        .mid { border-left: 1px solid #333; border-right: 1px solid #333; }
+        .lbl { font-size: 0.65rem; color: #888; font-weight: bold; }
+        .val { font-size: 1.1rem; font-weight: 900; margin-top: 5px; }
+        .cyan { color: var(--cyan); } .pink { color: var(--pink); } .yellow { color: #f1c40f; }
+
+        .server-bar { margin-bottom: 30px; }
+        .hex-select { width: 100%; background: #000; color: white; border: 1px solid #444; padding: 10px; border-radius: 5px; font-weight: bold; outline: none; }
+
+        /* العداد */
+        .gauge-hex { position: relative; width: 280px; height: 280px; margin: 0 auto; }
+        .track-bg { stroke: #222; stroke-width: 15; stroke-linecap: butt; }
+        .track-fg { 
+            stroke-width: 15; stroke-linecap: butt; 
+            stroke-dasharray: 660; stroke-dashoffset: 660; 
+            transition: stroke-dashoffset 0.1s linear; 
+            filter: drop-shadow(0 0 5px var(--cyan)); 
+        }
+
+        .center-data { position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%); width: 100%; }
+        #live-num { font-size: 5rem; font-weight: 900; line-height: 0.9; letter-spacing: -3px; }
+        .status-msg { font-size: 0.9rem; font-weight: bold; color: var(--cyan); margin-top: 5px; letter-spacing: 2px; }
+        .unit { font-size: 0.8rem; color: #666; }
+
+        /* المعلومات السفلية */
+        .net-metrics { display: flex; justify-content: space-between; margin-top: 20px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 5px; }
+        .metric span { font-size: 0.7rem; color: #aaa; margin-right: 5px; }
+        .metric b { font-size: 1rem; }
+
+        .hex-btn { 
+            width: 100%; padding: 18px; margin-top: 30px; 
+            background: linear-gradient(45deg, #111, #222); 
+            border: 2px solid var(--cyan); color: var(--cyan); 
+            font-weight: 900; font-size: 1.2rem; cursor: pointer; 
+            transition: 0.3s; text-transform: uppercase; letter-spacing: 2px; 
+            clip-path: polygon(5% 0, 100% 0, 100% 70%, 95% 100%, 0 100%, 0 30%); 
+        }
+        .hex-btn:hover { background: var(--cyan); color: #000; box-shadow: 0 0 20px var(--cyan); }
+        .hex-btn:disabled { border-color: #444; color: #444; cursor: not-allowed; box-shadow: none; }
+    </style>
 </head>
 <body>
-    <div class="frosted-bg"></div>
-    <div class="glass-deck">
+    <div class="hex-bg"></div>
+    <div class="engine-shell">
         
-        <div class="top-control">
-            <div class="status-indicator" id="status-dot"></div>
-            <select id="server-select" class="glass-select">
-                <option value="auto">📡 الشبكة الذكية (Auto)</option>
+        <div class="hex-stats">
+            <div class="stat-hex">
+                <span class="lbl">PING</span>
+                <span id="end-ping" class="val">--</span>
+            </div>
+            <div class="stat-hex mid">
+                <span class="lbl">DOWNLOAD</span>
+                <span id="end-dl" class="val cyan">--</span>
+            </div>
+            <div class="stat-hex">
+                <span class="lbl">UPLOAD</span>
+                <span id="end-ul" class="val pink">--</span>
+            </div>
+        </div>
+
+        <div class="server-bar">
+            <select id="srv-select" class="hex-select">
+                <option value="auto">💠 تلقائي (الأسرع استجابة)</option>
                 <option value="stc">STC KSA</option>
                 <option value="mobily">Mobily KSA</option>
                 <option value="zain">Zain KSA</option>
-                <option value="salam">Salam Integrated</option>
-                <option value="go">GO Telecom</option>
             </select>
         </div>
 
-        <div class="gauge-smart">
-            <div class="gauge-ticks" id="ticks"></div>
-            <div class="gauge-inner">
-                <svg viewBox="0 0 240 240">
-                    <defs>
-                        <linearGradient id="grad-dl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2af598"/><stop offset="1" stop-color="#009efd"/></linearGradient>
-                        <linearGradient id="grad-ul" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f77062"/><stop offset="1" stop-color="#fe5196"/></linearGradient>
-                    </defs>
-                    <circle class="track-bg" cx="120" cy="120" r="100" />
-                    <circle id="track-fill" class="track-fg" cx="120" cy="120" r="100" />
-                </svg>
-                <div class="center-readout">
-                    <div id="live-val">0.0</div>
-                    <div id="phase-lbl" class="phase-lbl">READY</div>
-                    <div class="unit">Mbps</div>
-                </div>
+        <div class="gauge-hex">
+            <svg viewBox="0 0 300 300">
+                <defs>
+                    <linearGradient id="grad-active" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stop-color="#00F260"/>
+                        <stop offset="100%" stop-color="#0575E6"/>
+                    </linearGradient>
+                </defs>
+                <path class="track-bg" d="M 50 250 A 140 140 0 1 1 250 250" fill="none" />
+                <path id="track-fill" class="track-fg" d="M 50 250 A 140 140 0 1 1 250 250" fill="none" stroke="url(#grad-active)" />
+            </svg>
+            
+            <div class="center-data">
+                <div id="live-num">0.0</div>
+                <div id="status-msg" class="status-msg">READY</div>
+                <div class="unit">Mbps</div>
             </div>
         </div>
 
-        <div class="stats-matrix">
-            <div class="matrix-cell">
-                <span>PING</span>
-                <b id="res-ping">--</b>
+        <div class="net-metrics">
+            <div class="metric">
+                <span>Loaded Jitter:</span>
+                <b id="live-jitter" class="yellow">-- ms</b>
             </div>
-            <div class="matrix-cell">
-                <span>JITTER</span>
-                <b id="res-jitter" class="yellow">--</b>
-            </div>
-            <div class="matrix-cell">
-                <span>DOWNLOAD</span>
-                <b id="res-dl" class="blue">--</b>
-            </div>
-            <div class="matrix-cell">
-                <span>UPLOAD</span>
-                <b id="res-ul" class="red">--</b>
+            <div class="metric">
+                <span>Stability:</span>
+                <b id="live-stability">100%</b>
             </div>
         </div>
 
-        <button id="start-btn" class="smart-btn" onclick="startSmartTest()">START TEST</button>
+        <button id="start-btn" class="hex-btn" onclick="startHexTest()">ابدأ الفحص</button>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
