@@ -3,158 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S-SPEED V128 | OASIS</title>
+    <title>قياس السرعة V129 | Hybrid</title>
     <style>
-        /* --- تصميم الواحة V128 --- */
-        :root { 
-            --primary: #00E5FF; /* سماوي */
-            --secondary: #D500F9; /* بنفسجي */
-            --accent: #FFD600; /* أصفر */
-            --bg: #0d0d12; 
-            --surface: #15151a;
-        }
+        /* --- تصميم الكبسولة V129 --- */
+        :root { --accent: #00E676; --bg: #050508; --card: #121217; --text: #ffffff; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
         
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        body { background: var(--bg); color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
-
-        /* الخلفية */
-        .oasis-bg { 
-            position: fixed; width: 100%; height: 100%; 
-            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
-            opacity: 0.8; z-index: -1;
+        body { 
+            background: var(--bg); color: var(--text); margin: 0; 
+            display: flex; justify-content: center; align-items: center; 
+            min-height: 100vh; overflow: hidden; 
         }
 
-        .dashboard { 
-            width: 95%; max-width: 500px; padding: 30px; 
-            background: rgba(21, 21, 26, 0.95); border: 1px solid rgba(255,255,255,0.1); 
-            border-radius: 25px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); 
-            text-align: center; display: flex; flex-direction: column; gap: 20px;
+        /* حاوية الفحص */
+        .app-container {
+            width: 100%; max-width: 420px; padding: 25px;
+            background: var(--card); border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            display: flex; flex-direction: column; gap: 20px;
+            border: 1px solid rgba(255,255,255,0.05);
         }
 
-        /* شبكة النتائج العلوية */
-        .stats-header { 
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
-            background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px;
+        /* الرأس: السيرفر */
+        .header-status {
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255,255,255,0.03); padding: 10px 20px; border-radius: 50px;
         }
-        .stat-box { display: flex; flex-direction: column; }
-        .stat-box:not(:last-child) { border-left: 1px solid rgba(255,255,255,0.1); }
-        
-        .lbl { font-size: 0.65rem; color: #888; font-weight: bold; margin-bottom: 5px; }
-        .val { font-size: 1rem; font-weight: 900; direction: ltr; }
-        
-        .c-dl { color: var(--primary); } 
-        .c-ul { color: var(--secondary); } 
-        .c-jit { color: var(--accent); }
+        .server-info { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #aaa; }
+        .dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 8px var(--accent); }
+        .status-text { font-weight: bold; color: var(--accent); font-size: 0.85rem; }
 
-        /* منطقة السيرفر */
-        .server-zone { display: flex; flex-direction: column; gap: 5px; }
-        .server-status { font-size: 0.8rem; color: #aaa; }
-        .server-name { font-weight: bold; color: white; font-size: 1rem; }
-
-        /* العداد المركزي */
-        .gauge-section { 
-            position: relative; width: 260px; height: 260px; margin: 0 auto; 
-            /* هنا الحل لمشكلة التداخل: مسافة واضحة */
-            margin-bottom: 10px;
+        /* العداد */
+        .gauge-wrapper {
+            position: relative; width: 260px; height: 260px; margin: 10px auto;
         }
         svg { transform: rotate(135deg); width: 100%; height: 100%; }
-        
+        /* دائرة مفتوحة 270 درجة */
         .track-bg { stroke: #222; stroke-width: 12; stroke-linecap: round; fill: none; }
         .track-fg { 
-            stroke-width: 12; stroke-linecap: round; fill: none; 
-            /* محيط الدائرة 2 * PI * 110 = 691. نحاول عرض 75% منها = 518 */
-            stroke-dasharray: 518; stroke-dashoffset: 518; 
-            transition: stroke-dashoffset 0.15s ease-out;
-            filter: drop-shadow(0 0 8px var(--primary));
+            stroke: var(--accent); stroke-width: 12; stroke-linecap: round; fill: none;
+            stroke-dasharray: 565; stroke-dashoffset: 565; /* البداية صفر */
+            transition: stroke-dashoffset 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            filter: drop-shadow(0 0 10px rgba(0, 230, 118, 0.4));
         }
 
-        .hud-center { 
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            display: flex; flex-direction: column; align-items: center;
+        .gauge-content {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            text-align: center;
         }
-        #speed-display { font-size: 4rem; font-weight: 800; line-height: 1; letter-spacing: -2px; }
-        .unit-display { font-size: 0.8rem; color: #666; margin-top: 5px; }
-        .phase-display { font-size: 0.9rem; font-weight: bold; color: var(--primary); margin-top: 5px; }
+        #main-speed { font-size: 4.5rem; font-weight: 800; line-height: 1; letter-spacing: -2px; }
+        .unit-label { font-size: 0.9rem; color: #666; font-weight: bold; }
 
-        /* منطقة البنق المثقل المنفصلة */
-        .jitter-panel { 
-            background: rgba(0,0,0,0.3); padding: 10px 20px; border-radius: 50px; 
-            align-self: center; border: 1px solid #333; margin-bottom: 10px;
+        /* شبكة البيانات */
+        .stats-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
         }
-        .jitter-text { font-size: 0.8rem; color: #aaa; }
-        .jitter-live { font-size: 1.1rem; font-weight: bold; color: var(--accent); margin-right: 5px; }
+        .stat-card {
+            background: rgba(255,255,255,0.03); padding: 15px; border-radius: 15px;
+            display: flex; flex-direction: column; justify-content: center;
+        }
+        .stat-label { font-size: 0.7rem; color: #777; font-weight: bold; margin-bottom: 5px; }
+        .stat-val { font-size: 1.2rem; font-weight: 900; direction: ltr; }
+        
+        .c-ping { border-right: 2px solid #FFD700; }
+        .c-jit { border-right: 2px solid #FF5722; }
+        .c-dl { border-right: 2px solid #00E676; }
+        .c-ul { border-right: 2px solid #D500F9; }
 
         /* الأزرار */
-        .actions { display: flex; gap: 10px; }
-        .btn-start { 
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        .btn-start {
             flex: 3; padding: 18px; border: none; border-radius: 15px;
-            background: white; color: black; font-weight: 900; font-size: 1.2rem;
-            cursor: pointer; transition: 0.3s;
+            background: white; color: black; font-weight: 900; font-size: 1.1rem;
+            cursor: pointer; transition: 0.2s; box-shadow: 0 5px 20px rgba(255,255,255,0.1);
         }
-        .btn-start:hover { background: var(--primary); box-shadow: 0 0 30px var(--primary); }
-        .btn-start:disabled { background: #333; color: #555; cursor: not-allowed; box-shadow: none; }
+        .btn-start:hover { transform: translateY(-2px); background: var(--accent); }
+        .btn-start:disabled { background: #333; color: #555; cursor: not-allowed; transform: none; }
 
-        .btn-reset { 
-            flex: 1; border: 1px solid #444; background: transparent; border-radius: 15px;
-            color: white; font-size: 1.5rem; cursor: pointer; transition: 0.3s;
+        .btn-reset {
+            flex: 1; background: #222; border: 1px solid #333; border-radius: 15px;
+            color: white; font-size: 1.5rem; cursor: pointer; transition: 0.2s;
         }
-        .btn-reset:hover { border-color: var(--secondary); color: var(--secondary); }
+        .btn-reset:hover { border-color: var(--accent); color: var(--accent); }
 
     </style>
 </head>
 <body>
-    <div class="oasis-bg"></div>
-    <div class="dashboard">
+
+    <div class="app-container">
         
-        <div class="stats-header">
-            <div class="stat-box">
-                <span class="lbl">PING</span>
-                <span id="res-ping" class="val">--</span>
+        <div class="header-status">
+            <div class="server-info">
+                <div class="dot" id="status-dot"></div>
+                <span id="server-name">تلقائي (KSA)</span>
             </div>
-            <div class="stat-box">
-                <span class="lbl">JITTER</span>
-                <span id="res-jitter" class="val c-jit">--</span>
-            </div>
-            <div class="stat-box">
-                <span class="lbl">DOWN</span>
-                <span id="res-dl" class="val c-dl">--</span>
-            </div>
-            <div class="stat-box">
-                <span class="lbl">UP</span>
-                <span id="res-ul" class="val c-ul">--</span>
-            </div>
+            <div class="status-text" id="phase-txt">جاهز</div>
         </div>
 
-        <div class="server-zone">
-            <span class="server-status">السيرفر المحدد تلقائياً:</span>
-            <span id="server-name" class="server-name">جاري البحث...</span>
-        </div>
-
-        <div class="gauge-section">
-            <svg viewBox="0 0 260 260">
-                <defs>
-                    <linearGradient id="grad-dl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00E5FF"/><stop offset="1" stop-color="#2979FF"/></linearGradient>
-                    <linearGradient id="grad-ul" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#D500F9"/><stop offset="1" stop-color="#FF1744"/></linearGradient>
-                </defs>
-                <path class="track-bg" d="M 50 210 A 110 110 0 1 1 210 210" />
-                <path id="track-active" class="track-fg" stroke="url(#grad-dl)" d="M 50 210 A 110 110 0 1 1 210 210" />
+        <div class="gauge-wrapper">
+            <svg viewBox="0 0 240 240">
+                <path class="track-bg" d="M 40 200 A 100 100 0 1 1 200 200" />
+                <path id="gauge-path" class="track-fg" d="M 40 200 A 100 100 0 1 1 200 200" />
             </svg>
-            <div class="hud-center">
-                <div id="speed-display">0.0</div>
-                <div class="unit-display">Mbps</div>
-                <div id="phase-txt" class="phase-display">جاهز</div>
+            <div class="gauge-content">
+                <div id="main-speed">0.0</div>
+                <div class="unit-label">Mbps</div>
             </div>
         </div>
 
-        <div class="jitter-panel">
-            <span class="jitter-text">استقرار الخط (Loaded): </span>
-            <span id="live-jitter" class="jitter-live">--</span>
+        <div class="stats-grid">
+            <div class="stat-card c-ping">
+                <span class="stat-label">PING</span>
+                <span id="val-ping" class="stat-val">--</span>
+            </div>
+            <div class="stat-card c-jit">
+                <span class="stat-label">JITTER</span>
+                <span id="val-jitter" class="stat-val">--</span>
+            </div>
+            <div class="stat-card c-dl">
+                <span class="stat-label">DOWNLOAD</span>
+                <span id="val-dl" class="stat-val">--</span>
+            </div>
+            <div class="stat-card c-ul">
+                <span class="stat-label">UPLOAD</span>
+                <span id="val-ul" class="stat-val">--</span>
+            </div>
         </div>
 
-        <div class="actions">
-            <button id="start-btn" class="btn-start" onclick="startOasisTest()">بدء الفحص</button>
-            <button class="btn-reset" onclick="resetAll()">↺</button>
+        <div class="btn-group">
+            <button id="start-btn" class="btn-start" onclick="runHybridTest()">بدء الفحص</button>
+            <button class="btn-reset" onclick="resetSystem()">↺</button>
         </div>
+
     </div>
 
     <script src="script.js"></script>
