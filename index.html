@@ -3,31 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S-SPEED V116 | INFINITY SWARM</title>
+    <title>S-SPEED V117 | SMART STABLE</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="infinity-bg"></div>
-    <div class="swarm-container">
+    <div class="frosted-bg"></div>
+    <div class="glass-deck">
         
-        <div class="status-deck">
-            <div class="stat-pod">
-                <span class="lbl">PING</span>
-                <span id="res-ping" class="val">-- <small>ms</small></span>
-            </div>
-            <div class="stat-pod middle">
-                <span class="lbl">DOWNLOAD</span>
-                <span id="res-dl" class="val neon-blue">-- <small>Mbps</small></span>
-            </div>
-            <div class="stat-pod">
-                <span class="lbl">UPLOAD</span>
-                <span id="res-ul" class="val neon-pink">-- <small>Mbps</small></span>
-            </div>
-        </div>
-
-        <div class="server-hub">
-            <select id="srv-select" class="swarm-select">
-                <option value="auto">⚡ SWARM AUTO (أقصى سرعة)</option>
+        <div class="top-control">
+            <div class="status-indicator" id="status-dot"></div>
+            <select id="server-select" class="glass-select">
+                <option value="auto">📡 الشبكة الذكية (Auto)</option>
                 <option value="stc">STC KSA</option>
                 <option value="mobily">Mobily KSA</option>
                 <option value="zain">Zain KSA</option>
@@ -36,31 +22,45 @@
             </select>
         </div>
 
-        <div class="gauge-infinity">
-            <canvas id="gauge-canvas" width="300" height="300"></canvas>
-            
-            <div class="center-hud">
-                <div id="live-num">0.0</div>
-                <div id="phase-txt" class="phase-txt">SYSTEM READY</div>
-                <div class="unit">Mbps</div>
+        <div class="gauge-smart">
+            <div class="gauge-ticks" id="ticks"></div>
+            <div class="gauge-inner">
+                <svg viewBox="0 0 240 240">
+                    <defs>
+                        <linearGradient id="grad-dl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2af598"/><stop offset="1" stop-color="#009efd"/></linearGradient>
+                        <linearGradient id="grad-ul" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f77062"/><stop offset="1" stop-color="#fe5196"/></linearGradient>
+                    </defs>
+                    <circle class="track-bg" cx="120" cy="120" r="100" />
+                    <circle id="track-fill" class="track-fg" cx="120" cy="120" r="100" />
+                </svg>
+                <div class="center-readout">
+                    <div id="live-val">0.0</div>
+                    <div id="phase-lbl" class="phase-lbl">READY</div>
+                    <div class="unit">Mbps</div>
+                </div>
             </div>
         </div>
 
-        <div class="net-info">
-            <div class="info-row">
-                <span>Loaded Jitter</span>
-                <strong id="val-jitter" class="yellow">-- ms</strong>
+        <div class="stats-matrix">
+            <div class="matrix-cell">
+                <span>PING</span>
+                <b id="res-ping">--</b>
             </div>
-            <div class="info-row">
-                <span>Swarm Threads</span>
-                <strong id="thread-count" class="green">0 / 50</strong>
+            <div class="matrix-cell">
+                <span>JITTER</span>
+                <b id="res-jitter" class="yellow">--</b>
             </div>
-            <div class="stability-track">
-                <div id="stability-bar" class="stability-fill"></div>
+            <div class="matrix-cell">
+                <span>DOWNLOAD</span>
+                <b id="res-dl" class="blue">--</b>
+            </div>
+            <div class="matrix-cell">
+                <span>UPLOAD</span>
+                <b id="res-ul" class="red">--</b>
             </div>
         </div>
 
-        <button id="start-btn" class="swarm-btn" onclick="startSwarmTest()">ACTIVATE SWARM</button>
+        <button id="start-btn" class="smart-btn" onclick="startSmartTest()">START TEST</button>
     </div>
     <script src="script.js"></script>
 </body>
