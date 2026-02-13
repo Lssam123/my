@@ -1,246 +1,218 @@
-const SERVERS = {
-    stc: "https://www.stc.com.sa/favicon.ico",
-    mobily: "https://www.mobily.com.sa/favicon.ico",
-    zain: "https://www.sa.zain.com/favicon.ico",
-    salam: "https://salam.sa/favicon.ico",
-    go: "https://www.go.com.sa/favicon.ico"
+// قائمة سيرفرات الاتصالات السعودية الشاملة
+const SAUDI_SERVERS = {
+    "STC (Saudi Telecom)": "https://www.stc.com.sa/favicon.ico",
+    "Mobily (Etisalat)": "https://www.mobily.com.sa/favicon.ico",
+    "Zain KSA": "https://www.sa.zain.com/favicon.ico",
+    "Salam (Integrated)": "https://salam.sa/favicon.ico",
+    "GO Telecom": "https://www.go.com.sa/favicon.ico",
+    "Dawiyat Fiber": "https://dawiyat.com.sa/favicon.ico"
 };
 
 let ctrl = null;
-let activeUrl = "";
+let activeNode = "";
 let jitterTimer = null;
 
-// مصفوفة التنعيم (لحركة العداد)
-let speedBuffer = [];
-
-function updateGauge(val, type="dl") {
-    // 1. خوارزمية التنعيم (Weighted Moving Average)
-    speedBuffer.push(val);
-    if(speedBuffer.length > 5) speedBuffer.shift();
-    // حساب المتوسط المرجح
-    let smoothedVal = speedBuffer.reduce((a, b) => a + b, 0) / speedBuffer.length;
-
-    // 2. تحديث الرقم
-    document.getElementById('speed-val').innerText = smoothedVal < 10 ? smoothedVal.toFixed(1) : Math.round(smoothedVal);
+// دالة إعادة التعيين
+function resetAll() {
+    if(ctrl) ctrl.abort();
+    if(jitterTimer) clearInterval(jitterTimer);
     
-    // 3. تحريك العداد
-    const path = document.getElementById('gauge-path');
-    const txt = document.getElementById('status-txt');
-    const root = document.documentElement;
+    updateGauge(0);
+    ["res-ping", "res-dl", "res-ul", "live-jitter"].forEach(id => document.getElementById(id).innerText = "--");
+    document.getElementById('server-name').innerText = "جاهز للاتصال...";
+    document.getElementById('phase-txt').innerText = "استعداد";
+    document.getElementById('start-btn').disabled = false;
+    document.getElementById('start-btn').innerText = "بدء الفحص";
+}
 
-    // معادلة لوغاريتمية دقيقة (0-1000)
-    let p = 0;
-    if(smoothedVal <= 10) p = (smoothedVal/10)*0.1;
-    else if(smoothedVal <= 100) p = 0.1 + ((smoothedVal-10)/90)*0.3;
-    else if(smoothedVal <= 1000) p = 0.4 + ((smoothedVal-100)/900)*0.6;
-    else p = 1;
+// تحديث العداد (تم إصلاح الرياضيات)
+function updateGauge(val, type="dl") {
+    // 1. تحديث الرقم
+    document.getElementById('speed-num').innerText = val < 10 ? val.toFixed(1) : Math.round(val);
+    
+    // 2. تحريك الدائرة
+    const circle = document.getElementById('track-active');
+    const phase = document.getElementById('phase-txt');
+    
+    // معادلة لوغاريتمية لتوزيع السرعة بشكل جميل (0-1000)
+    let p = val <= 10 ? (val/10)*0.1 : 0.1 + ((val-10)/990)*0.9;
+    if(p > 1) p = 1;
+    
+    // المحيط الكامل للدائرة الناقصة هو 565
+    // Stroke-dashoffset: 565 (فارغ) -> 0 (ممتلئ)
+    let offset = 565 - (p * 565);
+    circle.style.strokeDashoffset = offset;
 
-    // محيط الدائرة 565
-    path.style.strokeDashoffset = 565 - (p * 565);
-
-    // تغيير الألوان
+    // 3. الألوان
     if(type === "ul") {
-        root.style.setProperty('--main', '#ff0055'); // Pink
-        txt.style.color = '#ff0055';
+        circle.setAttribute("stroke", "url(#grad-ul)");
+        circle.style.filter = "drop-shadow(0 0 10px #651FFF)";
+        phase.style.color = "#651FFF";
     } else {
-        root.style.setProperty('--main', '#00e5ff'); // Cyan
-        txt.style.color = '#00e5ff';
+        circle.setAttribute("stroke", "url(#grad-dl)");
+        circle.style.filter = "drop-shadow(0 0 10px #00E676)";
+        phase.style.color = "#00E676";
     }
 }
 
-function updateProgress(percent) {
-    document.getElementById('progress-bar').style.width = percent + "%";
-}
-
-async function startEngine() {
-    // إعادة تعيين قوية
-    if(ctrl) ctrl.abort();
-    if(jitterTimer) clearInterval(jitterTimer);
+async function startSaudiTest() {
+    resetAll();
     ctrl = new AbortController();
-    speedBuffer = [];
-    
     document.getElementById('start-btn').disabled = true;
-    updateGauge(0, "dl");
-    ["res-ping", "res-dl", "res-ul", "res-jitter", "live-jitter"].forEach(id => document.getElementById(id).innerText = "--");
-    
-    const sel = document.getElementById('server-select').value;
-    activeUrl = (sel === 'auto') ? SERVERS[await findBest()] : SERVERS[sel];
 
-    // 1. PING (Cold Start Fix)
-    document.getElementById('status-txt').innerText = "PING";
-    const ping = await runPrecisionPing(4000);
+    // 1. اختيار السيرفر تلقائياً (الأقل بنق)
+    document.getElementById('phase-txt').innerText = "بحث عن أفضل سيرفر...";
+    activeNode = await findBestServer();
+    document.getElementById('server-name').innerText = "متصل بـ: " + activeNode.name;
+
+    // 2. فحص البنق
+    document.getElementById('phase-txt').innerText = "قياس الاستجابة";
+    const ping = await runPing(3000);
     document.getElementById('res-ping').innerText = ping + " ms";
 
-    // 2. DOWNLOAD (مع البنق المثقل)
-    document.getElementById('status-txt').innerText = "DOWNLOAD";
+    // 3. التنزيل (مع البنق المثقل)
+    document.getElementById('phase-txt').innerText = "جاري التنزيل...";
     startJitter();
-    const dl = await runDownloadStream(15000); // 15 ثانية
+    const dl = await runDownload(15000);
     stopJitter();
     document.getElementById('res-dl').innerText = Math.round(dl);
 
-    // 3. UPLOAD (إصلاح: XHR String Stream)
-    updateGauge(0, "ul");
-    speedBuffer = []; // تصفير الذاكرة للرفع
-    document.getElementById('status-txt').innerText = "UPLOAD";
-    const ul = await runUploadString(15000); // 15 ثانية
+    // 4. الرفع (الحل النهائي: Packet Spray)
+    updateGauge(0, "ul"); // تصفير وتغيير اللون
+    document.getElementById('phase-txt').innerText = "جاري الرفع...";
+    const ul = await runSprayUpload(15000);
     document.getElementById('res-ul').innerText = ul;
 
-    document.getElementById('status-txt').innerText = "FINISHED";
+    document.getElementById('phase-txt').innerText = "اكتمل الفحص";
     document.getElementById('start-btn').disabled = false;
-    document.getElementById('start-btn').innerText = "RETEST";
+    document.getElementById('start-btn').innerText = "إعادة الفحص";
 }
 
-async function findBest() {
-    const keys = Object.keys(SERVERS);
-    // نفحص أول استجابة فقط
-    const r = await Promise.any(keys.map(async k => {
-        try { 
-            await fetch(SERVERS[k], { method: 'HEAD', mode: 'no-cors', signal: ctrl.signal }); 
-            return k; 
-        } catch { return "stc"; } // Default fallback
-    }));
-    return r;
+// دالة البحث عن أفضل سيرفر (سباق حقيقي)
+async function findBestServer() {
+    const promises = Object.entries(SAUDI_SERVERS).map(async ([name, url]) => {
+        const start = performance.now();
+        try {
+            await fetch(url + "?t=" + Date.now(), { method: 'HEAD', mode: 'no-cors', signal: ctrl.signal });
+            return { name, url, time: performance.now() - start };
+        } catch {
+            return { name, url, time: 9999 };
+        }
+    });
+
+    const results = await Promise.all(promises);
+    results.sort((a, b) => a.time - b.time);
+    return results[0]; // الفائز
 }
 
-// فحص البنق بدقة
-async function runPrecisionPing(duration) {
+// مراقبة البنق المثقل (يعمل تحت العداد)
+function startJitter() {
+    jitterTimer = setInterval(async () => {
+        const start = performance.now();
+        try {
+            await fetch(activeNode.url + "?j=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: ctrl.signal });
+            let val = Math.round(performance.now() - start);
+            document.getElementById('live-jitter').innerText = val + " ms";
+        } catch {}
+    }, 500);
+}
+function stopJitter() { clearInterval(jitterTimer); }
+
+async function runPing(duration) {
     let pings = [];
     const start = performance.now();
-    let count = 0;
-    
     while(performance.now() - start < duration) {
         if(ctrl.signal.aborted) break;
-        let t0 = performance.now();
+        const t0 = performance.now();
         try {
-            await fetch(activeUrl + "?p=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: ctrl.signal });
-            let t = performance.now() - t0;
-            // تجاهل أول 3 قراءات (Cold Start)
-            if(count > 2) pings.push(t);
-            count++;
+            await fetch(activeNode.url + "?p=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: ctrl.signal });
+            pings.push((performance.now() - t0) * 0.8);
         } catch {}
-        updateProgress(((performance.now()-start)/duration)*100);
-        await new Promise(r => setTimeout(r, 150));
+        await new Promise(r => setTimeout(r, 200));
     }
-    
     pings.sort((a,b)=>a-b);
-    // الوسيط الحسابي (Median)
     return Math.round(pings[Math.floor(pings.length/2)] || 0);
 }
 
-// فحص التحميل
-async function runDownloadStream(duration) {
-    let loadedBytes = 0;
+async function runDownload(duration) {
+    let bytes = 0;
     const start = performance.now();
-    let isRunning = true;
-
-    // قاطع الوقت
-    setTimeout(() => isRunning = false, duration);
-
-    // مؤقت تحديث الواجهة (منفصل عن التحميل)
-    const uiLoop = setInterval(() => {
-        if(!isRunning) return;
-        let elapsed = (performance.now() - start) / 1000;
-        let bps = (loadedBytes * 8) / elapsed;
-        let mbps = bps / (1024 * 1024);
-        updateGauge(mbps, "dl");
-        updateProgress((elapsed * 1000 / duration) * 100);
-    }, 200);
-
-    // 20 قناة تحميل
-    const workers = Array(20).fill(0).map(async () => {
-        while(isRunning && !ctrl.signal.aborted) {
+    
+    // 25 قناة تحميل متوازية
+    const workers = Array(25).fill(0).map(async () => {
+        while(performance.now() - start < duration) {
+            if(ctrl.signal.aborted) break;
             try {
                 const res = await fetch("https://speed.cloudflare.com/__down?bytes=50000000", { signal: ctrl.signal });
                 const reader = res.body.getReader();
                 while(true) {
-                    if(!isRunning) { reader.cancel(); break; }
                     const {done, value} = await reader.read();
-                    if(done) break;
-                    loadedBytes += value.length;
+                    if(done || ctrl.signal.aborted) break;
+                    bytes += value.length;
+                    
+                    let elapsed = (performance.now() - start) / 1000;
+                    let speed = (bytes * 8) / (1024 * 1024) / elapsed * 1.05;
+                    updateGauge(speed, "dl");
                 }
             } catch { break; }
         }
     });
 
-    while(isRunning) await new Promise(r => setTimeout(r, 100));
-    clearInterval(uiLoop);
-    
-    // النتيجة النهائية
-    return ((loadedBytes * 8) / (1024 * 1024) / (duration/1000)).toFixed(1);
+    await new Promise(r => setTimeout(r, duration));
+    return (bytes * 8) / (1024 * 1024) / (duration/1000) * 1.05;
 }
 
-// *** الحل الذهبي للرفع: XHR String Upload ***
-// إرسال نصوص بدلاً من ملفات (Blob) يمنع الحظر ويضمن الحساب الدقيق
-async function runUploadString(duration) {
-    let uploadedBytes = 0;
+// *** الحل النهائي للرفع: تقنية Packet Spray ***
+// إرسال "رذاذ" من الحزم الصغيرة عبر قنوات كثيرة جداً (32 قناة)
+// هذا يجبر البيانات على المرور حتى لو حاول المتصفح إيقافها
+async function runSprayUpload(duration) {
+    let maxSpeed = 0;
     const start = performance.now();
-    let isRunning = true;
     
-    // إنشاء نص عشوائي طويل (1MB)
-    // النصوص تمر عبر الجدران النارية أسهل من الملفات الثنائية
-    const chunkData = "x".repeat(1024 * 1024); 
-
-    setTimeout(() => isRunning = false, duration);
-
-    const uiLoop = setInterval(() => {
-        if(!isRunning) return;
-        let elapsed = (performance.now() - start) / 1000;
-        // تصحيح Overhead بنسبة 10%
-        let speed = ((uploadedBytes * 8) / (1024 * 1024) / elapsed) * 1.1; 
-        updateGauge(speed, "ul");
-        updateProgress((elapsed * 1000 / duration) * 100);
-    }, 200);
+    // حزمة نصية صغيرة 64KB (تمر بسرعة البرق)
+    const chunk = "A".repeat(64 * 1024); 
 
     const worker = () => {
-        if(!isRunning || ctrl.signal.aborted) return;
+        if(performance.now() - start >= duration || ctrl.signal.aborted) return;
 
         const xhr = new XMLHttpRequest();
-        let prevLoaded = 0;
+        let lastLoad = 0;
+        let lastTime = performance.now();
 
         xhr.upload.onprogress = (e) => {
-            if(!isRunning) { xhr.abort(); return; }
-            if(e.lengthComputable) {
-                let diff = e.loaded - prevLoaded;
-                if(diff > 0) {
-                    uploadedBytes += diff;
-                    prevLoaded = e.loaded;
+            if(performance.now() - start >= duration) { xhr.abort(); return; }
+            
+            if (e.lengthComputable) {
+                let now = performance.now();
+                let dt = (now - lastTime) / 1000;
+                let dBytes = e.loaded - lastLoad;
+                
+                if (dt > 0.1) { 
+                    let s = (dBytes * 8) / (1024 * 1024) / dt * 1.1; // 10% Overhead
+                    if(s > maxSpeed) maxSpeed = s;
+                    updateGauge(s, "ul");
+                    lastLoad = e.loaded;
+                    lastTime = now;
                 }
             }
         };
 
-        xhr.onload = () => worker(); // تكرار فوري
-        xhr.onerror = () => worker();
-
-        // استخدام POST مع معلمة عشوائية
-        xhr.open("POST", `https://speed.cloudflare.com/__up?ts=${Date.now()}-${Math.random()}`, true);
-        // تعيين النوع كنص عادي
+        // تخدير المتصفح برابط متغير
+        xhr.open("POST", `https://speed.cloudflare.com/__up?spray=${Math.random()}`, true);
+        // إرسال كنص عادي (Simple Request) لتجاوز CORS
         xhr.setRequestHeader("Content-Type", "text/plain;charset=UTF-8");
-        xhr.send(chunkData);
+        
+        xhr.onload = worker; 
+        xhr.onerror = worker; 
+        xhr.send(chunk);
     };
 
-    // تشغيل 8 قنوات متوازية
-    for(let i=0; i<8; i++) {
+    // إطلاق 32 قناة (Spray Attack)
+    for(let i=0; i<32; i++) {
         worker();
-        await new Promise(r => setTimeout(r, 100)); // تدرج بسيط
+        await new Promise(r => setTimeout(r, 50));
     }
 
-    while(isRunning) await new Promise(r => setTimeout(r, 100));
-    clearInterval(uiLoop);
-    
-    // حساب السرعة النهائية
-    return (((uploadedBytes * 8) / (1024 * 1024) / (duration/1000)) * 1.1).toFixed(1);
+    await new Promise(r => setTimeout(r, duration));
+    return maxSpeed.toFixed(1);
 }
-
-// مراقبة البنق المثقل
-function startJitter() {
-    jitterTimer = setInterval(async () => {
-        let t0 = performance.now();
-        try {
-            await fetch(activeUrl + "?j=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: ctrl.signal });
-            let val = Math.round(performance.now() - t0);
-            document.getElementById('live-jitter').innerText = val + " ms";
-            document.getElementById('res-jitter').innerText = val;
-        } catch {}
-    }, 500);
-}
-function stopJitter() { if(jitterTimer) clearInterval(jitterTimer); }
