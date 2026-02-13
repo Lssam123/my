@@ -3,103 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S-SPEED V124 | CHRONO SYNC</title>
+    <title>S-SPEED V125 | STRICT TIMING</title>
     <style>
-        /* --- V124 Design System --- */
-        :root { --dl-color: #00F260; --ul-color: #F000FF; --jit-color: #FFD700; --bg: #09090b; --glass: rgba(25, 25, 30, 0.95); }
-        body { background: var(--bg); color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'Segoe UI', system-ui, sans-serif; overflow: hidden; }
+        /* --- V125 Styling --- */
+        :root { --blue: #00F260; --pink: #F000FF; --bg: #050505; --panel: #111; }
+        body { background: var(--bg); color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
 
-        .sync-bg { 
-            position: fixed; width: 100%; height: 100%; 
-            background: radial-gradient(circle at 50% 10%, #1a202c 0%, #000 100%); z-index: -1;
-        }
+        .hex-bg { position: fixed; width: 100%; height: 100%; background: radial-gradient(circle at 50% 0%, #1a202c 0%, #000 100%); z-index: -1; }
 
-        .main-console { 
-            width: 95%; max-width: 480px; padding: 25px; 
-            background: var(--glass); border: 1px solid #333; 
-            border-radius: 24px; box-shadow: 0 0 80px rgba(0,0,0,0.8); 
-            text-align: center; position: relative;
-        }
+        .console { width: 95%; max-width: 480px; padding: 25px; background: rgba(20,20,25,0.95); border: 1px solid #333; border-radius: 20px; box-shadow: 0 0 60px rgba(0,0,0,0.8); text-align: center; }
 
         /* شريط الوقت */
-        .time-track { width: 100%; height: 4px; background: #222; border-radius: 2px; margin-bottom: 20px; overflow: hidden; }
-        .time-fill { height: 100%; width: 0%; background: white; transition: width 0.1s linear; }
+        .timer-track { width: 100%; height: 4px; background: #222; margin-bottom: 20px; border-radius: 2px; overflow: hidden; }
+        .timer-fill { height: 100%; width: 0%; background: white; transition: width 0.2s linear; }
 
         /* النتائج */
-        .stats-row { display: flex; justify-content: space-between; margin-bottom: 25px; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; }
-        .stat-item { flex: 1; display: flex; flex-direction: column; position: relative; }
-        .sep { border-left: 1px solid #333; border-right: 1px solid #333; }
-        .lbl { font-size: 0.65rem; color: #777; font-weight: bold; letter-spacing: 1px; }
-        .val { font-size: 1.1rem; font-weight: 900; margin-top: 5px; }
-        
-        /* ألوان */
-        .c-dl { color: var(--dl-color); } .c-ul { color: var(--ul-color); } .c-jit { color: var(--jit-color); }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; margin-bottom: 20px; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 10px; }
+        .stat-box { border-left: 1px solid #333; display: flex; flex-direction: column; }
+        .stat-box:last-child { border-left: none; }
+        .lbl { font-size: 0.6rem; color: #888; font-weight: bold; margin-bottom: 5px; }
+        .val { font-size: 0.9rem; font-weight: 900; }
+        .c-dl { color: var(--blue); } .c-ul { color: var(--pink); } .c-jit { color: #FFD700; }
 
-        .server-select { 
-            width: 100%; background: #000; color: white; border: 1px solid #444; 
-            padding: 12px; border-radius: 10px; font-weight: bold; outline: none; margin-bottom: 20px; 
-        }
+        .server-select { width: 100%; background: #000; color: white; border: 1px solid #444; padding: 10px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; outline: none; }
 
         /* العداد */
-        .gauge-area { position: relative; width: 280px; height: 280px; margin: 0 auto; }
-        .track-bg { stroke: #222; stroke-width: 14; stroke-linecap: round; }
-        .track-fg { 
-            stroke-width: 14; stroke-linecap: round; 
-            stroke-dasharray: 600; stroke-dashoffset: 600; 
-            transition: stroke-dashoffset 0.1s linear; 
-            filter: drop-shadow(0 0 10px var(--dl-color)); 
-        }
+        .gauge-wrap { position: relative; width: 260px; height: 260px; margin: 0 auto; }
+        svg { transform: rotate(135deg); width: 100%; height: 100%; }
+        .track-bg { stroke: #222; stroke-width: 14; stroke-linecap: round; fill: none; }
+        .track-fg { stroke: #222; stroke-width: 14; stroke-linecap: round; fill: none; stroke-dasharray: 565; stroke-dashoffset: 565; transition: stroke-dashoffset 0.1s linear; }
 
-        .center-hud { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; }
-        #live-num { font-size: 5rem; font-weight: 900; line-height: 0.9; letter-spacing: -3px; }
-        .status-txt { font-size: 0.8rem; font-weight: bold; color: #666; margin-top: 5px; text-transform: uppercase; }
+        .center-info { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        #live-num { font-size: 4.5rem; font-weight: 900; line-height: 0.9; letter-spacing: -2px; }
+        .phase-txt { font-size: 0.9rem; font-weight: bold; color: var(--blue); margin-top: 5px; }
 
-        /* منطقة الجيتر (أسفل العداد) */
-        .jitter-dock { 
-            margin-top: -30px; margin-bottom: 20px; position: relative; z-index: 10;
-            background: rgba(0,0,0,0.5); padding: 8px 20px; border-radius: 20px; 
-            display: inline-block; border: 1px solid #333;
-        }
-        .j-lbl { font-size: 0.7rem; color: #888; margin-right: 5px; }
-        .j-val { font-size: 1.1rem; font-weight: 900; color: var(--jit-color); }
+        /* منطقة الجيتر */
+        .jitter-area { margin-top: -30px; margin-bottom: 20px; position: relative; z-index: 10; font-size: 0.9rem; }
+        .j-val { color: #FFD700; font-weight: bold; font-size: 1.2rem; }
 
-        /* الأزرار */
-        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
-        .main-btn { 
-            flex: 4; padding: 16px; background: white; border: none; border-radius: 12px;
-            color: black; font-weight: 900; font-size: 1.1rem; cursor: pointer; transition: 0.3s; 
-        }
-        .main-btn:hover { background: var(--dl-color); box-shadow: 0 0 25px var(--dl-color); }
-        .main-btn:disabled { background: #333; color: #555; box-shadow: none; cursor: not-allowed; }
-        
-        .reset-btn { flex: 1; background: #222; border: 1px solid #444; border-radius: 12px; color: white; font-size: 1.4rem; cursor: pointer; }
-        .reset-btn:hover { border-color: var(--ul-color); color: var(--ul-color); }
+        .btn { width: 100%; padding: 16px; background: white; color: black; font-weight: 900; font-size: 1.1rem; border: none; border-radius: 10px; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .btn:hover { background: var(--blue); box-shadow: 0 0 20px var(--blue); }
+        .btn:disabled { background: #333; color: #666; cursor: not-allowed; box-shadow: none; }
     </style>
 </head>
 <body>
-    <div class="sync-bg"></div>
-    <div class="main-console">
-        
-        <div class="time-track"><div id="time-bar" class="time-fill"></div></div>
+    <div class="hex-bg"></div>
+    <div class="console">
+        <div class="timer-track"><div id="time-bar" class="timer-fill"></div></div>
 
-        <div class="stats-row">
-            <div class="stat-item">
+        <div class="stats-grid">
+            <div class="stat-box">
                 <span class="lbl">PING</span>
-                <span id="res-ping" class="val">--</span>
+                <span id="end-ping" class="val">--</span>
             </div>
-            <div class="stat-item sep">
-                <span class="lbl">DOWNLOAD</span>
-                <span id="res-dl" class="val c-dl">--</span>
+            <div class="stat-box">
+                <span class="lbl">JITTER</span>
+                <span id="end-jitter" class="val c-jit">--</span>
             </div>
-            <div class="stat-item">
-                <span class="lbl">UPLOAD</span>
-                <span id="res-ul" class="val c-ul">--</span>
+            <div class="stat-box">
+                <span class="lbl">DOWN</span>
+                <span id="end-dl" class="val c-dl">--</span>
+            </div>
+            <div class="stat-box">
+                <span class="lbl">UP</span>
+                <span id="end-ul" class="val c-ul">--</span>
             </div>
         </div>
 
         <select id="srv-select" class="server-select">
-            <option value="auto">📡 تلقائي (الأفضل)</option>
-            <optgroup label="Saudi Arabia Servers">
+            <option value="auto">🚀 تلقائي (Auto Best)</option>
+            <optgroup label="Saudi Arabia">
                 <option value="stc">STC (الاتصالات)</option>
                 <option value="mobily">Mobily (موبايلي)</option>
                 <option value="zain">Zain (زين)</option>
@@ -109,32 +82,28 @@
             </optgroup>
         </select>
 
-        <div class="gauge-area">
-            <svg viewBox="0 0 300 300">
+        <div class="gauge-wrap">
+            <svg viewBox="0 0 240 240">
+                <path class="track-bg" d="M 40 120 A 80 80 0 1 1 200 120" /> <path class="track-bg" d="M 20 220 A 110 110 0 1 1 220 220" /> <path id="track-fill" class="track-fg" stroke="url(#g-dl)" d="M 20 220 A 110 110 0 1 1 220 220" />
                 <defs>
                     <linearGradient id="g-dl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00F260"/><stop offset="1" stop-color="#0575E6"/></linearGradient>
                     <linearGradient id="g-ul" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#F000FF"/><stop offset="1" stop-color="#FF5E00"/></linearGradient>
                 </defs>
-                <path class="track-bg" d="M 60 260 A 130 130 0 1 1 240 260" fill="none" />
-                <path id="track-fill" class="track-fg" d="M 60 260 A 130 130 0 1 1 240 260" fill="none" stroke="url(#g-dl)" />
             </svg>
-            <div class="center-hud">
+            <div class="center-info">
                 <div id="live-num">0.0</div>
-                <div id="status-txt" class="status-txt">READY</div>
+                <div id="phase-lbl" class="phase-txt">READY</div>
+                <div class="unit">Mbps</div>
             </div>
         </div>
 
-        <div class="jitter-dock">
-            <span class="j-lbl">LOADED JITTER:</span>
-            <span id="res-jitter" class="j-val">-- ms</span>
+        <div class="jitter-area">
+            <span>Loaded Jitter: </span>
+            <span id="live-jitter" class="j-val">--</span>
         </div>
 
-        <div class="btn-group">
-            <button id="start-btn" class="main-btn" onclick="runSyncTest()">START TEST</button>
-            <button class="reset-btn" onclick="resetAll()">↺</button>
-        </div>
+        <button id="start-btn" class="btn" onclick="startStrictTest()">START TEST</button>
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>
