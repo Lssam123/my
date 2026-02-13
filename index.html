@@ -3,128 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>قياس السرعة V127 | المعيار السعودي</title>
+    <title>S-SPEED V128 | OASIS</title>
     <style>
-        /* --- تصميم V127 العربي --- */
-        :root { --main: #00E676; --sec: #651FFF; --bg: #0a0a0f; --card: #141419; }
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        /* --- تصميم الواحة V128 --- */
+        :root { 
+            --primary: #00E5FF; /* سماوي */
+            --secondary: #D500F9; /* بنفسجي */
+            --accent: #FFD600; /* أصفر */
+            --bg: #0d0d12; 
+            --surface: #15151a;
+        }
         
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
         body { background: var(--bg); color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
 
-        .saudi-bg { 
+        /* الخلفية */
+        .oasis-bg { 
             position: fixed; width: 100%; height: 100%; 
-            background: radial-gradient(circle at 50% 10%, #1a2322 0%, #000 100%); z-index: -1;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            opacity: 0.8; z-index: -1;
         }
 
-        .main-frame { 
-            width: 95%; max-width: 450px; padding: 30px; 
-            background: rgba(20, 20, 25, 0.95); border: 1px solid rgba(255,255,255,0.1); 
-            border-radius: 30px; box-shadow: 0 0 80px rgba(0,0,0,0.8); 
-            text-align: center; position: relative;
+        .dashboard { 
+            width: 95%; max-width: 500px; padding: 30px; 
+            background: rgba(21, 21, 26, 0.95); border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 25px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); 
+            text-align: center; display: flex; flex-direction: column; gap: 20px;
         }
 
-        /* السيرفر التلقائي */
-        .server-display { 
-            background: rgba(255,255,255,0.05); padding: 10px; border-radius: 15px; 
-            margin-bottom: 30px; display: flex; align-items: center; justify-content: center; gap: 10px;
+        /* شبكة النتائج العلوية */
+        .stats-header { 
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+            background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px;
         }
-        .pulse-dot { width: 10px; height: 10px; background: var(--main); border-radius: 50%; box-shadow: 0 0 10px var(--main); animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
-        .server-name { font-weight: bold; color: #fff; font-size: 0.9rem; }
-
-        /* العداد الدقيق */
-        .gauge-box { position: relative; width: 280px; height: 280px; margin: 0 auto; }
-        svg { transform: rotate(135deg); width: 100%; height: 100%; }
-        /* محيط الدائرة المحسوب بدقة: 2 * PI * 120 = 754 */
-        /* نريد عرض 75% من الدائرة: 754 * 0.75 = 565 */
-        .track-bg { stroke: #222; stroke-width: 16; stroke-linecap: round; fill: none; stroke-dasharray: 565; stroke-dashoffset: 0; opacity: 0.3; }
-        .track-val { 
-            stroke: var(--main); stroke-width: 16; stroke-linecap: round; fill: none; 
-            stroke-dasharray: 565; stroke-dashoffset: 565; /* يبدأ فارغاً */
-            transition: stroke-dashoffset 0.2s ease-out, stroke 0.3s;
-            filter: drop-shadow(0 0 10px var(--main));
-        }
-
-        .center-info { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
-        #speed-num { font-size: 4.5rem; font-weight: 800; line-height: 0.9; letter-spacing: -2px; }
-        .phase-text { font-size: 1rem; font-weight: bold; color: var(--main); margin-top: 10px; display: block; }
-        .unit { font-size: 0.8rem; color: #666; }
-
-        /* البنق المثقل أسفل العداد */
-        .jitter-box { margin-top: -30px; margin-bottom: 30px; position: relative; z-index: 2; font-size: 0.9rem; color: #aaa; }
-        .jitter-val { color: #FFD700; font-weight: bold; font-size: 1.1rem; margin-right: 5px; }
-
-        /* شبكة النتائج */
-        .results-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 30px; }
-        .res-card { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
-        .lbl { font-size: 0.7rem; color: #888; font-weight: bold; display: block; margin-bottom: 5px; }
-        .val { font-size: 1.1rem; font-weight: 900; dir: ltr; } /* الأرقام دائماً إنجليزي */
+        .stat-box { display: flex; flex-direction: column; }
+        .stat-box:not(:last-child) { border-left: 1px solid rgba(255,255,255,0.1); }
         
-        .btn-row { display: flex; gap: 10px; }
-        .start-btn { 
-            flex: 3; padding: 18px; border-radius: 15px; border: none;
-            background: white; color: black; font-weight: 900; font-size: 1.2rem; 
-            cursor: pointer; transition: 0.3s; 
-        }
-        .start-btn:hover { background: var(--main); box-shadow: 0 0 30px var(--main); }
-        .start-btn:disabled { background: #333; color: #555; cursor: not-allowed; box-shadow: none; }
+        .lbl { font-size: 0.65rem; color: #888; font-weight: bold; margin-bottom: 5px; }
+        .val { font-size: 1rem; font-weight: 900; direction: ltr; }
+        
+        .c-dl { color: var(--primary); } 
+        .c-ul { color: var(--secondary); } 
+        .c-jit { color: var(--accent); }
 
-        .reset-btn {
-            flex: 1; border-radius: 15px; border: 1px solid #444; background: #111;
+        /* منطقة السيرفر */
+        .server-zone { display: flex; flex-direction: column; gap: 5px; }
+        .server-status { font-size: 0.8rem; color: #aaa; }
+        .server-name { font-weight: bold; color: white; font-size: 1rem; }
+
+        /* العداد المركزي */
+        .gauge-section { 
+            position: relative; width: 260px; height: 260px; margin: 0 auto; 
+            /* هنا الحل لمشكلة التداخل: مسافة واضحة */
+            margin-bottom: 10px;
+        }
+        svg { transform: rotate(135deg); width: 100%; height: 100%; }
+        
+        .track-bg { stroke: #222; stroke-width: 12; stroke-linecap: round; fill: none; }
+        .track-fg { 
+            stroke-width: 12; stroke-linecap: round; fill: none; 
+            /* محيط الدائرة 2 * PI * 110 = 691. نحاول عرض 75% منها = 518 */
+            stroke-dasharray: 518; stroke-dashoffset: 518; 
+            transition: stroke-dashoffset 0.15s ease-out;
+            filter: drop-shadow(0 0 8px var(--primary));
+        }
+
+        .hud-center { 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            display: flex; flex-direction: column; align-items: center;
+        }
+        #speed-display { font-size: 4rem; font-weight: 800; line-height: 1; letter-spacing: -2px; }
+        .unit-display { font-size: 0.8rem; color: #666; margin-top: 5px; }
+        .phase-display { font-size: 0.9rem; font-weight: bold; color: var(--primary); margin-top: 5px; }
+
+        /* منطقة البنق المثقل المنفصلة */
+        .jitter-panel { 
+            background: rgba(0,0,0,0.3); padding: 10px 20px; border-radius: 50px; 
+            align-self: center; border: 1px solid #333; margin-bottom: 10px;
+        }
+        .jitter-text { font-size: 0.8rem; color: #aaa; }
+        .jitter-live { font-size: 1.1rem; font-weight: bold; color: var(--accent); margin-right: 5px; }
+
+        /* الأزرار */
+        .actions { display: flex; gap: 10px; }
+        .btn-start { 
+            flex: 3; padding: 18px; border: none; border-radius: 15px;
+            background: white; color: black; font-weight: 900; font-size: 1.2rem;
+            cursor: pointer; transition: 0.3s;
+        }
+        .btn-start:hover { background: var(--primary); box-shadow: 0 0 30px var(--primary); }
+        .btn-start:disabled { background: #333; color: #555; cursor: not-allowed; box-shadow: none; }
+
+        .btn-reset { 
+            flex: 1; border: 1px solid #444; background: transparent; border-radius: 15px;
             color: white; font-size: 1.5rem; cursor: pointer; transition: 0.3s;
         }
-        .reset-btn:hover { border-color: var(--main); color: var(--main); }
+        .btn-reset:hover { border-color: var(--secondary); color: var(--secondary); }
 
     </style>
 </head>
 <body>
-    <div class="saudi-bg"></div>
-    <div class="main-frame">
+    <div class="oasis-bg"></div>
+    <div class="dashboard">
         
-        <div class="server-display">
-            <div class="pulse-dot"></div>
-            <span id="server-name" class="server-name">جاهز للاتصال...</span>
-        </div>
-
-        <div class="gauge-box">
-            <svg viewBox="0 0 280 280">
-                <defs>
-                    <linearGradient id="grad-dl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00E676"/><stop offset="1" stop-color="#00B0FF"/></linearGradient>
-                    <linearGradient id="grad-ul" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#651FFF"/><stop offset="1" stop-color="#FF4081"/></linearGradient>
-                </defs>
-                <circle class="track-bg" cx="140" cy="140" r="120" />
-                <circle id="track-active" class="track-val" cx="140" cy="140" r="120" stroke="url(#grad-dl)" />
-            </svg>
-            <div class="center-info">
-                <div id="speed-num">0.0</div>
-                <div class="unit">ميجابت/ثانية</div>
-                <span id="phase-txt" class="phase-text">استعداد</span>
-            </div>
-        </div>
-
-        <div class="jitter-box">
-            ثبات الخط (Jitter): <span id="live-jitter" class="jitter-val">--</span>
-        </div>
-
-        <div class="results-grid">
-            <div class="res-card">
-                <span class="lbl">البنق (PING)</span>
+        <div class="stats-header">
+            <div class="stat-box">
+                <span class="lbl">PING</span>
                 <span id="res-ping" class="val">--</span>
             </div>
-            <div class="res-card">
-                <span class="lbl">التنزيل</span>
-                <span id="res-dl" class="val" style="color:var(--main)">--</span>
+            <div class="stat-box">
+                <span class="lbl">JITTER</span>
+                <span id="res-jitter" class="val c-jit">--</span>
             </div>
-            <div class="res-card">
-                <span class="lbl">الرفع</span>
-                <span id="res-ul" class="val" style="color:var(--sec)">--</span>
+            <div class="stat-box">
+                <span class="lbl">DOWN</span>
+                <span id="res-dl" class="val c-dl">--</span>
+            </div>
+            <div class="stat-box">
+                <span class="lbl">UP</span>
+                <span id="res-ul" class="val c-ul">--</span>
             </div>
         </div>
 
-        <div class="btn-row">
-            <button id="start-btn" class="start-btn" onclick="startSaudiTest()">بدء الفحص</button>
-            <button class="reset-btn" onclick="resetAll()" title="إعادة تعيين">↺</button>
+        <div class="server-zone">
+            <span class="server-status">السيرفر المحدد تلقائياً:</span>
+            <span id="server-name" class="server-name">جاري البحث...</span>
+        </div>
+
+        <div class="gauge-section">
+            <svg viewBox="0 0 260 260">
+                <defs>
+                    <linearGradient id="grad-dl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00E5FF"/><stop offset="1" stop-color="#2979FF"/></linearGradient>
+                    <linearGradient id="grad-ul" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#D500F9"/><stop offset="1" stop-color="#FF1744"/></linearGradient>
+                </defs>
+                <path class="track-bg" d="M 50 210 A 110 110 0 1 1 210 210" />
+                <path id="track-active" class="track-fg" stroke="url(#grad-dl)" d="M 50 210 A 110 110 0 1 1 210 210" />
+            </svg>
+            <div class="hud-center">
+                <div id="speed-display">0.0</div>
+                <div class="unit-display">Mbps</div>
+                <div id="phase-txt" class="phase-display">جاهز</div>
+            </div>
+        </div>
+
+        <div class="jitter-panel">
+            <span class="jitter-text">استقرار الخط (Loaded): </span>
+            <span id="live-jitter" class="jitter-live">--</span>
+        </div>
+
+        <div class="actions">
+            <button id="start-btn" class="btn-start" onclick="startOasisTest()">بدء الفحص</button>
+            <button class="btn-reset" onclick="resetAll()">↺</button>
         </div>
     </div>
 
-    <script src="script.js
+    <script src="script.js"></script>
+</body>
+</html>
