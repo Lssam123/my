@@ -3,106 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S-SPEED V125 | STRICT TIMING</title>
+    <title>S-SPEED V126 | PRECISION</title>
     <style>
-        /* --- V125 Styling --- */
-        :root { --blue: #00F260; --pink: #F000FF; --bg: #050505; --panel: #111; }
-        body { background: var(--bg); color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+        /* --- تصميم V126 الدقيق --- */
+        :root { --main: #00e5ff; --sec: #ff0055; --bg: #0a0b10; --glass: rgba(20, 25, 35, 0.95); }
+        body { background: var(--bg); color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'Segoe UI', system-ui, sans-serif; overflow: hidden; }
 
-        .hex-bg { position: fixed; width: 100%; height: 100%; background: radial-gradient(circle at 50% 0%, #1a202c 0%, #000 100%); z-index: -1; }
+        .grid-bg { 
+            position: fixed; width: 100%; height: 100%; 
+            background-image: linear-gradient(rgba(0, 229, 255, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 229, 255, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px; z-index: -1;
+        }
 
-        .console { width: 95%; max-width: 480px; padding: 25px; background: rgba(20,20,25,0.95); border: 1px solid #333; border-radius: 20px; box-shadow: 0 0 60px rgba(0,0,0,0.8); text-align: center; }
+        .dashboard { 
+            width: 95%; max-width: 460px; padding: 25px; 
+            background: var(--glass); border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 20px; box-shadow: 0 0 80px rgba(0,0,0,0.8); 
+            text-align: center; position: relative;
+        }
 
         /* شريط الوقت */
-        .timer-track { width: 100%; height: 4px; background: #222; margin-bottom: 20px; border-radius: 2px; overflow: hidden; }
-        .timer-fill { height: 100%; width: 0%; background: white; transition: width 0.2s linear; }
+        .progress-track { width: 100%; height: 4px; background: #222; margin-bottom: 20px; border-radius: 2px; overflow: hidden; }
+        .progress-bar { height: 100%; width: 0%; background: var(--main); transition: width 0.2s linear; }
 
         /* النتائج */
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; margin-bottom: 20px; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 10px; }
-        .stat-box { border-left: 1px solid #333; display: flex; flex-direction: column; }
-        .stat-box:last-child { border-left: none; }
-        .lbl { font-size: 0.6rem; color: #888; font-weight: bold; margin-bottom: 5px; }
-        .val { font-size: 0.9rem; font-weight: 900; }
-        .c-dl { color: var(--blue); } .c-ul { color: var(--pink); } .c-jit { color: #FFD700; }
+        .stats-deck { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; margin-bottom: 25px; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 12px; }
+        .stat-cell { display: flex; flex-direction: column; border-left: 1px solid #333; }
+        .stat-cell:last-child { border-left: none; }
+        .lbl { font-size: 0.65rem; color: #888; font-weight: bold; letter-spacing: 1px; }
+        .val { font-size: 1rem; font-weight: 900; margin-top: 5px; }
+        .c-main { color: var(--main); } .c-sec { color: var(--sec); } .c-warn { color: #ffd700; }
 
-        .server-select { width: 100%; background: #000; color: white; border: 1px solid #444; padding: 10px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; outline: none; }
+        .server-select { width: 100%; background: #000; color: white; border: 1px solid #444; padding: 12px; border-radius: 8px; margin-bottom: 25px; font-weight: bold; outline: none; }
 
         /* العداد */
-        .gauge-wrap { position: relative; width: 260px; height: 260px; margin: 0 auto; }
+        .gauge-container { position: relative; width: 280px; height: 280px; margin: 0 auto; }
         svg { transform: rotate(135deg); width: 100%; height: 100%; }
-        .track-bg { stroke: #222; stroke-width: 14; stroke-linecap: round; fill: none; }
-        .track-fg { stroke: #222; stroke-width: 14; stroke-linecap: round; fill: none; stroke-dasharray: 565; stroke-dashoffset: 565; transition: stroke-dashoffset 0.1s linear; }
+        .track-base { stroke: #1a1a1a; stroke-width: 14; stroke-linecap: round; fill: none; }
+        .track-active { 
+            stroke: var(--main); stroke-width: 14; stroke-linecap: round; fill: none; 
+            stroke-dasharray: 565; stroke-dashoffset: 565; /* محيط الدائرة الناقص */
+            transition: stroke-dashoffset 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
+            filter: drop-shadow(0 0 8px var(--main));
+        }
 
-        .center-info { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
-        #live-num { font-size: 4.5rem; font-weight: 900; line-height: 0.9; letter-spacing: -2px; }
-        .phase-txt { font-size: 0.9rem; font-weight: bold; color: var(--blue); margin-top: 5px; }
+        .center-hud { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        #speed-val { font-size: 4.5rem; font-weight: 900; line-height: 0.9; letter-spacing: -3px; }
+        .status-txt { font-size: 0.9rem; font-weight: bold; color: var(--main); margin-top: 5px; }
+        .unit { font-size: 0.8rem; color: #666; }
 
         /* منطقة الجيتر */
-        .jitter-area { margin-top: -30px; margin-bottom: 20px; position: relative; z-index: 10; font-size: 0.9rem; }
-        .j-val { color: #FFD700; font-weight: bold; font-size: 1.2rem; }
+        .jitter-row { margin-top: -20px; margin-bottom: 25px; font-size: 0.85rem; color: #aaa; position: relative; z-index: 5; }
+        .j-val { color: #ffd700; font-weight: bold; margin-left: 5px; font-size: 1.1rem; }
 
-        .btn { width: 100%; padding: 16px; background: white; color: black; font-weight: 900; font-size: 1.1rem; border: none; border-radius: 10px; cursor: pointer; transition: 0.3s; margin-top: 10px; }
-        .btn:hover { background: var(--blue); box-shadow: 0 0 20px var(--blue); }
-        .btn:disabled { background: #333; color: #666; cursor: not-allowed; box-shadow: none; }
+        .action-btn { 
+            width: 100%; padding: 18px; border: none; border-radius: 12px;
+            background: white; color: black; font-weight: 900; font-size: 1.2rem; 
+            cursor: pointer; transition: 0.3s; letter-spacing: 1px;
+        }
+        .action-btn:hover { background: var(--main); box-shadow: 0 0 30px var(--main); }
+        .action-btn:disabled { background: #333; color: #555; cursor: not-allowed; box-shadow: none; }
     </style>
 </head>
 <body>
-    <div class="hex-bg"></div>
-    <div class="console">
-        <div class="timer-track"><div id="time-bar" class="timer-fill"></div></div>
+    <div class="grid-bg"></div>
+    <div class="dashboard">
+        <div class="progress-track"><div id="progress-bar" class="progress-bar"></div></div>
 
-        <div class="stats-grid">
-            <div class="stat-box">
+        <div class="stats-deck">
+            <div class="stat-cell">
                 <span class="lbl">PING</span>
-                <span id="end-ping" class="val">--</span>
+                <span id="res-ping" class="val">--</span>
             </div>
-            <div class="stat-box">
+            <div class="stat-cell">
                 <span class="lbl">JITTER</span>
-                <span id="end-jitter" class="val c-jit">--</span>
+                <span id="res-jitter" class="val c-warn">--</span>
             </div>
-            <div class="stat-box">
+            <div class="stat-cell">
                 <span class="lbl">DOWN</span>
-                <span id="end-dl" class="val c-dl">--</span>
+                <span id="res-dl" class="val c-main">--</span>
             </div>
-            <div class="stat-box">
+            <div class="stat-cell">
                 <span class="lbl">UP</span>
-                <span id="end-ul" class="val c-ul">--</span>
+                <span id="res-ul" class="val c-sec">--</span>
             </div>
         </div>
 
-        <select id="srv-select" class="server-select">
-            <option value="auto">🚀 تلقائي (Auto Best)</option>
+        <select id="server-select" class="server-select">
+            <option value="auto">📡 تلقائي (AUTO BEST)</option>
             <optgroup label="Saudi Arabia">
-                <option value="stc">STC (الاتصالات)</option>
-                <option value="mobily">Mobily (موبايلي)</option>
-                <option value="zain">Zain (زين)</option>
-                <option value="salam">Salam (سلام)</option>
+                <option value="stc">STC (Saudi Telecom)</option>
+                <option value="mobily">Mobily</option>
+                <option value="zain">Zain KSA</option>
+                <option value="salam">Salam</option>
                 <option value="go">GO Telecom</option>
-                <option value="dawiyat">Dawiyat</option>
             </optgroup>
         </select>
 
-        <div class="gauge-wrap">
+        <div class="gauge-container">
             <svg viewBox="0 0 240 240">
-                <path class="track-bg" d="M 40 120 A 80 80 0 1 1 200 120" /> <path class="track-bg" d="M 20 220 A 110 110 0 1 1 220 220" /> <path id="track-fill" class="track-fg" stroke="url(#g-dl)" d="M 20 220 A 110 110 0 1 1 220 220" />
-                <defs>
-                    <linearGradient id="g-dl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00F260"/><stop offset="1" stop-color="#0575E6"/></linearGradient>
-                    <linearGradient id="g-ul" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#F000FF"/><stop offset="1" stop-color="#FF5E00"/></linearGradient>
-                </defs>
+                <path class="track-base" d="M 40 120 A 80 80 0 1 1 200 120" /> 
+                <path class="track-base" d="M 20 220 A 110 110 0 1 1 220 220" /> 
+                <path id="gauge-path" class="track-active" d="M 20 220 A 110 110 0 1 1 220 220" />
             </svg>
-            <div class="center-info">
-                <div id="live-num">0.0</div>
-                <div id="phase-lbl" class="phase-txt">READY</div>
+            <div class="center-hud">
+                <div id="speed-val">0.0</div>
+                <div id="status-txt" class="status-txt">READY</div>
                 <div class="unit">Mbps</div>
             </div>
         </div>
 
-        <div class="jitter-area">
-            <span>Loaded Jitter: </span>
-            <span id="live-jitter" class="j-val">--</span>
+        <div class="jitter-row">
+            Active Jitter: <span id="live-jitter" class="j-val">--</span>
         </div>
 
-        <button id="start-btn" class="btn" onclick="startStrictTest()">START TEST</button>
+        <button id="start-btn" class="action-btn" onclick="startEngine()">START TEST</button>
     </div>
     <script src="script.js"></script>
 </body>
