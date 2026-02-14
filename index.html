@@ -3,143 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S-SPEED V130 | PHANTOM</title>
+    <title>قياس السرعة V131 | المدار</title>
     <style>
-        /* --- تصميم الشبح V130 --- */
+        /* --- تصميم المدار V131 --- */
         :root { 
-            --main-color: #00ff88; 
-            --sec-color: #00ccff; 
-            --bg-color: #050505; 
-            --panel-color: #0f0f12; 
+            --primary: #00E676;   /* أخضر للتحميل */
+            --secondary: #651FFF; /* بنفسجي للرفع */
+            --warn: #FFD600;      /* أصفر للبنق */
+            --bg: #0b0b10; 
+            --card: #15151a; 
         }
         
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        body { background: var(--bg-color); color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: var(--bg); color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
 
-        /* الخلفية الشبكية */
-        .phantom-bg { 
+        /* الخلفية المتحركة */
+        .orbit-bg { 
             position: fixed; width: 100%; height: 100%; 
-            background-image: linear-gradient(rgba(0, 255, 136, 0.03) 1px, transparent 1px), 
-            linear-gradient(90deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px);
-            background-size: 30px 30px; z-index: -1;
+            background: radial-gradient(circle at 50% 0%, #1a252f 0%, #000 100%); z-index: -1;
         }
 
-        .main-interface { 
-            width: 95%; max-width: 450px; padding: 30px; 
-            background: var(--panel-color); border: 1px solid #222; 
-            border-radius: 25px; box-shadow: 0 0 100px rgba(0,0,0,0.9); 
+        .main-container { 
+            width: 95%; max-width: 460px; padding: 30px; 
+            background: var(--card); border: 1px solid rgba(255,255,255,0.08); 
+            border-radius: 30px; box-shadow: 0 0 100px rgba(0,0,0,0.8); 
             text-align: center; display: flex; flex-direction: column; gap: 20px;
         }
 
-        /* شريط الحالة والسيرفر الخفي */
-        .status-bar { 
+        /* شريط الحالة العلوي */
+        .top-status { 
             display: flex; justify-content: space-between; align-items: center;
             background: rgba(255,255,255,0.03); padding: 10px 20px; border-radius: 50px;
+            font-size: 0.85rem; color: #aaa;
         }
-        .connection-status { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: #888; }
-        .pulse { width: 8px; height: 8px; background: var(--main-color); border-radius: 50%; box-shadow: 0 0 10px var(--main-color); animation: blink 2s infinite; }
-        @keyframes blink { 0% {opacity: 1;} 50% {opacity: 0.3;} 100% {opacity: 1;} }
-        
-        /* شريط الوقت */
-        .timer-container { width: 100%; height: 4px; background: #222; border-radius: 2px; overflow: hidden; }
-        .timer-fill { height: 100%; width: 0%; background: var(--main-color); transition: width 0.1s linear; }
+        .server-indicator { display: flex; align-items: center; gap: 8px; }
+        .pulse-dot { width: 8px; height: 8px; background: var(--primary); border-radius: 50%; box-shadow: 0 0 8px var(--primary); animation: blink 1.5s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
         /* العداد */
-        .gauge-zone { position: relative; width: 260px; height: 260px; margin: 0 auto; }
+        .gauge-zone { position: relative; width: 270px; height: 270px; margin: 0 auto; }
         svg { transform: rotate(135deg); width: 100%; height: 100%; }
         
-        .track-bg { stroke: #1a1a1a; stroke-width: 14; stroke-linecap: round; fill: none; }
-        .track-fg { 
-            stroke: var(--main-color); stroke-width: 14; stroke-linecap: round; fill: none;
-            stroke-dasharray: 565; stroke-dashoffset: 565; /* الدائرة فارغة */
-            transition: stroke-dashoffset 0.1s linear, stroke 0.3s;
-            filter: drop-shadow(0 0 10px var(--main-color));
+        .track-base { stroke: #222; stroke-width: 14; stroke-linecap: round; fill: none; }
+        .track-fill { 
+            stroke: var(--primary); stroke-width: 14; stroke-linecap: round; fill: none;
+            stroke-dasharray: 590; stroke-dashoffset: 590; /* البداية صفر */
+            transition: stroke-dashoffset 0.15s linear;
+            filter: drop-shadow(0 0 10px var(--primary));
         }
 
-        .hud-info { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
-        #speed-text { font-size: 4.5rem; font-weight: 800; line-height: 0.9; letter-spacing: -2px; }
-        .unit { font-size: 0.8rem; color: #666; margin-top: 5px; }
-        .phase-label { font-size: 0.9rem; font-weight: bold; color: var(--main-color); margin-top: 5px; }
+        .center-text { 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            display: flex; flex-direction: column; align-items: center;
+        }
+        #speed-num { font-size: 4.5rem; font-weight: 800; line-height: 0.9; letter-spacing: -2px; }
+        .unit-lbl { font-size: 0.8rem; color: #666; margin-top: 5px; }
+        #phase-lbl { font-size: 0.9rem; font-weight: bold; color: var(--primary); margin-top: 5px; }
 
-        /* منطقة البنق المثقل */
-        .jitter-display { font-size: 0.9rem; color: #666; margin-top: -20px; margin-bottom: 10px; position: relative; z-index: 5; }
-        .j-val { color: #ffd700; font-weight: bold; font-size: 1.1rem; margin-right: 5px; }
+        /* منطقة البنق المثقل (أسفل العداد) */
+        .jitter-dock { 
+            background: rgba(0,0,0,0.3); padding: 8px 20px; border-radius: 12px;
+            display: inline-block; margin: -20px auto 10px auto; border: 1px solid #222;
+        }
+        .j-title { font-size: 0.8rem; color: #888; }
+        .j-val { font-size: 1.1rem; font-weight: bold; color: var(--warn); margin-right: 5px; }
 
-        /* شبكة النتائج */
-        .grid-results { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-        .card { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 10px; display: flex; flex-direction: column; }
-        .c-lbl { font-size: 0.65rem; color: #666; font-weight: bold; margin-bottom: 3px; }
-        .c-val { font-size: 1rem; font-weight: 900; direction: ltr; }
+        /* شريط الوقت */
+        .time-wrapper { width: 100%; height: 6px; background: #222; border-radius: 3px; overflow: hidden; margin-bottom: 10px; }
+        .time-bar { height: 100%; width: 0%; background: var(--primary); transition: width 0.1s linear; }
+
+        /* النتائج */
+        .results-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .res-box { 
+            background: rgba(255,255,255,0.03); padding: 10px; border-radius: 10px; 
+            display: flex; flex-direction: column; 
+        }
+        .r-head { font-size: 0.65rem; color: #666; font-weight: bold; margin-bottom: 5px; }
+        .r-val { font-size: 1rem; font-weight: 900; direction: ltr; }
 
         /* الأزرار */
-        .ctrl-btns { display: flex; gap: 10px; margin-top: 10px; }
+        .controls { display: flex; gap: 10px; margin-top: 10px; }
         .btn-main { 
-            flex: 3; padding: 16px; border: none; border-radius: 12px;
-            background: white; color: black; font-weight: 900; font-size: 1.1rem;
-            cursor: pointer; transition: 0.3s; 
+            flex: 3; padding: 16px; background: white; color: black; border: none; 
+            border-radius: 12px; font-weight: 900; font-size: 1.1rem; cursor: pointer; 
+            transition: 0.3s; 
         }
-        .btn-main:hover { background: var(--main-color); box-shadow: 0 0 30px var(--main-color); }
+        .btn-main:hover { background: var(--primary); box-shadow: 0 0 30px var(--primary); }
         .btn-main:disabled { background: #333; color: #555; cursor: not-allowed; box-shadow: none; }
         
         .btn-reset { 
-            flex: 1; border: 1px solid #333; background: transparent; border-radius: 12px;
-            color: white; font-size: 1.5rem; cursor: pointer; transition: 0.3s;
+            flex: 1; background: transparent; border: 1px solid #333; color: white; 
+            border-radius: 12px; font-size: 1.5rem; cursor: pointer; transition: 0.3s; 
         }
-        .btn-reset:hover { border-color: var(--sec-color); color: var(--sec-color); }
+        .btn-reset:hover { border-color: var(--secondary); color: var(--secondary); }
     </style>
 </head>
 <body>
-    <div class="phantom-bg"></div>
-    <div class="main-interface">
+    <div class="orbit-bg"></div>
+    <div class="main-container">
         
-        <div class="status-bar">
-            <div class="connection-status">
-                <div class="pulse"></div>
-                <span id="server-status">جاهز للفحص</span>
+        <div class="top-status">
+            <div class="server-indicator">
+                <div class="pulse-dot"></div>
+                <span id="srv-status">جاهز للفحص</span>
             </div>
-            <div id="timer-text" style="font-size: 0.8rem; font-weight: bold; color: #666">00s</div>
+            <div id="timer-txt">00s</div>
         </div>
 
-        <div class="timer-container"><div id="time-bar" class="timer-fill"></div></div>
+        <div class="time-wrapper"><div id="time-bar" class="time-bar"></div></div>
 
         <div class="gauge-zone">
-            <svg viewBox="0 0 240 240">
-                <path class="track-bg" d="M 40 200 A 100 100 0 1 1 200 200" />
-                <path id="gauge-fill" class="track-fg" d="M 40 200 A 100 100 0 1 1 200 200" />
+            <svg viewBox="0 0 260 260">
+                <defs>
+                    <linearGradient id="grad-dl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00E676"/><stop offset="1" stop-color="#00B0FF"/></linearGradient>
+                    <linearGradient id="grad-ul" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#651FFF"/><stop offset="1" stop-color="#FF4081"/></linearGradient>
+                </defs>
+                <path class="track-base" d="M 50 210 A 110 110 0 1 1 210 210" />
+                <path id="track-fill" class="track-fill" d="M 50 210 A 110 110 0 1 1 210 210" stroke="url(#grad-dl)" />
             </svg>
-            <div class="hud-info">
-                <div id="speed-text">0.0</div>
-                <div class="unit">Mbps</div>
-                <div id="phase-txt" class="phase-label">استعداد</div>
+            <div class="center-text">
+                <div id="speed-num">0.0</div>
+                <div class="unit-lbl">ميجابت/ثانية</div>
+                <div id="phase-lbl">استعداد</div>
             </div>
         </div>
 
-        <div class="jitter-display">
-            استقرار الخط: <span id="live-jitter" class="j-val">--</span>
+        <div class="jitter-dock">
+            <span class="j-title">استقرار الخط (تحت الضغط):</span>
+            <span id="live-jitter" class="j-val">--</span>
         </div>
 
-        <div class="grid-results">
-            <div class="card">
-                <span class="c-lbl">PING</span>
-                <span id="res-ping" class="c-val">--</span>
+        <div class="results-row">
+            <div class="res-box">
+                <span class="r-head">PING</span>
+                <span id="res-ping" class="r-val">--</span>
             </div>
-            <div class="card">
-                <span class="c-lbl">JITTER</span>
-                <span id="res-jitter" class="c-val" style="color:#ffd700">--</span>
+            <div class="res-box">
+                <span class="r-head">JITTER</span>
+                <span id="res-jitter" class="r-val" style="color:#FFD600">--</span>
             </div>
-            <div class="card">
-                <span class="c-lbl">DOWN</span>
-                <span id="res-dl" class="c-val" style="color:var(--main-color)">--</span>
+            <div class="res-box">
+                <span class="r-head">تنزيل</span>
+                <span id="res-dl" class="r-val" style="color:var(--primary)">--</span>
             </div>
-            <div class="card">
-                <span class="c-lbl">UP</span>
-                <span id="res-ul" class="c-val" style="color:var(--sec-color)">--</span>
+            <div class="res-box">
+                <span class="r-head">رفع</span>
+                <span id="res-ul" class="r-val" style="color:var(--secondary)">--</span>
             </div>
         </div>
 
-        <div class="ctrl-btns">
-            <button id="start-btn" class="btn-main" onclick="startPhantomTest()">بدء الفحص</button>
-            <button class="btn-reset" onclick="resetAll()">↺</button>
+        <div class="controls">
+            <button id="start-btn" class="btn-main" onclick="startOrbitTest()">بدء الفحص</button>
+            <button class="btn-reset" onclick="resetSystem()">↺</button>
         </div>
     </div>
 
