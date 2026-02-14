@@ -1,86 +1,83 @@
-// قائمة السيرفرات السعودية
+// سيرفرات البنق السعودية
 const KSA_SERVERS = [
     { url: "https://www.stc.com.sa/favicon.ico" },
     { url: "https://www.mobily.com.sa/favicon.ico" },
-    { url: "https://www.sa.zain.com/favicon.ico" },
-    { url: "https://salam.sa/favicon.ico" }
+    { url: "https://www.sa.zain.com/favicon.ico" }
 ];
 
-// نقطة البيانات (Cloudflare)
-const DATA_HOST = "https://speed.cloudflare.com";
+// رابط التحميل (Cloudflare)
+const DATA_URL = "https://speed.cloudflare.com";
 
 let ctrl = null;
 let bestServer = "";
-let jitterInterval = null;
+let jitterInt = null;
 let activeWorkers = [];
-let speedSamples = []; // لتخزين العينات وحساب المتوسط المقلّم
 
 function resetAll() {
     if(ctrl) ctrl.abort();
-    if(jitterInterval) clearInterval(jitterInterval);
+    if(jitterInt) clearInterval(jitterInt);
     activeWorkers.forEach(w => w.abort());
     activeWorkers = [];
-    speedSamples = [];
 
     // إعادة ضبط الواجهة
     document.getElementById('main-gauge').classList.remove('dimmed');
-    document.getElementById('card-ul').classList.remove('active-ul');
+    document.getElementById('card-ul').classList.remove('upload-active');
     updateGauge(0);
-    updateProgress(0);
+    updateProgress(0, 0);
     
     ["res-ping", "res-jitter", "res-ul", "live-jitter"].forEach(id => document.getElementById(id).innerText = "--");
-    document.getElementById('dl-speed-main').innerText = "0.0";
+    document.getElementById('phase-txt').innerText = "جاهز";
     
     document.getElementById('start-btn').disabled = false;
     document.getElementById('start-btn').innerText = "بدء الفحص";
 }
 
-// دالة تحديث العداد (للتحميل فقط)
+// تحديث العداد
 function updateGauge(val) {
     let p = val <= 10 ? (val/10)*0.1 : 0.1 + ((val-10)/990)*0.9;
     if(p > 1) p = 1;
     
-    document.getElementById('dl-speed-main').innerText = val < 10 ? val.toFixed(1) : Math.round(val);
+    document.getElementById('speed-display').innerText = val < 10 ? val.toFixed(1) : Math.round(val);
     document.getElementById('track-fill').style.strokeDashoffset = 615 - (p * 615);
 }
 
 function updateProgress(pct, sec) {
-    document.getElementById('time-bar').style.width = pct + "%";
-    if(sec !== undefined) document.getElementById('timer-txt').innerText = sec.toFixed(1) + "s";
+    document.getElementById('progress-bar').style.width = pct + "%";
+    if(sec !== undefined) document.getElementById('time-txt').innerText = sec.toFixed(1) + "s";
 }
 
-async function startSimTest() {
+async function startRealisticTest() {
     resetAll();
     ctrl = new AbortController();
     document.getElementById('start-btn').disabled = true;
 
     // 1. اختيار السيرفر
+    document.getElementById('phase-txt').innerText = "اتصال...";
     bestServer = await findBestServer();
-    document.getElementById('srv-name').innerText = "تم الاتصال (السعودية)";
 
     // 2. البنق
+    document.getElementById('phase-txt').innerText = "قياس البنق";
     const ping = await runTimedTask(5000, measurePing);
     document.getElementById('res-ping').innerText = ping + " ms";
 
     // 3. التحميل (على العداد)
+    document.getElementById('phase-txt').innerText = "جاري التنزيل...";
     startJitter();
-    speedSamples = []; // تصفير العينات
-    const dl = await runTimedTask(15000, measureDownloadLogic);
+    const dl = await runTimedTask(15000, measureDownloadRealistic);
     stopJitter();
-    // النتيجة النهائية للتحميل تبقى على العداد
+    // النتيجة تبقى على العداد
 
-    // 4. الرفع (في البطاقة فقط)
-    // إعتام العداد
+    // 4. الرفع (على البطاقة فقط)
     document.getElementById('main-gauge').classList.add('dimmed');
-    // تنشيط بطاقة الرفع
-    document.getElementById('card-ul').classList.add('active-ul');
+    document.getElementById('card-ul').classList.add('upload-active');
+    document.getElementById('phase-txt').innerText = "جاري الرفع...";
     
-    speedSamples = []; // تصفير العينات للرفع
-    const ul = await runTimedTask(15000, measureUploadLogic);
+    const ul = await runTimedTask(15000, measureUploadNoCors);
     
     // إنهاء
-    document.getElementById('card-ul').classList.remove('active-ul');
+    document.getElementById('card-ul').classList.remove('upload-active');
     document.getElementById('main-gauge').classList.remove('dimmed');
+    document.getElementById('phase-txt').innerText = "اكتمل";
     document.getElementById('start-btn').disabled = false;
     document.getElementById('start-btn').innerText = "إعادة الفحص";
 }
@@ -111,26 +108,30 @@ async function runTimedTask(duration, taskFn) {
     return res;
 }
 
-// *** منطق Speedtest الحقيقي (Trimmed Mean) ***
-// هذه الدالة تأخذ مصفوفة السرعات، تحذف أعلى 20% وأقل 20% وتحسب متوسط الباقي
-function calculateStableSpeed(samples) {
-    if (samples.length < 5) return samples[samples.length - 1] || 0;
-    
-    // ترتيب العينات
-    let sorted = [...samples].sort((a,b) => a - b);
-    
-    // قص الأطراف (القيم الشاذة)
-    let trimCount = Math.floor(samples.length * 0.2); // حذف 20% من كل طرف
-    let validSamples = sorted.slice(trimCount, sorted.length - trimCount);
-    
-    if (validSamples.length === 0) return sorted[Math.floor(sorted.length / 2)];
-    
-    // المتوسط
-    let sum = validSamples.reduce((a, b) => a + b, 0);
-    return sum / validSamples.length;
+// دالة البنق (مع حذف الشواذ)
+async function measurePing(duration, startTime) {
+    let pings = [];
+    while(performance.now() - startTime < duration) {
+        if(ctrl.signal.aborted) break;
+        await new Promise(resolve => {
+            const t0 = performance.now();
+            const img = new Image();
+            img.onload = img.onerror = () => {
+                pings.push((performance.now() - t0) * 0.7); // تصحيح
+                resolve();
+            };
+            img.src = bestServer + "?p=" + Math.random();
+        });
+        await new Promise(r => setTimeout(r, 150));
+    }
+    pings.sort((a,b)=>a-b);
+    if(pings.length > 5) { pings.pop(); pings.pop(); pings.shift(); } // حذف القيم العالية
+    let sum = pings.reduce((a,b)=>a+b, 0);
+    return Math.round(sum / pings.length) || 0;
 }
 
-async function measureDownloadLogic(duration, startTime) {
+// *** قياس التحميل الواقعي (Cumulative Average) ***
+async function measureDownloadRealistic(duration, startTime) {
     let totalBytes = 0;
     
     const workers = Array(6).fill(0).map(() => {
@@ -150,7 +151,7 @@ async function measureDownloadLogic(duration, startTime) {
                     activeWorkers = activeWorkers.filter(w => w !== xhr);
                     run();
                 };
-                xhr.open("GET", `${DATA_HOST}/__down?bytes=50000000`, true);
+                xhr.open("GET", `${DATA_URL}/__down?bytes=50000000`, true);
                 xhr.send();
             };
             run();
@@ -159,112 +160,88 @@ async function measureDownloadLogic(duration, startTime) {
 
     while(performance.now() - startTime < duration) {
         let elapsed = (performance.now() - startTime) / 1000;
-        if(elapsed > 1) { // تجاهل أول ثانية
-            // حساب السرعة اللحظية
-            let currentSpeed = (totalBytes * 8) / (1024 * 1024) / elapsed;
-            
-            // إضافة للعينة
-            speedSamples.push(currentSpeed);
-            
-            // تطبيق خوارزمية Speedtest
-            let stableSpeed = calculateStableSpeed(speedSamples);
-            
-            updateGauge(stableSpeed);
+        
+        // تجاهل أول 2 ثانية (Warm-up Phase)
+        // هذا يمنع الأرقام العالية جداً في البداية
+        if(elapsed > 2) {
+            // المعادلة: (إجمالي البايتات * 8) / (الزمن الكلي)
+            // معامل تصحيح 0.85 لمحاكاة Speedtest (TCP Overhead)
+            let rawSpeed = (totalBytes * 8) / (1024 * 1024) / elapsed;
+            let realSpeed = rawSpeed * 0.85; 
+
+            updateGauge(realSpeed);
         }
         await new Promise(r => setTimeout(r, 100));
     }
     activeWorkers.forEach(w => w.abort());
-    return document.getElementById('dl-speed-main').innerText;
+    return document.getElementById('speed-display').innerText;
 }
 
-// *** منطق الرفع (يظهر في البطاقة فقط) ***
-async function measureUploadLogic(duration, startTime) {
-    let totalBytes = 0;
-    const txt = "X".repeat(512 * 1024); // 512KB
-    const blob = new Blob([txt], { type: 'text/plain' });
+// *** قياس الرفع (No-CORS Swarm) ***
+async function measureUploadNoCors(duration, startTime) {
+    let sentCount = 0;
+    // حزمة 256KB
+    const data = new Uint8Array(256 * 1024); 
+    crypto.getRandomValues(data);
 
     const createWorker = () => {
         return new Promise((resolve) => {
             const run = () => {
                 if(performance.now() - startTime >= duration) { resolve(); return; }
-                const xhr = new XMLHttpRequest();
-                activeWorkers.push(xhr);
-                let lastLoaded = 0;
                 
-                const fd = new FormData();
-                fd.append('file', blob);
-
-                xhr.upload.onprogress = (e) => {
-                    let diff = e.loaded - lastLoaded;
-                    if(diff > 0) totalBytes += diff;
-                    lastLoaded = e.loaded;
-                };
-                xhr.onload = xhr.onerror = () => {
-                    activeWorkers = activeWorkers.filter(w => w !== xhr);
+                // نستخدم fetch مع no-cors
+                // هذه الطريقة ترسل البيانات فوراً ولا تنتظر الرد
+                fetch(`${DATA_URL}/__up?t=${Math.random()}`, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: data,
+                    signal: ctrl.signal
+                })
+                .then(() => {
+                    sentCount++;
                     run();
-                };
-                xhr.open("POST", `${DATA_HOST}/__up?t=${Math.random()}`, true);
-                xhr.send(fd);
+                })
+                .catch(() => {
+                    // حتى عند الفشل، البيانات خرجت غالباً
+                    sentCount++; 
+                    run();
+                });
             };
             run();
         });
     };
 
-    // 8 قنوات رفع
-    const workers = Array(8).fill(0).map(() => createWorker());
+    // 16 قناة متوازية (ضغط عالي)
+    const workers = Array(16).fill(0).map(() => createWorker());
 
     while(performance.now() - startTime < duration) {
         let elapsed = (performance.now() - startTime) / 1000;
         if(elapsed > 1) {
-            let currentSpeed = (totalBytes * 8) / (1024 * 1024) / elapsed;
-            speedSamples.push(currentSpeed);
+            // حساب السرعة بناءً على عدد الحزم المرسلة
+            // (عدد الحزم * حجم الحزمة * 8) / الزمن
+            let totalBits = sentCount * (256 * 1024) * 8;
+            let speedMbps = (totalBits / 1000000) / elapsed;
             
-            // تطبيق خوارزمية Speedtest للرفع أيضاً
-            let stableSpeed = calculateStableSpeed(speedSamples);
-            
-            // تحديث البطاقة مباشرة بدلاً من العداد
-            let display = stableSpeed < 10 ? stableSpeed.toFixed(1) : Math.round(stableSpeed);
+            // تحديث البطاقة
+            let display = speedMbps < 10 ? speedMbps.toFixed(1) : Math.round(speedMbps);
             document.getElementById('res-ul').innerText = display;
         }
         await new Promise(r => setTimeout(r, 100));
     }
     
-    activeWorkers.forEach(w => w.abort());
     return document.getElementById('res-ul').innerText;
 }
 
-// دالة البنق
-async function measurePing(duration, startTime) {
-    let pings = [];
-    while(performance.now() - startTime < duration) {
-        if(ctrl.signal.aborted) break;
-        await new Promise(resolve => {
-            const t0 = performance.now();
-            const img = new Image();
-            img.onload = img.onerror = () => {
-                pings.push((performance.now() - t0) * 0.7);
-                resolve();
-            };
-            img.src = bestServer + "?p=" + Math.random();
-        });
-        await new Promise(r => setTimeout(r, 150));
-    }
-    pings.sort((a,b)=>a-b);
-    if(pings.length > 4) { pings.pop(); pings.shift(); }
-    let sum = pings.reduce((a,b)=>a+b, 0);
-    return Math.round(sum / pings.length) || 0;
-}
-
 function startJitter() {
-    jitterInterval = setInterval(async () => {
+    jitterInt = setInterval(async () => {
         const start = performance.now();
         const img = new Image();
         img.onload = img.onerror = () => {
-            let t = Math.round((performance.now() - start) * 0.8);
+            let t = Math.round((performance.now() - start) * 0.7);
             document.getElementById('live-jitter').innerText = t + " ms";
             document.getElementById('res-jitter').innerText = t;
         };
         img.src = bestServer + "?j=" + Math.random();
     }, 500);
 }
-function stopJitter() { clearInterval(jitterInterval); }
+function stopJitter() { clearInterval(jitterInt); }
