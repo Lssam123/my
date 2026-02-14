@@ -3,153 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>قياس السرعة V132 | النواة المستقلة</title>
+    <title>S-SPEED V133 | STEALTH</title>
     <style>
-        /* --- تصميم V132 الاحترافي --- */
-        :root {
-            --primary: #00ffcc;    /* تركواز للتحميل */
-            --secondary: #bd00ff;  /* بنفسجي للرفع */
-            --bg: #0b0c10;
-            --panel: #1f2833;
-            --text-main: #66fcf1;
+        /* --- تصميم الشبح V133 --- */
+        :root { --neon: #00ff9d; --purple: #bd00ff; --dark: #08080c; --glass: rgba(20, 20, 30, 0.95); }
+        body { background: var(--dark); color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+
+        .stealth-bg { 
+            position: fixed; width: 100%; height: 100%; 
+            background: radial-gradient(circle at 50% 10%, #1a252f 0%, #000 100%); z-index: -1;
         }
 
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        body { background: var(--bg); color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
-
-        /* الخلفية الرقمية */
-        .digital-bg {
-            position: fixed; width: 100%; height: 100%;
-            background-image: radial-gradient(#1a1a1a 1px, transparent 1px);
-            background-size: 30px 30px; opacity: 0.3; z-index: -1;
-        }
-
-        .main-card {
-            width: 95%; max-width: 460px; padding: 30px;
-            background: rgba(31, 40, 51, 0.95); border: 1px solid #45a29e;
-            border-radius: 20px; box-shadow: 0 0 80px rgba(69, 162, 158, 0.2);
+        .main-unit { 
+            width: 95%; max-width: 480px; padding: 30px; 
+            background: var(--glass); border: 1px solid #333; 
+            border-radius: 30px; box-shadow: 0 0 100px rgba(0,0,0,0.9); 
             text-align: center; display: flex; flex-direction: column; gap: 20px;
         }
 
-        /* رأس الصفحة */
-        .header-info {
+        /* شريط المعلومات */
+        .info-bar { 
             display: flex; justify-content: space-between; align-items: center;
-            background: rgba(0,0,0,0.3); padding: 10px 20px; border-radius: 50px;
-            font-size: 0.8rem; color: #c5c6c7;
+            background: rgba(255,255,255,0.03); padding: 12px 20px; border-radius: 50px;
+            font-size: 0.9rem; color: #aaa;
         }
-        .server-txt { color: var(--text-main); font-weight: bold; }
+        .server-tag { color: var(--neon); font-weight: bold; display: flex; align-items: center; gap: 8px; }
+        .pulse { width: 8px; height: 8px; background: var(--neon); border-radius: 50%; box-shadow: 0 0 8px var(--neon); animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.4; } }
 
         /* العداد */
-        .gauge-section { position: relative; width: 280px; height: 280px; margin: 0 auto; }
+        .gauge-zone { position: relative; width: 280px; height: 280px; margin: 0 auto; }
         svg { transform: rotate(135deg); width: 100%; height: 100%; }
         
-        .track-bg { stroke: #0b0c10; stroke-width: 14; stroke-linecap: round; fill: none; }
-        .track-fg {
-            stroke: var(--primary); stroke-width: 14; stroke-linecap: round; fill: none;
-            stroke-dasharray: 615; stroke-dashoffset: 615; /* البداية صفر */
+        .track-bg { stroke: #1a1a1a; stroke-width: 14; stroke-linecap: round; fill: none; }
+        .track-val { 
+            stroke: var(--neon); stroke-width: 14; stroke-linecap: round; fill: none;
+            stroke-dasharray: 615; stroke-dashoffset: 615; 
             transition: stroke-dashoffset 0.1s linear;
-            filter: drop-shadow(0 0 10px var(--primary));
+            filter: drop-shadow(0 0 10px var(--neon));
         }
 
-        .center-hud {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            display: flex; flex-direction: column; align-items: center;
-        }
-        #speed-val { font-size: 4.5rem; font-weight: 900; line-height: 0.9; letter-spacing: -3px; color: white; }
-        .unit-txt { font-size: 0.8rem; color: #888; margin-top: 5px; }
-        #phase-txt { font-size: 1rem; font-weight: bold; color: var(--primary); margin-top: 5px; }
+        .center-display { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        #speed-readout { font-size: 4.5rem; font-weight: 800; line-height: 0.9; letter-spacing: -3px; }
+        .phase-lbl { font-size: 1rem; font-weight: bold; color: var(--neon); margin-top: 5px; }
+        .unit { font-size: 0.8rem; color: #666; }
 
         /* منطقة البنق المثقل */
-        .jitter-zone {
-            margin-top: -30px; background: rgba(0,0,0,0.5); padding: 8px 15px; 
-            border-radius: 10px; display: inline-block; align-self: center;
-            border: 1px solid #333; z-index: 10;
+        .jitter-strip { 
+            background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 10px; 
+            display: inline-block; align-self: center; margin-top: -30px; z-index: 10;
         }
-        .j-lbl { font-size: 0.8rem; color: #aaa; }
-        .j-val { font-size: 1.1rem; font-weight: bold; color: #ffd700; margin-right: 5px; }
+        .j-val { color: #ffd700; font-weight: bold; margin-right: 5px; }
 
         /* شريط الوقت */
-        .time-bar-bg { width: 100%; height: 6px; background: #0b0c10; border-radius: 3px; overflow: hidden; }
-        .time-bar-fg { height: 100%; width: 0%; background: var(--text-main); transition: width 0.1s linear; }
+        .time-rail { width: 100%; height: 4px; background: #222; border-radius: 2px; overflow: hidden; }
+        .time-fill { height: 100%; width: 0%; background: white; transition: width 0.1s linear; }
 
-        /* النتائج */
-        .grid-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-        .stat-item { background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; display: flex; flex-direction: column; }
-        .s-lbl { font-size: 0.65rem; color: #888; font-weight: bold; margin-bottom: 5px; }
-        .s-val { font-size: 1rem; font-weight: 900; direction: ltr; }
+        /* الشبكة */
+        .data-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .data-box { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 10px; display: flex; flex-direction: column; }
+        .d-head { font-size: 0.65rem; color: #666; font-weight: bold; margin-bottom: 5px; }
+        .d-val { font-size: 1rem; font-weight: 900; direction: ltr; }
 
         /* الأزرار */
-        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
-        .btn-start {
-            flex: 3; padding: 16px; border: none; border-radius: 10px;
+        .actions { display: flex; gap: 10px; margin-top: 10px; }
+        .btn-start { 
+            flex: 3; padding: 18px; border: none; border-radius: 12px;
             background: white; color: black; font-weight: 900; font-size: 1.2rem;
-            cursor: pointer; transition: 0.3s;
+            cursor: pointer; transition: 0.3s; 
         }
-        .btn-start:hover { background: var(--text-main); box-shadow: 0 0 25px var(--text-main); }
+        .btn-start:hover { background: var(--neon); box-shadow: 0 0 30px var(--neon); }
         .btn-start:disabled { background: #333; color: #555; cursor: not-allowed; box-shadow: none; }
         
-        .btn-reset {
-            flex: 1; background: transparent; border: 1px solid #45a29e; color: #45a29e;
-            border-radius: 10px; font-size: 1.5rem; cursor: pointer; transition: 0.3s;
+        .btn-refresh { 
+            flex: 1; border: 1px solid #444; background: transparent; border-radius: 12px;
+            color: white; font-size: 1.5rem; cursor: pointer; transition: 0.3s; 
         }
-        .btn-reset:hover { background: #45a29e; color: black; }
-
+        .btn-refresh:hover { border-color: var(--purple); color: var(--purple); }
     </style>
 </head>
 <body>
-    <div class="digital-bg"></div>
-    <div class="main-card">
+    <div class="stealth-bg"></div>
+    <div class="main-unit">
         
-        <div class="header-info">
-            <span id="server-status">جاري البحث...</span>
-            <span id="timer-display">00s</span>
+        <div class="info-bar">
+            <div class="server-tag">
+                <div class="pulse"></div>
+                <span id="srv-name">تلقائي (KSA)</span>
+            </div>
+            <div id="time-txt">0s</div>
         </div>
 
-        <div class="time-bar-bg"><div id="progress-fill" class="time-bar-fg"></div></div>
+        <div class="time-rail"><div id="time-bar" class="time-fill"></div></div>
 
-        <div class="gauge-section">
+        <div class="gauge-zone">
             <svg viewBox="0 0 260 260">
                 <defs>
-                    <linearGradient id="g-dl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00ffcc"/><stop offset="1" stop-color="#0099ff"/></linearGradient>
-                    <linearGradient id="g-ul" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#bd00ff"/><stop offset="1" stop-color="#ff0055"/></linearGradient>
+                    <linearGradient id="g-dl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00ff9d"/><stop offset="1" stop-color="#00b8d4"/></linearGradient>
+                    <linearGradient id="g-ul" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#bd00ff"/><stop offset="1" stop-color="#d50000"/></linearGradient>
                 </defs>
                 <path class="track-bg" d="M 50 210 A 110 110 0 1 1 210 210" />
-                <path id="track-active" class="track-fg" d="M 50 210 A 110 110 0 1 1 210 210" stroke="url(#g-dl)" />
+                <path id="track-val" class="track-val" d="M 50 210 A 110 110 0 1 1 210 210" stroke="url(#g-dl)" />
             </svg>
-            <div class="center-hud">
-                <div id="speed-val">0.0</div>
-                <div class="unit-txt">ميجابت/ثانية</div>
-                <div id="phase-txt">جاهز</div>
+            <div class="center-display">
+                <div id="speed-readout">0.0</div>
+                <div class="unit">ميجابت/ثانية</div>
+                <div id="phase-txt" class="phase-lbl">جاهز</div>
             </div>
         </div>
 
-        <div class="jitter-zone">
-            <span class="j-lbl">البنق تحت الضغط:</span>
-            <span id="live-jitter" class="j-val">--</span>
+        <div class="jitter-strip">
+            استقرار الخط: <span id="live-jitter" class="j-val">--</span>
         </div>
 
-        <div class="grid-stats">
-            <div class="stat-item">
-                <span class="s-lbl">PING</span>
-                <span id="res-ping" class="s-val">--</span>
+        <div class="data-grid">
+            <div class="data-box">
+                <span class="d-head">PING</span>
+                <span id="res-ping" class="d-val">--</span>
             </div>
-            <div class="stat-item">
-                <span class="s-lbl">JITTER</span>
-                <span id="res-jitter" class="s-val" style="color:#ffd700">--</span>
+            <div class="data-box">
+                <span class="d-head">JITTER</span>
+                <span id="res-jitter" class="d-val" style="color:#ffd700">--</span>
             </div>
-            <div class="stat-item">
-                <span class="s-lbl">DOWN</span>
-                <span id="res-dl" class="s-val" style="color:var(--primary)">--</span>
+            <div class="data-box">
+                <span class="d-head">DOWN</span>
+                <span id="res-dl" class="d-val" style="color:var(--neon)">--</span>
             </div>
-            <div class="stat-item">
-                <span class="s-lbl">UP</span>
-                <span id="res-ul" class="s-val" style="color:var(--secondary)">--</span>
+            <div class="data-box">
+                <span class="d-head">UP</span>
+                <span id="res-ul" class="d-val" style="color:var(--purple)">--</span>
             </div>
         </div>
 
-        <div class="btn-group">
-            <button id="start-btn" class="btn-start" onclick="startSystem()">بدء الفحص</button>
-            <button class="btn-reset" onclick="resetSystem()">↺</button>
+        <div class="actions">
+            <button id="start-btn" class="btn-start" onclick="startStealthTest()">بدء الفحص</button>
+            <button class="btn-refresh" onclick="resetAll()">↺</button>
         </div>
     </div>
 
