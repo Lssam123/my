@@ -3,109 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>قياس السرعة V135 | الفولاذ</title>
+    <title>S-SPEED V136 | QUANTUM</title>
     <style>
-        /* --- تصميم الفولاذ --- */
-        :root { --main: #00e5ff; --sec: #d500f9; --bg: #0b0c10; --card: #1f2833; }
+        /* --- تصميم الكوانتوم --- */
+        :root { --main: #00ffd5; --sec: #ff007b; --bg: #050508; --card: #121217; }
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
         body { background: var(--bg); color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
 
-        .iron-bg { position: fixed; width: 100%; height: 100%; background: radial-gradient(circle at 50% 10%, #1a1a2e 0%, #000 100%); z-index: -1; }
+        .quantum-bg { position: fixed; width: 100%; height: 100%; background: radial-gradient(circle at 50% 0%, #1a202c 0%, #000 100%); z-index: -1; }
 
-        .container { 
-            width: 95%; max-width: 480px; padding: 25px; 
-            background: var(--card); border-radius: 20px; 
-            box-shadow: 0 0 50px rgba(0,0,0,0.8); text-align: center; 
-            border: 1px solid #45a29e;
+        .console-box { 
+            width: 95%; max-width: 480px; padding: 30px; 
+            background: var(--card); border: 1px solid #333; 
+            border-radius: 30px; box-shadow: 0 0 100px rgba(0,255,213,0.1); 
+            text-align: center; display: flex; flex-direction: column; gap: 20px;
         }
 
         /* شريط الحالة */
-        .status-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-size: 0.85rem; color: #aaa; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 50px; }
-        .server-dot { width: 10px; height: 10px; background: var(--main); border-radius: 50%; box-shadow: 0 0 10px var(--main); margin-left: 8px; }
+        .status-header { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 12px 20px; border-radius: 50px; }
+        .srv-indicator { font-size: 0.85rem; color: var(--main); font-weight: bold; display: flex; align-items: center; gap: 8px; }
+        .dot { width: 8px; height: 8px; background: var(--main); border-radius: 50%; box-shadow: 0 0 10px var(--main); animation: pulse 2s infinite; }
+        @keyframes pulse { 50% { opacity: 0.3; } }
 
         /* شريط الوقت */
-        .progress-container { width: 100%; height: 6px; background: #0b0c10; border-radius: 3px; overflow: hidden; margin-bottom: 20px; }
-        .progress-fill { height: 100%; width: 0%; background: var(--main); transition: width 0.1s linear; }
+        .time-track { width: 100%; height: 4px; background: #222; border-radius: 2px; overflow: hidden; }
+        .time-fill { height: 100%; width: 0%; background: white; transition: width 0.1s linear; }
 
         /* العداد */
-        .gauge-wrapper { position: relative; width: 280px; height: 280px; margin: 0 auto; }
+        .gauge-wrap { position: relative; width: 280px; height: 280px; margin: 0 auto; }
         svg { transform: rotate(135deg); width: 100%; height: 100%; }
-        .track-bg { stroke: #0b0c10; stroke-width: 14; stroke-linecap: round; fill: none; }
-        .track-val { 
+        .track-bg { stroke: #1a1a1a; stroke-width: 14; stroke-linecap: round; fill: none; }
+        .track-fg { 
             stroke: var(--main); stroke-width: 14; stroke-linecap: round; fill: none;
             stroke-dasharray: 615; stroke-dashoffset: 615; 
-            transition: stroke-dashoffset 0.1s linear; filter: drop-shadow(0 0 8px var(--main));
+            transition: stroke-dashoffset 0.1s linear;
+            filter: drop-shadow(0 0 15px var(--main));
         }
 
-        .center-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
-        #speed-text { font-size: 4.5rem; font-weight: 800; line-height: 0.9; letter-spacing: -2px; }
-        .phase-text { font-size: 1rem; font-weight: bold; color: var(--main); margin-top: 5px; }
+        .center-vals { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        #speed-big { font-size: 4.5rem; font-weight: 900; line-height: 0.9; letter-spacing: -3px; }
+        .phase-name { font-size: 1rem; font-weight: bold; color: var(--main); margin-top: 5px; }
 
-        /* البنق المثقل */
-        .jitter-box { background: rgba(0,0,0,0.4); padding: 5px 15px; border-radius: 15px; display: inline-block; margin-top: -20px; margin-bottom: 10px; font-size: 0.9rem; border: 1px solid #333; z-index: 5; position: relative; }
-        .j-val { color: #ffd700; font-weight: bold; }
+        /* منطقة الجيتر */
+        .jitter-panel { margin-top: -30px; margin-bottom: 10px; z-index: 10; position: relative; font-size: 0.9rem; color: #888; }
+        .j-num { color: #ffd700; font-weight: bold; font-size: 1.1rem; margin-right: 5px; }
 
-        /* النتائج */
-        .results { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 20px; }
-        .res-item { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 10px; display: flex; flex-direction: column; }
-        .lbl { font-size: 0.65rem; color: #888; font-weight: bold; margin-bottom: 5px; }
-        .val { font-size: 1rem; font-weight: 900; direction: ltr; }
+        /* الشبكة */
+        .grid-res { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .res-cell { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; display: flex; flex-direction: column; }
+        .head { font-size: 0.65rem; color: #666; font-weight: bold; margin-bottom: 5px; }
+        .num { font-size: 1rem; font-weight: 900; direction: ltr; }
 
         /* الأزرار */
-        .btn-row { display: flex; gap: 10px; margin-top: 20px; }
-        .btn-start { 
-            flex: 3; padding: 15px; background: white; color: black; border: none; 
-            border-radius: 10px; font-weight: 900; font-size: 1.2rem; cursor: pointer; transition: 0.3s; 
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        .btn-go { 
+            flex: 3; padding: 18px; border: none; border-radius: 15px;
+            background: white; color: black; font-weight: 900; font-size: 1.2rem;
+            cursor: pointer; transition: 0.3s; 
         }
-        .btn-start:hover { background: var(--main); box-shadow: 0 0 20px var(--main); }
-        .btn-start:disabled { background: #333; color: #555; cursor: not-allowed; box-shadow: none; }
-        .btn-reset { flex: 1; background: transparent; border: 1px solid #45a29e; color: #45a29e; border-radius: 10px; font-size: 1.5rem; cursor: pointer; }
+        .btn-go:hover { background: var(--main); box-shadow: 0 0 30px var(--main); }
+        .btn-go:disabled { background: #333; color: #555; cursor: not-allowed; box-shadow: none; }
+        
+        .btn-re { 
+            flex: 1; border: 1px solid #333; background: transparent; border-radius: 15px;
+            color: white; font-size: 1.5rem; cursor: pointer; transition: 0.3s; 
+        }
+        .btn-re:hover { border-color: var(--sec); color: var(--sec); }
     </style>
 </head>
 <body>
-    <div class="iron-bg"></div>
-    <div class="container">
+    <div class="quantum-bg"></div>
+    <div class="console-box">
         
         <div class="status-header">
-            <div style="display:flex; align-items:center">
-                <div class="server-dot"></div>
-                <span id="srv-name">تلقائي (السعودية)</span>
+            <div class="srv-indicator">
+                <div class="dot"></div>
+                <span id="srv-name">تلقائي (KSA)</span>
             </div>
-            <div id="time-txt">0s</div>
+            <div id="timer">0s</div>
         </div>
 
-        <div class="progress-container"><div id="progress-bar" class="progress-fill"></div></div>
+        <div class="time-track"><div id="time-bar" class="time-fill"></div></div>
 
-        <div class="gauge-wrapper">
+        <div class="gauge-wrap">
             <svg viewBox="0 0 260 260">
                 <defs>
-                    <linearGradient id="g-dl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00e5ff"/><stop offset="1" stop-color="#2979ff"/></linearGradient>
-                    <linearGradient id="g-ul" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d500f9"/><stop offset="1" stop-color="#ff1744"/></linearGradient>
+                    <linearGradient id="g-dl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00ffd5"/><stop offset="1" stop-color="#008cff"/></linearGradient>
+                    <linearGradient id="g-ul" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff007b"/><stop offset="1" stop-color="#7b00ff"/></linearGradient>
                 </defs>
                 <path class="track-bg" d="M 50 210 A 110 110 0 1 1 210 210" />
-                <path id="track-fill" class="track-val" d="M 50 210 A 110 110 0 1 1 210 210" stroke="url(#g-dl)" />
+                <path id="track-fill" class="track-fg" d="M 50 210 A 110 110 0 1 1 210 210" stroke="url(#g-dl)" />
             </svg>
-            <div class="center-text">
-                <div id="speed-text">0.0</div>
-                <div style="font-size:0.8rem; color:#888; margin-top:5px">Mbps</div>
-                <div id="phase-txt" class="phase-text">جاهز</div>
+            <div class="center-vals">
+                <div id="speed-big">0.0</div>
+                <div style="font-size:0.8rem; color:#666; margin-top:5px">Mbps</div>
+                <div id="phase-txt" class="phase-name">جاهز</div>
             </div>
         </div>
 
-        <div class="jitter-box">
-            استقرار الخط: <span id="live-jitter" class="j-val">--</span>
+        <div class="jitter-panel">
+            استقرار الخط: <span id="live-jitter" class="j-num">--</span>
         </div>
 
-        <div class="results">
-            <div class="res-item"><span class="lbl">PING</span><span id="res-ping" class="val">--</span></div>
-            <div class="res-item"><span class="lbl">JITTER</span><span id="res-jitter" class="val" style="color:#ffd700">--</span></div>
-            <div class="res-item"><span class="lbl">DOWN</span><span id="res-dl" class="val" style="color:var(--main)">--</span></div>
-            <div class="res-item"><span class="lbl">UP</span><span id="res-ul" class="val" style="color:var(--sec)">--</span></div>
+        <div class="grid-res">
+            <div class="res-cell"><span class="head">PING</span><span id="res-ping" class="num">--</span></div>
+            <div class="res-cell"><span class="head">JITTER</span><span id="res-jitter" class="num" style="color:#ffd700">--</span></div>
+            <div class="res-cell"><span class="head">DOWN</span><span id="res-dl" class="num" style="color:var(--main)">--</span></div>
+            <div class="res-cell"><span class="head">UP</span><span id="res-ul" class="num" style="color:var(--sec)">--</span></div>
         </div>
 
-        <div class="btn-row">
-            <button id="start-btn" class="btn-start" onclick="startIronTest()">بدء الفحص</button>
-            <button class="btn-reset" onclick="resetAll()">↺</button>
+        <div class="btn-group">
+            <button id="start-btn" class="btn-go" onclick="startQuantumTest()">بدء الفحص</button>
+            <button class="btn-re" onclick="resetAll()">↺</button>
         </div>
     </div>
     <script src="script.js"></script>
