@@ -3,151 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S-SPEED V141 | TURBO</title>
+    <title>S-SPEED V142 | SIMULATION</title>
     <style>
-        /* --- تصميم التوربو V141 --- */
+        /* --- تصميم المحاكاة V142 --- */
         :root { 
-            --speed-dl: #00ffcc; /* تركواز */
-            --speed-ul: #aa00ff; /* بنفسجي غامق */
-            --ping-col: #ffcc00; /* أصفر */
-            --bg-col: #050505; 
-            --panel-col: #101015;
+            --dl-color: #00ffcc; 
+            --ul-color: #aa00ff; 
+            --ping-color: #ffcc00; 
+            --bg: #0b0c10; 
+            --card: #1f2833; 
         }
         
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        body { background: var(--bg-col); color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+        body { background: var(--bg); color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
 
-        .turbo-bg { 
-            position: fixed; width: 100%; height: 100%; 
-            background: linear-gradient(0deg, #111 0%, #050505 100%);
-            z-index: -1;
-        }
+        .sim-bg { position: fixed; width: 100%; height: 100%; background: radial-gradient(circle at 50% 10%, #1a1a2e 0%, #000 100%); z-index: -1; }
 
-        .dashboard { 
+        .console { 
             width: 95%; max-width: 480px; padding: 30px; 
-            background: var(--panel-col); border: 1px solid #222; 
-            border-radius: 30px; box-shadow: 0 0 120px rgba(0, 255, 204, 0.05); 
+            background: var(--card); border: 1px solid #45a29e; 
+            border-radius: 20px; box-shadow: 0 0 60px rgba(0,0,0,0.8); 
             text-align: center; display: flex; flex-direction: column; gap: 20px;
         }
 
-        /* شريط المعلومات */
-        .top-info { 
-            display: flex; justify-content: space-between; align-items: center;
-            background: rgba(255,255,255,0.03); padding: 10px 20px; border-radius: 50px;
-            font-size: 0.85rem; color: #888;
-        }
-        .live-status { color: white; font-weight: bold; display: flex; align-items: center; gap: 8px; }
-        .blinker { width: 8px; height: 8px; background: var(--speed-dl); border-radius: 50%; box-shadow: 0 0 10px var(--speed-dl); animation: pulse 0.5s infinite alternate; }
-        @keyframes pulse { from { opacity: 1; } to { opacity: 0.3; } }
-
-        /* العداد التوربيني */
-        .gauge-section { position: relative; width: 280px; height: 280px; margin: 0 auto; }
-        svg { transform: rotate(135deg); width: 100%; height: 100%; }
+        /* شريط الحالة */
+        .top-bar { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: #888; background: rgba(0,0,0,0.2); padding: 8px 15px; border-radius: 50px; }
         
-        .track-bg { stroke: #1a1a1a; stroke-width: 14; stroke-linecap: round; fill: none; }
+        /* شريط الوقت */
+        .time-rail { width: 100%; height: 4px; background: #0b0c10; border-radius: 2px; overflow: hidden; }
+        .time-fill { height: 100%; width: 0%; background: white; transition: width 0.1s linear; }
+
+        /* العداد (للتحميل فقط) */
+        .gauge-box { position: relative; width: 280px; height: 280px; margin: 0 auto; transition: opacity 0.3s; }
+        svg { transform: rotate(135deg); width: 100%; height: 100%; }
+        .track-bg { stroke: #0b0c10; stroke-width: 14; stroke-linecap: round; fill: none; }
         .track-fg { 
-            stroke: var(--speed-dl); stroke-width: 14; stroke-linecap: round; fill: none;
+            stroke: var(--dl-color); stroke-width: 14; stroke-linecap: round; fill: none;
             stroke-dasharray: 615; stroke-dashoffset: 615; 
-            transition: stroke-dashoffset 0.05s linear; /* استجابة فائقة السرعة */
-            filter: drop-shadow(0 0 15px var(--speed-dl));
+            transition: stroke-dashoffset 0.2s cubic-bezier(0.4, 0, 0.2, 1); /* حركة ناعمة جداً */
+            filter: drop-shadow(0 0 10px var(--dl-color));
         }
 
         .center-hud { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
-        #speed-big { font-size: 5rem; font-weight: 900; line-height: 0.9; letter-spacing: -4px; }
-        .phase-lbl { font-size: 1.1rem; font-weight: bold; color: var(--speed-dl); margin-top: 5px; text-transform: uppercase; }
+        #dl-speed-main { font-size: 5rem; font-weight: 800; line-height: 0.9; letter-spacing: -3px; color: white; }
+        .unit { font-size: 0.8rem; color: #888; margin-top: 5px; }
 
         /* منطقة الجيتر */
-        .jitter-float { 
-            margin-top: -30px; position: relative; z-index: 10; 
-            background: rgba(0,0,0,0.6); padding: 5px 15px; border-radius: 15px; 
-            border: 1px solid #333; display: inline-block; align-self: center; font-size: 0.9rem;
+        .jitter-tag { margin-top: -30px; font-size: 0.9rem; color: #aaa; position: relative; z-index: 10; }
+        .j-val { color: var(--ping-color); font-weight: bold; }
+
+        /* البطاقات السفلية */
+        .cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+        .stat-card { 
+            background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; 
+            display: flex; flex-direction: column; transition: 0.3s; border: 1px solid transparent;
         }
-        .j-num { color: var(--ping-col); font-weight: bold; font-size: 1.1rem; margin-right: 5px; }
+        .head { font-size: 0.7rem; color: #666; font-weight: bold; margin-bottom: 5px; }
+        .val { font-size: 1.2rem; font-weight: 900; direction: ltr; }
 
-        /* شريط الوقت */
-        .time-track { width: 100%; height: 4px; background: #222; border-radius: 2px; overflow: hidden; margin-top: 10px; }
-        .time-bar { height: 100%; width: 0%; background: white; transition: width 0.1s linear; }
-
-        /* النتائج */
-        .grid-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-        .stat-card { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; display: flex; flex-direction: column; border: 1px solid rgba(255,255,255,0.05); }
-        .head { font-size: 0.65rem; color: #666; font-weight: bold; margin-bottom: 5px; }
-        .val { font-size: 1.1rem; font-weight: 900; direction: ltr; }
+        /* بطاقة الرفع النشطة */
+        .active-ul { 
+            border-color: var(--ul-color); 
+            background: rgba(170, 0, 255, 0.1); 
+            box-shadow: 0 0 20px rgba(170, 0, 255, 0.2); 
+            animation: pulse-border 1.5s infinite;
+        }
+        @keyframes pulse-border { 50% { border-color: transparent; box-shadow: none; } }
 
         /* الأزرار */
-        .btn-wrap { display: flex; gap: 10px; margin-top: 10px; }
         .btn-start { 
-            flex: 3; padding: 18px; border: none; border-radius: 15px;
-            background: white; color: black; font-weight: 900; font-size: 1.2rem;
-            cursor: pointer; transition: 0.2s; 
+            width: 100%; padding: 18px; border: none; border-radius: 12px; margin-top: 10px;
+            background: white; color: black; font-weight: 900; font-size: 1.2rem; cursor: pointer; 
         }
-        .btn-start:hover { background: var(--speed-dl); box-shadow: 0 0 40px var(--speed-dl); }
+        .btn-start:hover { background: var(--dl-color); box-shadow: 0 0 20px var(--dl-color); }
         .btn-start:disabled { background: #333; color: #555; cursor: not-allowed; box-shadow: none; }
-        
-        .btn-reset { 
-            flex: 1; border: 1px solid #333; background: transparent; border-radius: 15px;
-            color: white; font-size: 1.5rem; cursor: pointer; transition: 0.2s; 
-        }
-        .btn-reset:hover { border-color: var(--speed-ul); color: var(--speed-ul); }
+
+        /* إخفاء العداد عند الرفع */
+        .dimmed { opacity: 0.2; filter: grayscale(100%); }
     </style>
 </head>
 <body>
-    <div class="turbo-bg"></div>
-    <div class="dashboard">
+    <div class="sim-bg"></div>
+    <div class="console">
         
-        <div class="top-info">
-            <div class="live-status">
-                <div class="blinker"></div>
-                <span id="srv-txt">جاهز للفحص</span>
-            </div>
-            <div id="conn-count" style="font-size:0.7rem">Threads: 0</div>
+        <div class="top-bar">
+            <span id="srv-name">تلقائي (KSA)</span>
+            <span id="timer-txt">0.0s</span>
         </div>
 
-        <div class="time-track"><div id="time-bar" class="time-bar"></div></div>
+        <div class="time-rail"><div id="time-bar" class="time-fill"></div></div>
 
-        <div class="gauge-section">
+        <div id="main-gauge" class="gauge-box">
             <svg viewBox="0 0 260 260">
-                <defs>
-                    <linearGradient id="g-dl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00ffcc"/><stop offset="1" stop-color="#0066ff"/></linearGradient>
-                    <linearGradient id="g-ul" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#aa00ff"/><stop offset="1" stop-color="#ff0066"/></linearGradient>
-                </defs>
                 <path class="track-bg" d="M 50 210 A 110 110 0 1 1 210 210" />
-                <path id="track-fill" class="track-fg" d="M 50 210 A 110 110 0 1 1 210 210" stroke="url(#g-dl)" />
+                <path id="track-fill" class="track-fg" d="M 50 210 A 110 110 0 1 1 210 210" />
             </svg>
             <div class="center-hud">
-                <div id="speed-big">0.0</div>
-                <div style="font-size:0.8rem; color:#666; margin-top:5px">Mbps</div>
-                <div id="phase-txt" class="phase-lbl">جاهز</div>
+                <div id="dl-speed-main">0.0</div>
+                <div class="unit">DOWNLOAD</div>
             </div>
         </div>
 
-        <div class="jitter-float">
-            استقرار (Jitter): <span id="live-jitter" class="j-num">--</span>
+        <div class="jitter-tag">
+            استقرار (Jitter): <span id="live-jitter" class="j-val">--</span>
         </div>
 
-        <div class="grid-stats">
+        <div class="cards-grid">
             <div class="stat-card">
                 <span class="head">PING</span>
                 <span id="res-ping" class="val">--</span>
             </div>
+            <div id="card-ul" class="stat-card">
+                <span class="head">UPLOAD</span>
+                <span id="res-ul" class="val" style="color:var(--ul-color)">--</span>
+            </div>
             <div class="stat-card">
                 <span class="head">JITTER</span>
-                <span id="res-jitter" class="val" style="color:var(--ping-col)">--</span>
-            </div>
-            <div class="stat-card">
-                <span class="head">DOWN</span>
-                <span id="res-dl" class="val" style="color:var(--speed-dl)">--</span>
-            </div>
-            <div class="stat-card">
-                <span class="head">UP</span>
-                <span id="res-ul" class="val" style="color:var(--speed-ul)">--</span>
+                <span id="res-jitter" class="val" style="color:var(--ping-color)">--</span>
             </div>
         </div>
 
-        <div class="btn-wrap">
-            <button id="start-btn" class="btn-start" onclick="startTurboTest()">بدء الفحص</button>
-            <button class="btn-reset" onclick="resetAll()">↺</button>
-        </div>
+        <button id="start-btn" class="btn-start" onclick="startSimTest()">بدء الفحص</button>
     </div>
     <script src="script.js"></script>
 </body>
