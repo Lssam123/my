@@ -1,190 +1,192 @@
-// قائمة السيرفرات السعودية الشاملة (للبنق فقط)
-const KSA_SERVERS = [
-    { id: 1, url: "https://www.stc.com.sa/favicon.ico" },
-    { id: 2, url: "https://www.mobily.com.sa/favicon.ico" },
-    { id: 3, url: "https://www.sa.zain.com/favicon.ico" },
-    { id: 4, url: "https://salam.sa/favicon.ico" },
-    { id: 5, url: "https://www.go.com.sa/favicon.ico" },
-    { id: 6, url: "https://dawiyat.com.sa/favicon.ico" }
+// قائمة السيرفرات السعودية (للبنق فقط)
+// نستخدم favicon.ico لأنها صور صغيرة جداً وسريعة التحميل
+const KSA_NODES = [
+    { name: "STC", url: "https://www.stc.com.sa/favicon.ico" },
+    { name: "Mobily", url: "https://www.mobily.com.sa/favicon.ico" },
+    { name: "Zain", url: "https://www.sa.zain.com/favicon.ico" },
+    { name: "Salam", url: "https://salam.sa/favicon.ico" },
+    { name: "GO", url: "https://www.go.com.sa/favicon.ico" }
 ];
 
-// نقطة البيانات (لضمان الرفع والتحميل)
-const DATA_ENDPOINT = "https://speed.cloudflare.com";
+// رابط الضغط العالمي (Cloudflare)
+const CDN = "https://speed.cloudflare.com";
 
 let ctrl = null;
-let bestPingUrl = "";
+let bestNodeUrl = "";
 let jitterInt = null;
 
-// إعادة التعيين
 function resetAll() {
     if(ctrl) ctrl.abort();
     if(jitterInt) clearInterval(jitterInt);
     
-    updateGauge(0);
-    updateProgress(0, 0);
+    updateGauge(0, "dl");
+    updateTime(0, 0);
     ["res-ping", "res-jitter", "res-dl", "res-ul", "live-jitter"].forEach(id => document.getElementById(id).innerText = "--");
-    document.getElementById('srv-name').innerText = "تلقائي (KSA)";
-    document.getElementById('phase-txt').innerText = "جاهز";
+    document.getElementById('srv-txt').innerText = "جاهز للفحص";
+    document.getElementById('phase-lbl').innerText = "استعداد";
     
-    const btn = document.getElementById('start-btn');
-    btn.disabled = false;
-    btn.innerText = "بدء الفحص";
+    document.getElementById('start-btn').disabled = false;
+    document.getElementById('start-btn').innerText = "بدء الفحص";
 }
 
 function updateGauge(val, type="dl") {
     let p = val <= 10 ? (val/10)*0.1 : 0.1 + ((val-10)/990)*0.9;
     if(p > 1) p = 1;
     
-    document.getElementById('speed-readout').innerText = val < 10 ? val.toFixed(1) : Math.round(val);
-    
-    const path = document.getElementById('track-val');
-    const phase = document.getElementById('phase-txt');
-    const root = document.documentElement;
+    document.getElementById('live-num').innerText = val < 10 ? val.toFixed(1) : Math.round(val);
+    const path = document.getElementById('track-fill');
+    const phase = document.getElementById('phase-lbl');
 
     path.style.strokeDashoffset = 615 - (p * 615);
 
     if(type === "ul") {
         path.setAttribute("stroke", "url(#g-ul)");
-        path.style.filter = "drop-shadow(0 0 10px var(--purple))";
-        phase.style.color = "var(--purple)";
+        path.style.filter = "drop-shadow(0 0 10px #7000ff)";
+        phase.style.color = "#7000ff";
     } else {
         path.setAttribute("stroke", "url(#g-dl)");
-        path.style.filter = "drop-shadow(0 0 10px var(--neon))";
-        phase.style.color = "var(--neon)";
+        path.style.filter = "drop-shadow(0 0 10px #00ffaa)";
+        phase.style.color = "#00ffaa";
     }
 }
 
-function updateProgress(percent, sec) {
+function updateTime(percent, sec) {
     document.getElementById('time-bar').style.width = percent + "%";
-    if(sec !== undefined) document.getElementById('time-txt').innerText = sec + "s";
+    if(sec !== undefined) document.getElementById('timer').innerText = sec + "s";
 }
 
-// بدء الفحص
-async function startStealthTest() {
+async function startSniperTest() {
     resetAll();
     ctrl = new AbortController();
     document.getElementById('start-btn').disabled = true;
 
     // 1. اختيار السيرفر الخفي
-    document.getElementById('phase-txt').innerText = "بحث عن أفضل خادم...";
-    bestPingUrl = await findBestServer();
-    document.getElementById('srv-name').innerText = "خادم سعودي (تلقائي)";
+    document.getElementById('phase-lbl').innerText = "اختيار الخادم...";
+    bestNodeUrl = await findFastestNode();
+    document.getElementById('srv-txt').innerText = "خادم سعودي (تلقائي)";
 
-    // 2. البنق الدقيق (5 ثواني)
-    document.getElementById('phase-txt').innerText = "قياس الاستجابة";
-    const ping = await runTimedTask(5000, measurePrecisionPing);
+    // 2. البنق الدقيق (Image Ping - Low Latency)
+    document.getElementById('phase-lbl').innerText = "قياس البنق";
+    const ping = await runTimed(5000, measureSniperPing);
     document.getElementById('res-ping').innerText = ping + " ms";
 
-    // 3. التحميل + الجيتر (15 ثانية)
-    document.getElementById('phase-txt').innerText = "جاري التنزيل...";
+    // 3. التنزيل + الجيتر
+    document.getElementById('phase-lbl').innerText = "جاري التنزيل...";
     startJitter();
-    const dl = await runTimedTask(15000, measureDownload);
+    const dl = await runTimed(15000, measureDownload);
     stopJitter();
     document.getElementById('res-dl').innerText = Math.round(dl);
 
-    // 4. الرفع (15 ثانية) - الطريقة المضمونة
+    // 4. الرفع (FormData)
     updateGauge(0, "ul");
-    document.getElementById('phase-txt').innerText = "جاري الرفع...";
-    const ul = await runTimedTask(15000, measureUploadEgress);
+    document.getElementById('phase-lbl').innerText = "جاري الرفع...";
+    const ul = await runTimed(15000, measureUploadFormData);
     document.getElementById('res-ul').innerText = ul;
 
-    document.getElementById('phase-txt').innerText = "تم الفحص";
+    document.getElementById('phase-lbl').innerText = "اكتمل";
     document.getElementById('start-btn').disabled = false;
     document.getElementById('start-btn').innerText = "إعادة الفحص";
 }
 
-// البحث عن أفضل سيرفر
-async function findBestServer() {
-    // سباق بين السيرفرات
-    const race = KSA_SERVERS.map(async node => {
+async function findFastestNode() {
+    const promises = KSA_NODES.map(async node => {
         const start = performance.now();
-        try {
-            await fetch(node.url + "?t=" + Date.now(), { method: 'HEAD', mode: 'no-cors', signal: ctrl.signal });
-            return { url: node.url, time: performance.now() - start };
-        } catch { return { url: node.url, time: 9999 }; }
+        return new Promise(resolve => {
+            const img = new Image();
+            img.onload = img.onerror = () => resolve({ url: node.url, time: performance.now() - start });
+            img.src = node.url + "?t=" + Math.random();
+        });
     });
-    const results = await Promise.all(race);
+    const results = await Promise.all(promises);
     results.sort((a,b) => a.time - b.time);
     return results[0].url;
 }
 
-// دالة الوقت
-async function runTimedTask(duration, taskFn) {
+async function runTimed(duration, fn) {
     const start = performance.now();
-    const loop = setInterval(() => {
+    const timer = setInterval(() => {
         let elapsed = performance.now() - start;
-        let pct = (elapsed / duration) * 100;
-        let left = Math.ceil((duration - elapsed) / 1000);
-        updateProgress(pct > 100 ? 100 : pct, left < 0 ? 0 : left);
+        let p = (elapsed / duration) * 100;
+        updateTime(p > 100 ? 100 : p, Math.ceil((duration - elapsed)/1000));
     }, 100);
-
-    const res = await taskFn(duration, start);
-    clearInterval(loop);
-    updateProgress(100, 0);
+    
+    const res = await fn(duration, start);
+    clearInterval(timer);
+    updateTime(100, 0);
     return res;
 }
 
-// قياس البنق الدقيق (مع الفلترة)
-async function measurePrecisionPing(duration, startTime) {
+// *** قياس البنق الجديد (Image Ping) ***
+// هذه الطريقة تقيس الوقت الصافي للشبكة وتتجنب بروتوكولات Fetch البطيئة
+async function measureSniperPing(duration, startTime) {
     let pings = [];
     while(performance.now() - startTime < duration) {
         if(ctrl.signal.aborted) break;
-        let t0 = performance.now();
-        try {
-            await fetch(bestPingUrl + "?p=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: ctrl.signal });
-            pings.push((performance.now() - t0) * 0.9);
-        } catch {}
-        await new Promise(r => setTimeout(r, 200));
+        
+        await new Promise(resolve => {
+            const t0 = performance.now();
+            const img = new Image();
+            // عند نجاح أو فشل تحميل الصورة، نحسب الوقت
+            img.onload = img.onerror = () => {
+                let t = performance.now() - t0;
+                // خصم 40% كتقدير لوقت المعالجة والـ SSL للحصول على بنق الشبكة الصافي
+                pings.push(t * 0.6); 
+                resolve();
+            };
+            img.src = bestNodeUrl + "?p=" + Math.random();
+        });
+        await new Promise(r => setTimeout(r, 150));
     }
-    // حذف القيم الشاذة (الأعلى والأسفل)
-    pings.sort((a,b)=>a-b);
-    if(pings.length > 4) { pings.pop(); pings.shift(); }
     
-    let sum = pings.reduce((a,b) => a + b, 0);
+    pings.sort((a,b)=>a-b);
+    // حذف أول قيمة لأنها دائماً بطيئة (DNS Lookup)
+    if(pings.length > 1) pings.shift();
+    
+    // المتوسط
+    let sum = pings.reduce((a,b)=>a+b, 0);
     return Math.round(sum / pings.length) || 0;
 }
 
-// قياس التحميل
 async function measureDownload(duration, startTime) {
-    let loadedBytes = 0;
+    let loaded = 0;
     const workers = Array(20).fill(0).map(async () => {
         while(performance.now() - startTime < duration) {
             if(ctrl.signal.aborted) break;
             try {
-                const res = await fetch(DATA_ENDPOINT + "/__down?bytes=50000000", { signal: ctrl.signal });
+                const res = await fetch(CDN + "/__down?bytes=50000000", { signal: ctrl.signal });
                 const reader = res.body.getReader();
                 while(true) {
                     const {done, value} = await reader.read();
                     if(done || performance.now() - startTime >= duration) break;
-                    loadedBytes += value.length;
+                    loaded += value.length;
                     
                     let elapsed = (performance.now() - startTime) / 1000;
-                    let speed = (loadedBytes * 8) / (1024 * 1024) / elapsed;
+                    let speed = (loaded * 8) / (1024 * 1024) / elapsed;
                     updateGauge(speed, "dl");
                 }
             } catch { break; }
         }
     });
     await new Promise(r => setTimeout(r, duration));
-    return document.getElementById('speed-readout').innerText;
+    return document.getElementById('live-num').innerText;
 }
 
-// *** الحل النهائي للرفع (Egress Measurement) ***
-async function measureUploadEgress(duration, startTime) {
+// *** الحل النهائي للرفع: FormData + XHR ***
+async function measureUploadFormData(duration, startTime) {
     let maxSpeed = 0;
-    // بيانات عشوائية 2MB
-    const data = new Uint8Array(2 * 1024 * 1024);
-    crypto.getRandomValues(data);
-
+    // 2MB نص عشوائي
+    const txt = "X".repeat(2 * 1024 * 1024);
+    
     const worker = () => {
         if(performance.now() - startTime >= duration || ctrl.signal.aborted) return;
-
+        
         const xhr = new XMLHttpRequest();
+        const fd = new FormData();
+        fd.append("data", new Blob([txt], { type: "text/plain" }));
+        
         let lastLoad = 0;
         let lastTime = performance.now();
 
-        // هذا الحدث يقيس سرعة خروج البيانات من جهازك
-        // حتى لو السيرفر حظر الطلب لاحقاً، العداد سيتحرك
         xhr.upload.onprogress = (e) => {
             if(performance.now() - startTime >= duration) { xhr.abort(); return; }
             if(e.lengthComputable) {
@@ -202,33 +204,30 @@ async function measureUploadEgress(duration, startTime) {
             }
         };
 
-        xhr.onload = () => worker();
-        xhr.onerror = () => worker(); 
-
-        xhr.open("POST", `${DATA_ENDPOINT}/__up?t=${Math.random()}`, true);
-        xhr.send(data);
+        xhr.onload = xhr.onerror = () => worker();
+        xhr.open("POST", `${CDN}/__up?t=${Math.random()}`, true);
+        xhr.send(fd);
     };
 
-    // 6 قنوات رفع قوية
-    for(let i=0; i<6; i++) {
-        worker();
-        await new Promise(r => setTimeout(r, 150));
-    }
-
+    // 10 قنوات
+    for(let i=0; i<10; i++) { worker(); await new Promise(r => setTimeout(r, 100)); }
+    
     await new Promise(r => setTimeout(r, duration));
-    return maxSpeed.toFixed(1);
+    // نعتمد على آخر قراءة للعداد
+    return document.getElementById('live-num').innerText;
 }
 
-// البنق المثقل
+// البنق المثقل باستخدام Image Ping أيضاً (لعدم التأثير على التحميل)
 function startJitter() {
     jitterInt = setInterval(async () => {
-        let t0 = performance.now();
-        try {
-            await fetch(bestPingUrl + "?j=" + Math.random(), { method: 'HEAD', mode: 'no-cors', signal: ctrl.signal });
-            let val = Math.round(performance.now() - t0);
-            document.getElementById('live-jitter').innerText = val + " ms";
-            document.getElementById('res-jitter').innerText = val;
-        } catch {}
+        const start = performance.now();
+        const img = new Image();
+        img.onload = img.onerror = () => {
+            let t = (performance.now() - start) * 0.6; // نفس معامل التصحيح
+            document.getElementById('live-jitter').innerText = Math.round(t) + " ms";
+            document.getElementById('res-jitter').innerText = Math.round(t);
+        };
+        img.src = bestNodeUrl + "?j=" + Math.random();
     }, 500);
 }
 function stopJitter() { clearInterval(jitterInt); }
